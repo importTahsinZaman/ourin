@@ -1020,9 +1020,15 @@ function AuthenticatedAccount() {
     );
   }
 
-  const isSubscriber = tierInfo?.tier === "subscriber";
-  const isFree = tierInfo?.tier === "free";
-  const isOwnKeys = tierInfo?.tier === "own_keys";
+  // After the early returns above, tierInfo is guaranteed to be defined
+  // in non-self-hosting mode. Add explicit guard for TypeScript narrowing.
+  if (!tierInfo) {
+    return null;
+  }
+
+  const isSubscriber = tierInfo.tier === "subscriber";
+  const isFree = tierInfo.tier === "free";
+  const isOwnKeys = tierInfo.tier === "own_keys";
 
   return (
     <div className="space-y-6">
@@ -1239,12 +1245,12 @@ function AuthenticatedAccount() {
                   className="font-medium text-sm"
                   style={{
                     color:
-                      usageSummary.subscriptionBalance > 0
+                      (usageSummary.subscriptionBalance ?? 0) > 0
                         ? "var(--color-text-primary)"
                         : "#ef4444",
                   }}
                 >
-                  {usageSummary.subscriptionBalance.toLocaleString()}
+                  {(usageSummary.subscriptionBalance ?? 0).toLocaleString()}
                   <span style={{ color: "var(--color-text-muted)" }}>
                     {" "}
                     /{" "}
@@ -1263,12 +1269,12 @@ function AuthenticatedAccount() {
                   style={{
                     width: `${Math.max(
                       0,
-                      (usageSummary.subscriptionBalance /
+                      ((usageSummary.subscriptionBalance ?? 0) /
                         (billingConfig.subscriptionCredits ?? 10000)) *
                         100
                     )}%`,
                     backgroundColor:
-                      usageSummary.subscriptionBalance >
+                      (usageSummary.subscriptionBalance ?? 0) >
                       (billingConfig.subscriptionCredits ?? 10000) * 0.25
                         ? "var(--color-accent-primary)"
                         : "#ef4444",
@@ -1308,7 +1314,7 @@ function AuthenticatedAccount() {
                     className="font-medium text-sm"
                     style={{ color: "var(--color-text-primary)" }}
                   >
-                    {usageSummary.purchasedBalance.toLocaleString()}
+                    {(usageSummary.purchasedBalance ?? 0).toLocaleString()}
                   </span>
                 </div>
                 <p
