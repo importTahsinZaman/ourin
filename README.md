@@ -1,6 +1,6 @@
-<img width="1280" height="336" alt="ourin_banner" src="https://github.com/user-attachments/assets/3d5fd32e-0aea-4d9e-9165-52792ce11731" />
+<img width="1280" height="336" alt="ourin_banner" src="https://github.com/user-attachments/assets/ce6aa1f0-ff48-47c8-885b-8d3e21cd311a" />
 
-https://github.com/user-attachments/assets/03fefa8e-7950-4019-a0b8-7bf6134eb4ec
+https://github.com/user-attachments/assets/9d9c3c20-e3fd-47f2-a80e-7bf3889e88a8
 
 ### Features
 
