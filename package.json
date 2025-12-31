@@ -1,0 +1,44 @@
+{
+  "name": "ourin",
+  "private": true,
+  "workspaces": [
+    "web",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "lint:fix": "turbo lint:fix",
+    "format": "turbo format",
+    "format:check": "turbo format:check",
+    "dev:web": "turbo dev --filter=@ourin/web",
+    "dev:convex": "cd web && npx convex dev",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.7.4",
+    "turbo": "^2.3.0",
+    "typescript": "^5.7.2"
+  },
+  "packageManager": "bun@1.1.38",
+  "dependencies": {
+    "js-tiktoken": "^1.0.21"
+  },
+  "lint-staged": {
+    "web/**/*.{ts,tsx}": [
+      "eslint --fix --config web/eslint.config.mjs",
+      "prettier --write"
+    ],
+    "packages/core/**/*.ts": [
+      "eslint --fix --config packages/core/eslint.config.mjs",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
+  }
+}

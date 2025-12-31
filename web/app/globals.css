@@ -1,0 +1,408 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Ourin Theme Variables - Light Theme (Default) */
+:root {
+  /* Background colors */
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f8fafc;
+  --color-background-tertiary: #f1f5f9;
+  --color-background-elevated: #ffffff;
+  --color-background-input: #ffffff;
+  --color-background-hover: #f1f5f9;
+  --color-background-active: #e2e8f0;
+
+  /* Text colors */
+  --color-text-primary: #1e293b;
+  --color-text-secondary: #64748b;
+  --color-text-muted: #94a3b8;
+  --color-text-inverse: #ffffff;
+  --color-text-link: #b8865a;
+  --color-text-link-hover: #a3724a;
+
+  /* Border colors */
+  --color-border-default: #e2e8f0;
+  --color-border-muted: #f1f5f9;
+  --color-border-focus: #b8865a;
+  --color-border-accent: #b8865a;
+
+  /* Accent colors */
+  --color-accent-primary: #b8865a;
+  --color-accent-primary-hover: #a3724a;
+  --color-accent-primary-muted: rgba(184, 134, 90, 0.1);
+  --color-accent-secondary: #5a9e8f;
+
+  /* Message colors */
+  --color-message-user-background: #f5ebe0;
+  --color-message-user-text: #1e293b;
+  --color-message-user-border: transparent;
+  --color-message-assistant-background: transparent;
+  --color-message-assistant-text: #334155;
+  --color-message-assistant-border: transparent;
+
+  /* Button colors */
+  --color-button-primary-background: #b8865a;
+  --color-button-primary-background-hover: #a3724a;
+  --color-button-primary-text: #ffffff;
+  --color-button-secondary-background: #ffffff;
+  --color-button-secondary-background-hover: #f1f5f9;
+  --color-button-secondary-text: #334155;
+  --color-button-secondary-border: #e2e8f0;
+  --color-button-ghost-background: transparent;
+  --color-button-ghost-background-hover: #f1f5f9;
+  --color-button-ghost-text: #64748b;
+
+  /* Code colors */
+  --color-code-background: #f1f5f9;
+  --color-code-text: #1e293b;
+  --color-code-border: #e2e8f0;
+
+  /* Scrollbar */
+  --color-scrollbar-track: transparent;
+  --color-scrollbar-thumb: #cbd5e1;
+  --color-scrollbar-thumb-hover: #94a3b8;
+
+  /* Effects */
+  --effect-border-radius-sm: 0.375rem;
+  --effect-border-radius-md: 0.5rem;
+  --effect-border-radius-lg: 0.75rem;
+  --effect-border-radius-xl: 1rem;
+  --effect-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --effect-transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --effect-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --effect-shadow-md:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --effect-shadow-lg:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+
+  /* Layout */
+  --layout-chat-max-width: 48rem;
+  --layout-sidebar-width: 16rem;
+  --layout-sidebar-collapsed-width: 4rem;
+
+  /* Font family (set dynamically) */
+  --font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+/* Base styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  height: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  height: 100%;
+  line-height: 1.5;
+  background: var(--color-background-primary);
+  color: var(--color-text-primary);
+  overflow: hidden;
+  font-family: var(--font-family);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-scrollbar-thumb);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-scrollbar-thumb-hover);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-scrollbar-thumb) var(--color-scrollbar-track);
+}
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+  background: var(--color-accent-primary-muted);
+  color: var(--color-text-primary);
+}
+
+/* Links */
+a {
+  color: var(--color-text-link);
+  text-decoration: none;
+  transition: color var(--effect-transition-fast);
+}
+
+a:hover {
+  color: var(--color-text-link-hover);
+}
+
+/* Button reset */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* Input reset */
+input,
+textarea {
+  font-family: inherit;
+}
+
+/* Override browser autofill background color */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px var(--color-background-tertiary) inset !important;
+  -webkit-text-fill-color: var(--color-text-primary) !important;
+  caret-color: var(--color-text-primary) !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.15s ease-out;
+}
+
+.animate-slide-down {
+  animation: slideDown 0.3s ease-out;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Contenteditable placeholder */
+[data-empty="true"][data-placeholder]::before {
+  content: attr(data-placeholder);
+  color: var(--color-text-muted);
+  pointer-events: none;
+  position: absolute;
+}
+
+/* Remove focus ring for specific elements */
+[data-no-focus-ring]:focus,
+[data-no-focus-ring]:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Prose (markdown) styles */
+.prose {
+  color: var(--color-text-primary);
+  /* Override Tailwind Typography plugin variables with our theme colors */
+  --tw-prose-body: var(--color-text-primary);
+  --tw-prose-headings: var(--color-text-primary);
+  --tw-prose-lead: var(--color-text-secondary);
+  --tw-prose-links: var(--color-text-link);
+  --tw-prose-bold: var(--color-text-primary);
+  --tw-prose-counters: var(--color-text-muted);
+  --tw-prose-bullets: var(--color-text-muted);
+  --tw-prose-hr: var(--color-border-default);
+  --tw-prose-quotes: var(--color-text-secondary);
+  --tw-prose-quote-borders: var(--color-border-default);
+  --tw-prose-captions: var(--color-text-muted);
+  --tw-prose-code: var(--color-code-text);
+  --tw-prose-pre-code: var(--color-code-text);
+  --tw-prose-pre-bg: var(--color-code-background);
+  --tw-prose-th-borders: var(--color-border-default);
+  --tw-prose-td-borders: var(--color-border-muted);
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  color: var(--color-text-primary);
+}
+
+.prose a {
+  color: var(--color-text-link);
+}
+
+.prose a:hover {
+  color: var(--color-text-link-hover);
+}
+
+.prose code {
+  background: var(--color-code-background);
+  color: var(--color-code-text);
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+}
+
+.prose pre {
+  background: var(--color-code-background);
+  border: 1px solid var(--color-code-border);
+  border-radius: var(--effect-border-radius-lg);
+}
+
+.prose pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
+/* Shiki syntax highlighting - override inline background to use theme variable */
+.shiki-wrapper .shiki,
+.shiki-wrapper pre.shiki {
+  background-color: transparent !important;
+}
+
+.prose blockquote {
+  border-left-color: var(--color-border-default);
+  color: var(--color-text-secondary);
+}
+
+.prose hr {
+  border-color: var(--color-border-default);
+}
+
+.prose thead {
+  border-bottom-color: var(--color-border-default);
+}
+
+.prose tbody tr {
+  border-bottom-color: var(--color-border-muted);
+}
+
+.prose th {
+  color: var(--color-text-primary);
+}
+
+.prose td {
+  color: var(--color-text-secondary);
+}
+
+/* Prevent text overflow in message content */
+.prose p,
+.prose li,
+.prose blockquote {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Clean color picker - removes default browser styling */
+.color-picker-clean {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.color-picker-clean::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.color-picker-clean::-webkit-color-swatch {
+  border: none;
+  border-radius: 0.375rem;
+}
+
+.color-picker-clean::-moz-color-swatch {
+  border: none;
+  border-radius: 0.375rem;
+}

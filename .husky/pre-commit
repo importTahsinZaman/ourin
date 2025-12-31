@@ -1,0 +1,10 @@
+# Run lint-staged for automatic linting and formatting
+npx lint-staged
+
+# Regenerate pricing if models.ts was changed
+if git diff --cached --name-only | grep -q "web/lib/models.ts"; then
+  echo "models.ts changed, regenerating pricing..."
+  ROOT="$(git rev-parse --show-toplevel)"
+  (cd "$ROOT/web" && npx tsx scripts/generate-pricing.ts)
+  git add "$ROOT/web/convex/generatedPricing.ts"
+fi
