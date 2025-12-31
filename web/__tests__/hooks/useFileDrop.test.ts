@@ -30,10 +30,10 @@ function createMockFile(name: string, type: string, size: number = 1024): File {
 }
 
 describe("useFileDrop", () => {
-  let onDrop: ReturnType<typeof vi.fn>;
+  let onDrop: ReturnType<typeof vi.fn<(files: File[]) => void>>;
 
   beforeEach(() => {
-    onDrop = vi.fn();
+    onDrop = vi.fn<(files: File[]) => void>();
   });
 
   describe("initial state", () => {
@@ -260,8 +260,8 @@ describe("useFileDrop", () => {
     });
 
     it("should update handlers when dependencies change", () => {
-      const onDrop1 = vi.fn();
-      const onDrop2 = vi.fn();
+      const onDrop1 = vi.fn<(files: File[]) => void>();
+      const onDrop2 = vi.fn<(files: File[]) => void>();
 
       const { result, rerender } = renderHook(
         ({ onDrop }) => useFileDrop({ onDrop }),

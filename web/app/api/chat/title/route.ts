@@ -68,6 +68,20 @@ export async function POST(req: Request) {
       );
     }
 
+    // Special case: if asking about Ourin itself, return a fixed title
+    const lowerMessage = userMessage.toLowerCase();
+    const isAskingAboutOurin =
+      /\b(tell me about|what is|what's|explain|describe|introduce me to)\s+ourin\b/i.test(
+        lowerMessage
+      ) || /\babout ourin\b/i.test(lowerMessage);
+
+    if (isAskingAboutOurin) {
+      return new Response(JSON.stringify({ title: "Intro to Ourin" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     const generateResult = await generateText({
       model: anthropic("claude-3-5-haiku-latest"),
       system: `Generate a very short title (2-5 words) for a conversation that starts with the user message below.

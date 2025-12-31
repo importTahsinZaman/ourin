@@ -31,7 +31,8 @@
   "lint-staged": {
     "web/**/*.{ts,tsx}": [
       "eslint --fix --config web/eslint.config.mjs",
-      "prettier --write"
+      "prettier --write",
+      "bash -c 'cd web && tsc --noEmit --skipLibCheck'"
     ],
     "packages/core/**/*.ts": [
       "eslint --fix --config packages/core/eslint.config.mjs",

@@ -326,7 +326,7 @@ NEXT_PUBLIC_CONVEX_URL=
 # AI Providers (at least one)
 ANTHROPIC_API_KEY=
 OPENAI_API_KEY=
-GOOGLE_API_KEY=
+GOOGLE_GENERATIVE_API_KEY=
 
 # Security
 CHAT_AUTH_SECRET=           # Must match in Next.js and Convex
