@@ -12,6 +12,7 @@ import {
 import { GeistSans } from "geist/font/sans";
 import { cookies } from "next/headers";
 import { Toaster } from "sonner";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ConvexClientProvider } from "@/components/providers/ConvexClientProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { CoreEditorProviderWrapper } from "@/components/providers/CoreEditorProviderWrapper";
@@ -201,6 +202,7 @@ export default async function RootLayout({
             />
           </ThemeProvider>
         </ConvexClientProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
