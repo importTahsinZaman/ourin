@@ -11,7 +11,6 @@ import {
   Sparkles,
   Infinity as InfinityIcon,
   Zap,
-  Check,
 } from "lucide-react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useConvexAuth, useQuery, useMutation } from "convex/react";
@@ -81,27 +80,43 @@ export function SettingsDivider() {
   );
 }
 
-// Pricing features for the left side panel
+// Pricing features for the left side panel (sign-up / subscribe)
 const SUBSCRIPTION_FEATURES = [
   {
     icon: Sparkles,
-    title: "All Premium Models",
-    description: "Claude Opus, GPT-4o, o3, Gemini Pro and more",
+    title: "Premium Models",
+    description: "The best GPT, Claude, and Gemini models in one place",
   },
   {
     icon: InfinityIcon,
-    title: "10,000 Credits Monthly",
-    description: "Generous monthly allowance, buy more anytime",
+    title: "Generous Monthly Limit",
+    description: "Generous monthly credit allowance, buy more anytime",
   },
   {
     icon: Zap,
     title: "Premium Features",
-    description: "Web search, image uploads, bring your own API keys",
+    description: "Web search, image uploads, theme and font customization",
   },
   {
     icon: Key,
     title: "BYOK Support",
     description: "Use your own API keys to bypass credit usage",
+  },
+];
+
+// Generic features for the sign-in panel
+const GENERIC_FEATURES = [
+  {
+    title: "All the best models",
+    description: "GPT, Claude, and Gemini models in one place",
+  },
+  {
+    title: "Secure and Open Source",
+    description: "Fully auditable source code, no need to trust a black box",
+  },
+  {
+    title: "Personalized experience",
+    description: "Custom themes, dynamic system prompting, and keybinds",
   },
 ];
 
@@ -137,89 +152,71 @@ function PricingPanel({
           className="mb-3 font-bold text-4xl tracking-tight"
           style={{ color: "var(--color-text-primary)" }}
         >
-          {isSignIn ? "Welcome back" : "Ourin Pro"}
+          Ourin
         </h1>
         <p className="text-lg" style={{ color: "var(--color-text-secondary)" }}>
           {isSignIn
-            ? "Sign in to continue your conversations"
+            ? "Your AI assistant, your way."
             : "Your AI assistant, your way"}
         </p>
       </div>
 
-      {/* Features list or welcome message */}
+      {/* Features list */}
       <div className="z-10 relative space-y-5">
-        {isSignIn ? (
-          // Welcome back messaging
-          <>
-            <div className="flex items-start gap-3">
-              <Check
-                className="mt-0.5 w-5 h-5 shrink-0"
-                style={{ color: "var(--color-accent-primary)" }}
-              />
-              <p
-                className="text-sm"
-                style={{ color: "var(--color-text-secondary)" }}
-              >
-                Your conversations and settings are waiting for you
-              </p>
-            </div>
-            <div className="flex items-start gap-3">
-              <Check
-                className="mt-0.5 w-5 h-5 shrink-0"
-                style={{ color: "var(--color-accent-primary)" }}
-              />
-              <p
-                className="text-sm"
-                style={{ color: "var(--color-text-secondary)" }}
-              >
-                Continue with all the models you love
-              </p>
-            </div>
-            <div className="flex items-start gap-3">
-              <Check
-                className="mt-0.5 w-5 h-5 shrink-0"
-                style={{ color: "var(--color-accent-primary)" }}
-              />
-              <p
-                className="text-sm"
-                style={{ color: "var(--color-text-secondary)" }}
-              >
-                Your custom themes and preferences are saved
-              </p>
-            </div>
-          </>
-        ) : (
-          // Pricing features
-          SUBSCRIPTION_FEATURES.map((feature) => (
-            <div key={feature.title} className="flex items-start gap-3">
-              <div
-                className="flex flex-shrink-0 justify-center items-center mt-0.5 rounded w-6 h-6"
-                style={{
-                  backgroundColor: "var(--color-accent-primary-muted)",
-                }}
-              >
-                <feature.icon
-                  className="w-3.5 h-3.5"
-                  style={{ color: "var(--color-accent-primary)" }}
+        {isSignIn
+          ? // Generic features for sign-in
+            GENERIC_FEATURES.map((feature) => (
+              <div key={feature.title} className="flex items-start gap-3">
+                <div
+                  className="mt-[6px] rounded-full w-2 h-2 shrink-0"
+                  style={{ backgroundColor: "var(--color-accent-primary)" }}
                 />
+                <div>
+                  <h3
+                    className="font-medium text-sm"
+                    style={{ color: "var(--color-text-primary)" }}
+                  >
+                    {feature.title}
+                  </h3>
+                  <p
+                    className="text-sm"
+                    style={{ color: "var(--color-text-muted)" }}
+                  >
+                    {feature.description}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3
-                  className="font-medium text-sm"
-                  style={{ color: "var(--color-text-primary)" }}
+            ))
+          : // Pricing features
+            SUBSCRIPTION_FEATURES.map((feature) => (
+              <div key={feature.title} className="flex items-start gap-3">
+                <div
+                  className="flex flex-shrink-0 justify-center items-center mt-0.5 rounded w-6 h-6"
+                  style={{
+                    backgroundColor: "var(--color-accent-primary-muted)",
+                  }}
                 >
-                  {feature.title}
-                </h3>
-                <p
-                  className="text-sm"
-                  style={{ color: "var(--color-text-muted)" }}
-                >
-                  {feature.description}
-                </p>
+                  <feature.icon
+                    className="w-3.5 h-3.5"
+                    style={{ color: "var(--color-accent-primary)" }}
+                  />
+                </div>
+                <div>
+                  <h3
+                    className="font-medium text-sm"
+                    style={{ color: "var(--color-text-primary)" }}
+                  >
+                    {feature.title}
+                  </h3>
+                  <p
+                    className="text-sm"
+                    style={{ color: "var(--color-text-muted)" }}
+                  >
+                    {feature.description}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))
-        )}
+            ))}
       </div>
 
       {/* Footer - pricing */}
@@ -242,7 +239,7 @@ function PricingPanel({
         )}
         <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
           {isSignIn
-            ? "Secure, encrypted, and private"
+            ? "Continue right where you left off"
             : "Cancel anytime. No hidden fees."}
         </p>
       </div>
@@ -328,7 +325,7 @@ function SubscribePanel({ onClose }: { onClose: () => void }) {
           <button
             onClick={handleSubscribe}
             disabled={isLoading}
-            className="flex justify-center items-center gap-2 py-3 rounded-sm w-full font-medium text-sm transition-colors disabled:opacity-50"
+            className="flex justify-center items-center gap-2 disabled:opacity-50 py-3 rounded-sm w-full font-medium text-sm transition-colors"
             style={{
               backgroundColor: "var(--color-accent-primary)",
               color: "var(--color-text-inverse)",
