@@ -356,21 +356,64 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   // Track previous state to detect successful sign-in/sign-up
   const wasNotFullyAuthRef = useRef(!isFullyAuthenticated);
+  const generateChatToken = useMutation(api.chatAuth.generateChatToken);
+  const analytics = useAnalytics();
+  const [isRedirectingToStripe, setIsRedirectingToStripe] = useState(false);
 
-  // Don't close modal on auth - instead we redirect to Stripe for new signups
-  // For sign-in, we close the modal
+  // Handle auth state changes - close for sign-in, redirect to Stripe for sign-up
   useEffect(() => {
-    // Only close for sign-in flow, not sign-up (sign-up goes to Stripe)
-    if (
-      wasNotFullyAuthRef.current &&
-      isFullyAuthenticated &&
-      isOpen &&
-      authFlow === "signIn"
-    ) {
-      onClose();
+    // User just became fully authenticated
+    if (wasNotFullyAuthRef.current && isFullyAuthenticated && isOpen) {
+      if (authFlow === "signIn") {
+        // Sign-in: just close the modal
+        onClose();
+      } else {
+        // Sign-up: redirect to Stripe checkout
+        setIsRedirectingToStripe(true);
+        const redirectToStripe = async () => {
+          try {
+            analytics.trackSubscriptionEvent({
+              tier: "free",
+              action: "checkout_started",
+            });
+            const tokenResult = await generateChatToken();
+            if (!tokenResult) {
+              toast.error("Failed to authenticate. Please try again.");
+              setIsRedirectingToStripe(false);
+              return;
+            }
+            const response = await fetch("/api/stripe/checkout", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${tokenResult.token}`,
+              },
+              body: JSON.stringify({}),
+            });
+            if (!response.ok)
+              throw new Error("Failed to create checkout session");
+            const { url } = await response.json();
+            if (url) window.location.href = url;
+          } catch (error) {
+            console.error("Stripe redirect error:", error);
+            toast.error("Failed to redirect to checkout", {
+              description: "Please click Subscribe to try again.",
+            });
+            setIsRedirectingToStripe(false);
+          }
+        };
+        redirectToStripe();
+      }
     }
     wasNotFullyAuthRef.current = !isFullyAuthenticated;
-  }, [isFullyAuthenticated, isOpen, onClose, authFlow]);
+  }, [
+    isFullyAuthenticated,
+    isOpen,
+    onClose,
+    authFlow,
+    generateChatToken,
+    analytics,
+  ]);
 
   // Close on escape key
   useEffect(() => {

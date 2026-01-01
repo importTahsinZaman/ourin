@@ -79,7 +79,6 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
   const registerPendingLink = useMutation(
     api.settings.registerPendingAccountLink
   );
-  const generateChatToken = useMutation(api.chatAuth.generateChatToken);
 
   // Form fields
   const [firstName, setFirstName] = useState("");
@@ -173,33 +172,6 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
     }
   };
 
-  // Redirect to Stripe checkout after successful signup
-  const redirectToStripeCheckout = async () => {
-    try {
-      const tokenResult = await generateChatToken();
-      if (!tokenResult) {
-        toast.error("Failed to authenticate. Please try again.");
-        return;
-      }
-      const response = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${tokenResult.token}`,
-        },
-        body: JSON.stringify({}),
-      });
-      if (!response.ok) throw new Error("Failed to create checkout session");
-      const { url } = await response.json();
-      if (url) window.location.href = url;
-    } catch (error) {
-      console.error("Stripe redirect error:", error);
-      toast.error("Failed to redirect to checkout", {
-        description: "Please try subscribing from the settings menu.",
-      });
-    }
-  };
-
   // Handle verification code submission
   const handleVerificationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -222,15 +194,13 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
         setError("That code didn't work. Please check and try again.");
         setLoading(false);
       } else {
-        // Success: track analytics and redirect to Stripe
+        // Success: track analytics - Stripe redirect handled by SettingsModal
         analytics.trackSignUp("email");
         if (currentUser?.isAnonymous) {
           analytics.trackAccountUpgraded();
         }
-        toast.success("Account created! Redirecting to checkout...");
-        // Redirect to Stripe checkout immediately after signup
-        await redirectToStripeCheckout();
-        // Note: setLoading(false) not needed as we're redirecting
+        toast.success("Account created!");
+        // Auth state will update, SettingsModal will handle Stripe redirect
       }
     } catch (err) {
       // Convex auth throws an error when verification code is wrong
