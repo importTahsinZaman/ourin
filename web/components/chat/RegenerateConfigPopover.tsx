@@ -56,9 +56,7 @@ export function RegenerateConfigPopover({
 
   // Determine which models user can access
   const canAccessAllModels =
-    tierInfo?.tier === "subscriber" ||
-    tierInfo?.tier === "own_keys" ||
-    (tierInfo?.providers && tierInfo.providers.length > 0);
+    tierInfo?.tier === "subscriber" || tierInfo?.tier === "self_hosted";
 
   // Use message's model or fallback to current
   const initialModel = messageModel || fallbackModel;
@@ -175,7 +173,7 @@ export function RegenerateConfigPopover({
   const isReasoningModel = !!modelInfo.reasoningParameter;
 
   // Helper to check if user can access a model
-  const canAccessModel = (modelId: string, modelProvider: string) => {
+  const canAccessModel = (modelId: string, _modelProvider: string) => {
     if (!tierInfo) return modelId === FREE_MODEL_ID;
 
     // Self-hosted or subscriber can access all models
@@ -183,14 +181,7 @@ export function RegenerateConfigPopover({
       return true;
     }
 
-    if (tierInfo.tier === "free") {
-      return modelId === FREE_MODEL_ID;
-    }
-
-    if (tierInfo.tier === "own_keys") {
-      return tierInfo.providers?.includes(modelProvider) ?? false;
-    }
-
+    // Free tier can only access free model
     return modelId === FREE_MODEL_ID;
   };
 

@@ -12,7 +12,6 @@ import {
   CreditCard,
   Zap,
   ExternalLink,
-  Key,
   Coins,
   ChevronDown,
   Sparkles,
@@ -1044,11 +1043,10 @@ function AuthenticatedAccount() {
 
   const isSubscriber = tierInfo.tier === "subscriber";
   const isFree = tierInfo.tier === "free";
-  const isOwnKeys = tierInfo.tier === "own_keys";
 
   return (
     <div className="space-y-6">
-      {/* Current plan - for non-subscribers */}
+      {/* Current plan - for non-subscribers (free tier) */}
       {!isSubscriber && (
         <>
           <SettingsSection title="Current Plan">
@@ -1065,35 +1063,25 @@ function AuthenticatedAccount() {
                     className="flex justify-center items-center rounded-sm w-10 h-10"
                     style={{ backgroundColor: "var(--color-background-hover)" }}
                   >
-                    {isOwnKeys ? (
-                      <Key
-                        className="w-5 h-5"
-                        style={{ color: "var(--color-text-secondary)" }}
-                      />
-                    ) : (
-                      <Zap
-                        className="w-5 h-5"
-                        style={{ color: "var(--color-text-secondary)" }}
-                      />
-                    )}
+                    <Zap
+                      className="w-5 h-5"
+                      style={{ color: "var(--color-text-secondary)" }}
+                    />
                   </div>
                   <div>
                     <h5
                       className="font-medium"
                       style={{ color: "var(--color-text-primary)" }}
                     >
-                      {isOwnKeys ? "API Keys" : "Free Plan"}
+                      Free Plan
                     </h5>
                     <p
                       className="text-sm"
                       style={{ color: "var(--color-text-secondary)" }}
                     >
-                      {isOwnKeys
-                        ? "Using your own API keys"
-                        : `${
-                            tierInfo.remainingMessages ??
-                            FREE_TIER_MESSAGE_LIMIT
-                          } of ${FREE_TIER_MESSAGE_LIMIT} free messages remaining`}
+                      {`${
+                        tierInfo.remainingMessages ?? FREE_TIER_MESSAGE_LIMIT
+                      } of ${FREE_TIER_MESSAGE_LIMIT} free messages remaining`}
                     </p>
                   </div>
                 </div>

@@ -1,14 +1,30 @@
-import { mutation, query } from "./_generated/server";
+import { mutation, query, QueryCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import type { Id } from "./_generated/dataModel";
 import { isSelfHosting } from "./config";
 
 /**
+ * Helper to check if a user has an active subscription.
+ * Used to gate BYOK features to subscribers only.
+ */
+async function hasActiveSubscription(
+  ctx: QueryCtx,
+  userId: Id<"users">
+): Promise<boolean> {
+  const subscription = await ctx.db
+    .query("subscriptions")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .first();
+  return subscription?.status === "active";
+}
+
+/**
  * Save or update an API key for a provider.
  * The key should already be encrypted client-side before calling this mutation.
  *
  * Disabled in self-hosting mode - all requests use server-side API keys.
+ * Requires an active subscription - BYOK is a subscriber-only feature.
  */
 export const saveApiKey = mutation({
   args: {
@@ -26,6 +42,14 @@ export const saveApiKey = mutation({
 
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
+
+    // BYOK is a subscriber-only feature
+    const isSubscriber = await hasActiveSubscription(ctx, userId);
+    if (!isSubscriber) {
+      throw new Error(
+        "Active subscription required to save API keys. Subscribe to unlock BYOK."
+      );
+    }
 
     // Check if key exists for this provider
     const existing = await ctx.db
@@ -132,6 +156,7 @@ export const deleteApiKey = mutation({
  * Requires serverSecret to prevent client-side abuse.
  *
  * Disabled in self-hosting mode.
+ * Requires an active subscription - BYOK is a subscriber-only feature.
  */
 export const saveApiKeyInternal = mutation({
   args: {
@@ -160,6 +185,14 @@ export const saveApiKeyInternal = mutation({
 
     // Cast string userId to Id<"users"> for database queries
     const userIdTyped = userId as Id<"users">;
+
+    // BYOK is a subscriber-only feature
+    const isSubscriber = await hasActiveSubscription(ctx, userIdTyped);
+    if (!isSubscriber) {
+      throw new Error(
+        "Active subscription required to save API keys. Subscribe to unlock BYOK."
+      );
+    }
 
     // Check if key exists for this provider
     const existing = await ctx.db
@@ -197,6 +230,7 @@ export const saveApiKeyInternal = mutation({
  * Used internally by the chat route to decrypt and use the key.
  *
  * Returns null in self-hosting mode.
+ * Returns null for non-subscribers - BYOK is a subscriber-only feature.
  */
 export const getEncryptedKey = query({
   args: {
@@ -208,6 +242,10 @@ export const getEncryptedKey = query({
 
     const userId = await getAuthUserId(ctx);
     if (!userId) return null;
+
+    // BYOK is a subscriber-only feature - don't return keys for non-subscribers
+    const isSubscriber = await hasActiveSubscription(ctx, userId);
+    if (!isSubscriber) return null;
 
     const key = await ctx.db
       .query("apiKeys")

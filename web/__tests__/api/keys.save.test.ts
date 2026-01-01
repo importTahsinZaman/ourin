@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Use vi.hoisted to define mocks that can be referenced in vi.mock factories
-const { mockConvexMutation } = vi.hoisted(() => ({
+const { mockConvexMutation, mockConvexQuery } = vi.hoisted(() => ({
   mockConvexMutation: vi.fn(),
+  mockConvexQuery: vi.fn(),
 }));
 
 // Mock dependencies before importing the route
@@ -21,6 +22,7 @@ vi.mock("convex/browser", () => {
   return {
     ConvexHttpClient: class MockConvexHttpClient {
       mutation = mockConvexMutation;
+      query = mockConvexQuery;
     },
   };
 });
@@ -30,6 +32,24 @@ import { encryptApiKey, getKeyHint, validateKeyFormat } from "@/lib/encryption";
 
 // Import after mocking
 import { POST } from "@/app/api/keys/save/route";
+
+// Helper to mock subscriber tier (required for BYOK)
+function mockSubscriberTier() {
+  mockConvexQuery.mockResolvedValue({
+    tier: "subscriber",
+    canSendMessage: true,
+    modelsAllowed: "all",
+  });
+}
+
+// Helper to mock free tier (BYOK not allowed)
+function mockFreeTier() {
+  mockConvexQuery.mockResolvedValue({
+    tier: "free",
+    canSendMessage: true,
+    modelsAllowed: ["google:gemini-2.5-flash-lite"],
+  });
+}
 
 describe("POST /api/keys/save", () => {
   beforeEach(() => {
@@ -114,12 +134,39 @@ describe("POST /api/keys/save", () => {
     });
   });
 
+  describe("subscription requirement", () => {
+    it("returns 403 when non-subscriber tries to save key", async () => {
+      vi.mocked(verifyChatToken).mockResolvedValue({
+        valid: true,
+        userId: "user_free",
+      });
+      mockFreeTier();
+
+      const request = new Request("http://localhost/api/keys/save", {
+        method: "POST",
+        body: JSON.stringify({
+          chatToken: "valid_token",
+          provider: "anthropic",
+          apiKey: "sk-ant-test",
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(data.code).toBe("SUBSCRIPTION_REQUIRED");
+      expect(data.error).toContain("subscription required");
+    });
+  });
+
   describe("input validation", () => {
     it("returns 400 when provider is missing", async () => {
       vi.mocked(verifyChatToken).mockResolvedValue({
         valid: true,
         userId: "user_123",
       });
+      mockSubscriberTier();
 
       const request = new Request("http://localhost/api/keys/save", {
         method: "POST",
@@ -141,6 +188,7 @@ describe("POST /api/keys/save", () => {
         valid: true,
         userId: "user_123",
       });
+      mockSubscriberTier();
 
       const request = new Request("http://localhost/api/keys/save", {
         method: "POST",
@@ -162,6 +210,7 @@ describe("POST /api/keys/save", () => {
         valid: true,
         userId: "user_123",
       });
+      mockSubscriberTier();
 
       vi.mocked(validateKeyFormat).mockReturnValue(false);
 
@@ -188,6 +237,7 @@ describe("POST /api/keys/save", () => {
         valid: true,
         userId: "user_encrypt",
       });
+      mockSubscriberTier();
 
       vi.mocked(validateKeyFormat).mockReturnValue(true);
       vi.mocked(encryptApiKey).mockResolvedValue("encrypted_key_data");
@@ -214,6 +264,7 @@ describe("POST /api/keys/save", () => {
         valid: true,
         userId: "user_hint",
       });
+      mockSubscriberTier();
 
       vi.mocked(validateKeyFormat).mockReturnValue(true);
       vi.mocked(encryptApiKey).mockResolvedValue("encrypted_data");
@@ -242,6 +293,7 @@ describe("POST /api/keys/save", () => {
         valid: true,
         userId: "user_save",
       });
+      mockSubscriberTier();
 
       vi.mocked(validateKeyFormat).mockReturnValue(true);
       vi.mocked(encryptApiKey).mockResolvedValue("encrypted_key_123");
@@ -278,6 +330,7 @@ describe("POST /api/keys/save", () => {
         valid: true,
         userId: "user_anthropic",
       });
+      mockSubscriberTier();
 
       vi.mocked(validateKeyFormat).mockReturnValue(true);
       vi.mocked(encryptApiKey).mockResolvedValue("encrypted");
@@ -306,6 +359,7 @@ describe("POST /api/keys/save", () => {
         valid: true,
         userId: "user_openai",
       });
+      mockSubscriberTier();
 
       vi.mocked(validateKeyFormat).mockReturnValue(true);
       vi.mocked(encryptApiKey).mockResolvedValue("encrypted");
@@ -334,6 +388,7 @@ describe("POST /api/keys/save", () => {
         valid: true,
         userId: "user_google",
       });
+      mockSubscriberTier();
 
       vi.mocked(validateKeyFormat).mockReturnValue(true);
       vi.mocked(encryptApiKey).mockResolvedValue("encrypted");
@@ -356,11 +411,12 @@ describe("POST /api/keys/save", () => {
   });
 
   describe("successful save", () => {
-    it("returns success response", async () => {
+    it("returns success response for subscriber", async () => {
       vi.mocked(verifyChatToken).mockResolvedValue({
         valid: true,
         userId: "user_success",
       });
+      mockSubscriberTier();
 
       vi.mocked(validateKeyFormat).mockReturnValue(true);
       vi.mocked(encryptApiKey).mockResolvedValue("encrypted");
@@ -390,6 +446,7 @@ describe("POST /api/keys/save", () => {
         valid: true,
         userId: "user_enc_error",
       });
+      mockSubscriberTier();
 
       vi.mocked(validateKeyFormat).mockReturnValue(true);
       vi.mocked(encryptApiKey).mockRejectedValue(
@@ -415,6 +472,7 @@ describe("POST /api/keys/save", () => {
         valid: true,
         userId: "user_convex_error",
       });
+      mockSubscriberTier();
 
       vi.mocked(validateKeyFormat).mockReturnValue(true);
       vi.mocked(encryptApiKey).mockResolvedValue("encrypted");

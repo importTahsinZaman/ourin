@@ -16,6 +16,7 @@ const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
  * The client sends the plain key, we encrypt it here where the secret is available.
  *
  * Disabled in self-hosting mode - all requests use server-side API keys.
+ * Requires an active subscription - BYOK is a subscriber-only feature.
  */
 export async function POST(req: Request) {
   // In self-hosting mode, BYOK is disabled
@@ -56,6 +57,22 @@ export async function POST(req: Request) {
     }
 
     const userId = result.userId;
+
+    // Verify user has an active subscription - BYOK is a subscriber-only feature
+    const tierInfo = await convex.query(api.billing.getUserTierById, {
+      userId,
+    });
+    if (tierInfo.tier !== "subscriber") {
+      return NextResponse.json(
+        {
+          error: "Active subscription required to save API keys",
+          code: "SUBSCRIPTION_REQUIRED",
+          details:
+            "BYOK (Bring Your Own Key) is a subscriber-only feature. Subscribe to unlock.",
+        },
+        { status: 403 }
+      );
+    }
 
     // Validate inputs
     if (!provider || !apiKey) {

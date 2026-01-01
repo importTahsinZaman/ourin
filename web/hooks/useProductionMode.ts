@@ -22,9 +22,10 @@ interface BillingConfig {
  *
  * In production mode (SELF_HOSTING=false):
  * - Full billing/subscription system active
- * - Tiered access (anonymous, free, own_keys, subscriber)
+ * - Tiered access (anonymous, free, subscriber)
  * - Credit calculations and limits
  * - Stripe integration enabled
+ * - BYOK (Bring Your Own Key) available for subscribers
  */
 export function useProductionMode() {
   const [isSelfHosting, setIsSelfHosting] = useState<boolean | null>(null);

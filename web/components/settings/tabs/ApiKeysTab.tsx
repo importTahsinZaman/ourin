@@ -1,7 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Eye, EyeOff, Check, X, Trash2, Loader2 } from "lucide-react";
+import { useState } from "react";
+import {
+  Eye,
+  EyeOff,
+  Check,
+  X,
+  Trash2,
+  Loader2,
+  Lock,
+  Key,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -45,8 +54,9 @@ interface LocalKeyState {
 }
 
 export function ApiKeysTab() {
-  // Fetch existing API keys from backend
+  // Fetch existing API keys and tier info from backend
   const existingKeys = useQuery(api.apiKeys.getApiKeys);
+  const tierInfo = useQuery(api.billing.getUserTier);
   const deleteApiKeyMutation = useMutation(api.apiKeys.deleteApiKey);
   const generateChatToken = useMutation(api.chatAuth.generateChatToken);
 
@@ -61,6 +71,8 @@ export function ApiKeysTab() {
     },
     google: { value: "", isEditing: false, showValue: false, isSaving: false },
   });
+
+  const isSubscriber = tierInfo?.tier === "subscriber";
 
   // Check if a provider has a configured key
   const isKeyConfigured = (providerId: string) => {
@@ -118,7 +130,20 @@ export function ApiKeysTab() {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || "Failed to save API key");
+        // Handle subscription required error specifically
+        if (data.code === "SUBSCRIPTION_REQUIRED") {
+          toast.error("Subscription required", {
+            description:
+              "BYOK is a subscriber-only feature. Subscribe to unlock.",
+          });
+        } else {
+          throw new Error(data.error || "Failed to save API key");
+        }
+        setLocalState((prev) => ({
+          ...prev,
+          [providerId]: { ...prev[providerId], isSaving: false },
+        }));
+        return;
       }
 
       toast.success("API key saved", {
@@ -183,7 +208,7 @@ export function ApiKeysTab() {
   };
 
   // Loading state
-  if (existingKeys === undefined) {
+  if (existingKeys === undefined || tierInfo === undefined) {
     return (
       <div className="flex justify-center items-center py-8">
         <Loader2
@@ -194,11 +219,76 @@ export function ApiKeysTab() {
     );
   }
 
+  // Non-subscriber: show upgrade prompt
+  if (!isSubscriber) {
+    return (
+      <div className="space-y-6">
+        <SettingsSection
+          title="API Keys"
+          description="Bring your own API keys to use your preferred AI providers."
+        >
+          <div
+            className="p-6 border rounded-sm text-center"
+            style={{
+              backgroundColor: "var(--color-background-tertiary)",
+              borderColor: "var(--color-border-default)",
+            }}
+          >
+            <div
+              className="flex justify-center items-center mx-auto mb-4 rounded-full w-12 h-12"
+              style={{ backgroundColor: "var(--color-background-hover)" }}
+            >
+              <Lock
+                className="w-6 h-6"
+                style={{ color: "var(--color-accent-primary)" }}
+              />
+            </div>
+            <h4
+              className="mb-2 font-medium text-lg"
+              style={{ color: "var(--color-text-primary)" }}
+            >
+              Subscriber Feature
+            </h4>
+            <p
+              className="mb-4 text-sm"
+              style={{ color: "var(--color-text-secondary)" }}
+            >
+              Bring Your Own Key (BYOK) is available for subscribers. Use your
+              own OpenAI, Anthropic, or Google API keys to bypass credit usage
+              and access all models directly.
+            </p>
+            <div
+              className="space-y-2 mb-4 text-left text-sm"
+              style={{ color: "var(--color-text-muted)" }}
+            >
+              <div className="flex items-center gap-2">
+                <Key className="w-4 h-4" />
+                <span>Use your own API keys from any supported provider</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="w-4 h-4" />
+                <span>Messages using your keys don't consume credits</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="w-4 h-4" />
+                <span>Keys are encrypted and stored securely</span>
+              </div>
+            </div>
+            <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+              Go to the Account tab to subscribe and unlock BYOK.
+            </p>
+          </div>
+        </SettingsSection>
+      </div>
+    );
+  }
+
+  // Subscriber: show full API key management UI
   return (
     <div className="space-y-6">
       <SettingsSection
         title="API Keys"
-        description="Add your API keys to use different AI providers. Keys are encrypted and stored securely."
+        description="Add your API keys to use different AI providers. Messages using your keys don't consume credits."
       >
         <div className="space-y-4">
           {PROVIDERS.map((provider) => {
@@ -374,7 +464,8 @@ export function ApiKeysTab() {
 
       <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
         Your API keys are encrypted and stored securely. We never log or share
-        your keys.
+        your keys. Messages sent using your own keys don't consume subscription
+        credits.
       </p>
     </div>
   );

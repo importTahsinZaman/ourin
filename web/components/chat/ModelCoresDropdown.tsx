@@ -13,7 +13,6 @@ import {
   FileText,
   X,
   Lock,
-  Key,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MODELS_BY_DATE, getModelInfo, FREE_MODEL_ID } from "@/lib/models";
@@ -51,7 +50,7 @@ export function ModelCoresDropdown({
 
   // Helper to check if user can access a model based on their tier
   const canAccessModel = useCallback(
-    (modelId: string, modelProvider: string) => {
+    (modelId: string, _modelProvider: string) => {
       // Not authenticated - only free model
       if (!isAuthenticated) {
         return modelId === FREE_MODEL_ID;
@@ -67,11 +66,6 @@ export function ModelCoresDropdown({
         return modelId === FREE_MODEL_ID;
       }
 
-      // Own keys tier - only models from providers they have keys for
-      if (tierInfo.tier === "own_keys") {
-        return tierInfo.providers?.includes(modelProvider) ?? false;
-      }
-
       // Subscriber or self-hosted - all models
       if (tierInfo.tier === "subscriber" || tierInfo.tier === "self_hosted") {
         return true;
@@ -84,7 +78,7 @@ export function ModelCoresDropdown({
 
   // Get reason why model is locked
   const getLockReason = useCallback(
-    (modelProvider: string) => {
+    (_modelProvider: string) => {
       if (!isAuthenticated) {
         return "Sign in to access this model";
       }
@@ -96,10 +90,7 @@ export function ModelCoresDropdown({
         return "";
       }
       if (tierInfo.tier === "anonymous" || tierInfo.tier === "free") {
-        return "Subscribe or add an API key to access this model";
-      }
-      if (tierInfo.tier === "own_keys") {
-        return `Add a ${modelProvider} API key to access this model`;
+        return "Subscribe to access this model";
       }
       return "";
     },
@@ -396,8 +387,6 @@ export function ModelCoresDropdown({
                   const isSelected = model.id === selectedModel;
                   const hasAccess = canAccessModel(model.id, model.provider);
                   const isLocked = !hasAccess;
-                  const needsApiKey =
-                    tierInfo?.tier === "own_keys" && !hasAccess;
                   return (
                     <button
                       key={model.id}
@@ -437,18 +426,12 @@ export function ModelCoresDropdown({
                         </span>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
-                        {isLocked &&
-                          (needsApiKey ? (
-                            <Key
-                              className="w-3.5 h-3.5"
-                              style={{ color: "var(--color-text-muted)" }}
-                            />
-                          ) : (
-                            <Lock
-                              className="w-3.5 h-3.5"
-                              style={{ color: "var(--color-text-muted)" }}
-                            />
-                          ))}
+                        {isLocked && (
+                          <Lock
+                            className="w-3.5 h-3.5"
+                            style={{ color: "var(--color-text-muted)" }}
+                          />
+                        )}
                         {model.reasoningParameter && !isLocked && (
                           <Brain
                             className="w-3.5 h-3.5"

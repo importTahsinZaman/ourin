@@ -8,12 +8,7 @@ import type { Id, Doc } from "./_generated/dataModel";
 const FREE_MODEL_ID = "google:gemini-2.5-flash-lite";
 const FREE_MESSAGE_LIMIT = 10;
 
-export type UserTier =
-  | "anonymous"
-  | "free"
-  | "own_keys"
-  | "subscriber"
-  | "self_hosted";
+export type UserTier = "anonymous" | "free" | "subscriber" | "self_hosted";
 
 /**
  * Self-hosted tier info - grants unrestricted access to all models.
@@ -31,9 +26,8 @@ export interface TierInfo {
   // Free tier specific
   messageCount?: number;
   remainingMessages?: number;
-  // Own keys specific
+  // Subscriber specific - providers list for BYOK (subscriber-only feature)
   providers?: string[];
-  // Subscriber specific
   subscription?: {
     status: string;
     currentPeriodEnd: number;
@@ -148,17 +142,11 @@ async function computeTierInfo(
     };
   }
 
-  // Check for API keys (second priority)
-  if (apiKeys.length > 0) {
-    return {
-      tier: "own_keys",
-      canSendMessage: true,
-      modelsAllowed: providers, // Provider names to match against model provider
-      providers,
-    };
-  }
+  // Note: API keys without subscription no longer grant a separate tier.
+  // BYOK is now a subscriber-only feature. Users with stored API keys
+  // but no subscription fall through to the free tier below.
 
-  // Free signed-in user (lowest priority)
+  // Free signed-in user
   const freeUsage = await ctx.db
     .query("freeUsage")
     .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -232,6 +220,8 @@ export const getUserTierById = query({
 
 /**
  * Check if a user can use a specific model based on their tier.
+ * Note: BYOK is now a subscriber-only feature, so API keys alone
+ * don't grant access to additional models.
  */
 export const canUseModel = query({
   args: {
@@ -251,29 +241,18 @@ export const canUseModel = query({
       return modelId === FREE_MODEL_ID;
     }
 
-    // Check subscription
+    // Check subscription - subscribers can use all models
     const subscription = await ctx.db
       .query("subscriptions")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
 
     if (subscription?.status === "active") {
-      return true; // Subscribers can use all models
+      return true; // Subscribers can use all models (including via their own API keys)
     }
 
-    // Check API keys for the model's provider
-    const apiKey = await ctx.db
-      .query("apiKeys")
-      .withIndex("by_user_provider", (q) =>
-        q.eq("userId", userId).eq("provider", modelProvider)
-      )
-      .first();
-
-    if (apiKey) {
-      return true; // Has API key for this provider
-    }
-
-    // Free user can only use free model
+    // Non-subscribers (free tier) can only use free model
+    // Note: API keys without subscription no longer grant model access
     return modelId === FREE_MODEL_ID;
   },
 });

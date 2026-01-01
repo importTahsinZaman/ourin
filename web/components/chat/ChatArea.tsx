@@ -125,7 +125,7 @@ export function ChatArea({
           return {
             canSend: false,
             reason:
-              "Free users can only use Gemini 2.5 Flash Lite. Subscribe or add an API key to access other models.",
+              "Free users can only use Gemini 2.5 Flash Lite. Subscribe to access other models.",
           };
         }
         if (!tierInfo.canSendMessage) {
@@ -133,16 +133,6 @@ export function ChatArea({
             canSend: false,
             reason:
               "You've reached the free message limit. Subscribe to continue.",
-          };
-        }
-      }
-
-      // Own keys tier: check if they have key for this provider
-      if (tierInfo.tier === "own_keys") {
-        if (!tierInfo.providers?.includes(modelInfo.provider)) {
-          return {
-            canSend: false,
-            reason: `Add a ${modelInfo.provider} API key to use this model.`,
           };
         }
       }

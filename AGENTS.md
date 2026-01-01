@@ -355,11 +355,11 @@ npx convex env set SELF_HOSTING true
 
 Set `SELF_HOSTING=false` for production SaaS deployments with full billing:
 
-- Tiered access (anonymous, free, own_keys, subscriber)
+- Tiered access (anonymous, free, subscriber)
 - Credit calculations and limits
 - Stripe subscription and credit pack purchases
 - Free tier message limits
-- BYOK (Bring Your Own Keys) enabled - users can save their own API keys
+- BYOK (Bring Your Own Keys) - subscriber-only feature, allows using own API keys to bypass credit usage
 
 **Required for production (in addition to self-hosting vars):**
 

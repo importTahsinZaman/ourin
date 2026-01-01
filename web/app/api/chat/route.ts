@@ -449,7 +449,7 @@ export async function POST(req: Request) {
               error: "Model not available",
               code: "MODEL_RESTRICTED",
               details:
-                "Free users can only use Gemini 2.5 Flash Lite. Subscribe or add an API key to access other models.",
+                "Free users can only use Gemini 2.5 Flash Lite. Subscribe to access other models.",
             }),
             { status: 403, headers: { "Content-Type": "application/json" } }
           );
@@ -467,8 +467,9 @@ export async function POST(req: Request) {
             { status: 402, headers: { "Content-Type": "application/json" } }
           );
         }
-      } else if (tier.tier === "own_keys" || tier.tier === "subscriber") {
-        // Check if user has their own API key for this provider (takes priority)
+      } else if (tier.tier === "subscriber") {
+        // Subscribers can use all models
+        // Check if user has their own API key for this provider (BYOK - subscriber benefit)
         if (tier.providers?.includes(modelInfo.provider)) {
           // Get the user's API key for this provider
           const encryptedKey = await convex.query(api.apiKeys.getEncryptedKey, {
@@ -493,32 +494,17 @@ export async function POST(req: Request) {
           }
         }
 
-        // If not using own key, check tier-specific requirements
-        if (!useCustomKey) {
-          if (tier.tier === "own_keys") {
-            // own_keys tier without key for this provider - can't proceed
-            return new Response(
-              JSON.stringify({
-                error: "No API key for provider",
-                code: "NO_API_KEY",
-                details: `Add a ${modelInfo.provider} API key to use this model.`,
-              }),
-              { status: 403, headers: { "Content-Type": "application/json" } }
-            );
-          } else if (tier.tier === "subscriber") {
-            // Subscriber without own key - check credits
-            if (!tier.canSendMessage) {
-              return new Response(
-                JSON.stringify({
-                  error: "Credits depleted",
-                  code: "CREDITS_DEPLETED",
-                  details:
-                    "You've used all your credits. Purchase more credits to continue.",
-                }),
-                { status: 402, headers: { "Content-Type": "application/json" } }
-              );
-            }
-          }
+        // If not using own key, check credits
+        if (!useCustomKey && !tier.canSendMessage) {
+          return new Response(
+            JSON.stringify({
+              error: "Credits depleted",
+              code: "CREDITS_DEPLETED",
+              details:
+                "You've used all your credits. Purchase more credits to continue.",
+            }),
+            { status: 402, headers: { "Content-Type": "application/json" } }
+          );
         }
       }
     }

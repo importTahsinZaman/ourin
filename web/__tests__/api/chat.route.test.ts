@@ -60,35 +60,6 @@ describe("Chat API Route Logic", () => {
       });
     });
 
-    describe("Own Keys Tier Access", () => {
-      it("allows model when user has provider key", () => {
-        const tier = {
-          tier: "own_keys",
-          canSendMessage: true,
-          providers: ["anthropic"],
-        };
-        const requestedModel = "anthropic:claude-sonnet-4";
-        const modelProvider = "anthropic";
-
-        const canAccess = checkOwnKeysAccess(tier, modelProvider);
-        expect(canAccess.allowed).toBe(true);
-      });
-
-      it("blocks model when user lacks provider key", () => {
-        const tier = {
-          tier: "own_keys",
-          canSendMessage: true,
-          providers: ["openai"],
-        };
-        const requestedModel = "anthropic:claude-sonnet-4";
-        const modelProvider = "anthropic";
-
-        const canAccess = checkOwnKeysAccess(tier, modelProvider);
-        expect(canAccess.allowed).toBe(false);
-        expect(canAccess.code).toBe("NO_API_KEY");
-      });
-    });
-
     describe("Subscriber Tier Access", () => {
       it("allows any model for subscriber with credits", () => {
         const tier = {
@@ -594,16 +565,6 @@ function checkModelAccess(
     if (!tier.canSendMessage) {
       return { allowed: false, code: "FREE_LIMIT_REACHED" };
     }
-  }
-  return { allowed: true };
-}
-
-function checkOwnKeysAccess(
-  tier: { tier: string; providers: string[] },
-  modelProvider: string
-): { allowed: boolean; code?: string } {
-  if (!tier.providers.includes(modelProvider)) {
-    return { allowed: false, code: "NO_API_KEY" };
   }
   return { allowed: true };
 }

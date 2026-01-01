@@ -10,10 +10,11 @@
  *
  * When SELF_HOSTING=false (SaaS/production mode):
  * - Full billing/subscription system active
- * - Tiered access (anonymous, free, own_keys, subscriber)
+ * - Tiered access (anonymous, free, subscriber)
  * - Credit calculations and limits
  * - Stripe integration enabled
  * - Full authentication (email/password, OAuth)
+ * - BYOK (Bring Your Own Key) available for subscribers
  */
 
 /**
