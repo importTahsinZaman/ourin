@@ -445,7 +445,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   if (!isOpen) return null;
 
   // Modal variant 1: Anonymous users need to sign up (or sign in)
-  const needsAuth = !isFullyAuthenticated;
+  // Also show this while redirecting to Stripe to avoid flash of subscribe modal
+  const needsAuth = !isFullyAuthenticated || isRedirectingToStripe;
 
   if (needsAuth) {
     return (
@@ -453,7 +454,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         {/* Backdrop */}
         <div
           className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-          onClick={onClose}
+          onClick={isRedirectingToStripe ? undefined : onClose}
         />
 
         {/* Modal - same size as full settings modal */}
@@ -467,26 +468,39 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           {/* Left side - Pricing/Welcome panel */}
           <PricingPanel variant={authFlow === "signIn" ? "signIn" : "signUp"} />
 
-          {/* Right side - Auth form */}
+          {/* Right side - Auth form or redirecting state */}
           <div className="relative flex flex-col flex-1">
-            {/* Close button */}
-            <button
-              onClick={onClose}
-              className="top-4 right-4 z-10 absolute hover:bg-[var(--color-background-hover)] p-1.5 rounded-sm transition-colors"
-              style={{ color: "var(--color-text-muted)" }}
-            >
-              <X className="w-5 h-5" />
-            </button>
+            {/* Close button - hide while redirecting */}
+            {!isRedirectingToStripe && (
+              <button
+                onClick={onClose}
+                className="top-4 right-4 z-10 absolute hover:bg-[var(--color-background-hover)] p-1.5 rounded-sm transition-colors"
+                style={{ color: "var(--color-text-muted)" }}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
 
-            {/* Centered form */}
+            {/* Centered form or redirecting state */}
             <div className="flex flex-1 justify-center items-center px-12 py-8">
               <div className="w-full max-w-sm">
-                <AccountTab
-                  signUpStep={signUpStep}
-                  setSignUpStep={setSignUpStep}
-                  flow={authFlow}
-                  setFlow={setAuthFlow}
-                />
+                {isRedirectingToStripe ? (
+                  <div className="space-y-4 text-center">
+                    <p
+                      className="font-medium"
+                      style={{ color: "var(--color-text-primary)" }}
+                    >
+                      Redirecting to checkout...
+                    </p>
+                  </div>
+                ) : (
+                  <AccountTab
+                    signUpStep={signUpStep}
+                    setSignUpStep={setSignUpStep}
+                    flow={authFlow}
+                    setFlow={setAuthFlow}
+                  />
+                )}
               </div>
             </div>
           </div>
