@@ -1,14 +1,27 @@
 "use client";
 
 import { useState, useEffect, useRef, ReactNode, useMemo } from "react";
-import { X, CreditCard, Key, Keyboard, LogOut, Loader2 } from "lucide-react";
+import {
+  X,
+  CreditCard,
+  Key,
+  Keyboard,
+  LogOut,
+  Loader2,
+  Sparkles,
+  Infinity as InfinityIcon,
+  Zap,
+  Check,
+} from "lucide-react";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useConvexAuth, useQuery } from "convex/react";
+import { useConvexAuth, useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { ApiKeysTab } from "./tabs/ApiKeysTab";
 import { AccountTab, SignUpStep, AuthFlow } from "./tabs/AccountTab";
 import { KeybindsTab } from "./tabs/KeybindsTab";
 import { IS_SELF_HOSTING_CLIENT } from "@/lib/config";
+import { toast } from "sonner";
+import { useAnalytics } from "@/hooks/useAnalytics";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -68,6 +81,287 @@ export function SettingsDivider() {
   );
 }
 
+// Pricing features for the left side panel
+const SUBSCRIPTION_FEATURES = [
+  {
+    icon: Sparkles,
+    title: "All Premium Models",
+    description: "Claude Opus, GPT-4o, o3, Gemini Pro and more",
+  },
+  {
+    icon: InfinityIcon,
+    title: "10,000 Credits Monthly",
+    description: "Generous monthly allowance, buy more anytime",
+  },
+  {
+    icon: Zap,
+    title: "Premium Features",
+    description: "Web search, image uploads, bring your own API keys",
+  },
+  {
+    icon: Key,
+    title: "BYOK Support",
+    description: "Use your own API keys to bypass credit usage",
+  },
+];
+
+// Left side pricing panel component
+function PricingPanel({
+  variant,
+}: {
+  variant: "signUp" | "signIn" | "subscribe";
+}) {
+  const isSignIn = variant === "signIn";
+
+  return (
+    <div
+      className="relative flex flex-col flex-1 justify-between p-10 overflow-hidden"
+      style={{
+        backgroundColor: "var(--color-background-secondary)",
+        borderRight: "1px solid var(--color-border-muted)",
+      }}
+    >
+      {/* Decorative gradient orbs */}
+      <div
+        className="-top-32 -left-32 absolute opacity-30 blur-3xl rounded-full w-64 h-64"
+        style={{ backgroundColor: "var(--color-accent-primary)" }}
+      />
+      <div
+        className="-right-32 -bottom-32 absolute opacity-20 blur-3xl rounded-full w-96 h-96"
+        style={{ backgroundColor: "var(--color-accent-primary)" }}
+      />
+
+      {/* Header */}
+      <div className="z-10 relative">
+        <h1
+          className="mb-3 font-bold text-4xl tracking-tight"
+          style={{ color: "var(--color-text-primary)" }}
+        >
+          {isSignIn ? "Welcome back" : "Ourin Pro"}
+        </h1>
+        <p className="text-lg" style={{ color: "var(--color-text-secondary)" }}>
+          {isSignIn
+            ? "Sign in to continue your conversations"
+            : "Your AI assistant, your way"}
+        </p>
+      </div>
+
+      {/* Features list or welcome message */}
+      <div className="z-10 relative space-y-5">
+        {isSignIn ? (
+          // Welcome back messaging
+          <>
+            <div className="flex items-start gap-3">
+              <Check
+                className="mt-0.5 w-5 h-5 shrink-0"
+                style={{ color: "var(--color-accent-primary)" }}
+              />
+              <p
+                className="text-sm"
+                style={{ color: "var(--color-text-secondary)" }}
+              >
+                Your conversations and settings are waiting for you
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <Check
+                className="mt-0.5 w-5 h-5 shrink-0"
+                style={{ color: "var(--color-accent-primary)" }}
+              />
+              <p
+                className="text-sm"
+                style={{ color: "var(--color-text-secondary)" }}
+              >
+                Continue with all the models you love
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <Check
+                className="mt-0.5 w-5 h-5 shrink-0"
+                style={{ color: "var(--color-accent-primary)" }}
+              />
+              <p
+                className="text-sm"
+                style={{ color: "var(--color-text-secondary)" }}
+              >
+                Your custom themes and preferences are saved
+              </p>
+            </div>
+          </>
+        ) : (
+          // Pricing features
+          SUBSCRIPTION_FEATURES.map((feature) => (
+            <div key={feature.title} className="flex items-start gap-3">
+              <div
+                className="flex flex-shrink-0 justify-center items-center mt-0.5 rounded w-6 h-6"
+                style={{
+                  backgroundColor: "var(--color-accent-primary-muted)",
+                }}
+              >
+                <feature.icon
+                  className="w-3.5 h-3.5"
+                  style={{ color: "var(--color-accent-primary)" }}
+                />
+              </div>
+              <div>
+                <h3
+                  className="font-medium text-sm"
+                  style={{ color: "var(--color-text-primary)" }}
+                >
+                  {feature.title}
+                </h3>
+                <p
+                  className="text-sm"
+                  style={{ color: "var(--color-text-muted)" }}
+                >
+                  {feature.description}
+                </p>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Footer - pricing */}
+      <div className="z-10 relative">
+        {!isSignIn && (
+          <div className="mb-2">
+            <span
+              className="font-bold text-3xl"
+              style={{ color: "var(--color-accent-primary)" }}
+            >
+              $10
+            </span>
+            <span
+              className="text-base"
+              style={{ color: "var(--color-text-muted)" }}
+            >
+              /month
+            </span>
+          </div>
+        )}
+        <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+          {isSignIn
+            ? "Secure, encrypted, and private"
+            : "Cancel anytime. No hidden fees."}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// Subscribe panel for signed-in non-subscribers
+function SubscribePanel({ onClose }: { onClose: () => void }) {
+  const { signOut } = useAuthActions();
+  const analytics = useAnalytics();
+  const generateChatToken = useMutation(api.chatAuth.generateChatToken);
+  const tierInfo = useQuery(api.billing.getUserTier);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubscribe = async () => {
+    setIsLoading(true);
+    analytics.trackSubscriptionEvent({
+      tier: tierInfo?.tier ?? "free",
+      action: "checkout_started",
+    });
+    try {
+      const tokenResult = await generateChatToken();
+      if (!tokenResult) {
+        toast.error("Please sign in to subscribe");
+        setIsLoading(false);
+        return;
+      }
+      const response = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${tokenResult.token}`,
+        },
+        body: JSON.stringify({}),
+      });
+      if (!response.ok) throw new Error("Failed to create checkout session");
+      const { url } = await response.json();
+      if (url) window.location.href = url;
+    } catch (error) {
+      console.error("Checkout error:", error);
+      toast.error("Failed to start checkout", {
+        description: "Please try again.",
+      });
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await signOut();
+    onClose();
+  };
+
+  return (
+    <div className="relative flex flex-col flex-1">
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        className="top-4 right-4 z-10 absolute hover:bg-[var(--color-background-hover)] p-1.5 rounded-sm transition-colors"
+        style={{ color: "var(--color-text-muted)" }}
+      >
+        <X className="w-5 h-5" />
+      </button>
+
+      {/* Centered content */}
+      <div className="flex flex-col flex-1 justify-center items-center px-12 py-8">
+        <div className="space-y-8 w-full max-w-sm text-center">
+          <div>
+            <h2
+              className="mb-2 font-semibold text-2xl"
+              style={{ color: "var(--color-text-primary)" }}
+            >
+              Ready to upgrade?
+            </h2>
+            <p
+              className="text-sm"
+              style={{ color: "var(--color-text-secondary)" }}
+            >
+              Get access to all premium models and features
+            </p>
+          </div>
+
+          <button
+            onClick={handleSubscribe}
+            disabled={isLoading}
+            className="flex justify-center items-center gap-2 py-3 rounded-sm w-full font-medium text-sm transition-colors disabled:opacity-50"
+            style={{
+              backgroundColor: "var(--color-accent-primary)",
+              color: "var(--color-text-inverse)",
+            }}
+          >
+            {isLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <>
+                <CreditCard className="w-4 h-4" />
+                Subscribe - $10/month
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={handleLogout}
+            className="flex justify-center items-center gap-2 py-2.5 rounded-sm w-full font-medium text-sm transition-colors"
+            style={{
+              backgroundColor: "transparent",
+              color: "var(--color-text-muted)",
+              border: "1px solid var(--color-border-default)",
+            }}
+          >
+            <LogOut className="w-4 h-4" />
+            Log out
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   // Filter out API Keys tab in self-hosting mode
   const tabs = useMemo(
@@ -83,7 +377,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   // Auth form state - lifted here to survive AccountTab remounts during auth state changes
   const [signUpStep, setSignUpStep] = useState<SignUpStep>("profile");
-  const [authFlow, setAuthFlow] = useState<AuthFlow>("signIn");
+  // Default to signUp flow for new users
+  const [authFlow, setAuthFlow] = useState<AuthFlow>("signUp");
 
   // Check if user is anonymous
   const { isAuthenticated } = useConvexAuth();
@@ -91,20 +386,37 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     api.settings.getCurrentUser,
     isAuthenticated ? {} : "skip"
   );
+  const tierInfo = useQuery(
+    api.billing.getUserTier,
+    IS_SELF_HOSTING_CLIENT ? "skip" : {}
+  );
+
   const isAnonymousUser = !isAuthenticated || currentUser?.isAnonymous;
   const isFullyAuthenticated =
     isAuthenticated && currentUser?.emailVerified && !currentUser?.isAnonymous;
+  const isSubscriber = IS_SELF_HOSTING_CLIENT
+    ? true
+    : tierInfo?.tier === "subscriber";
+  const isSignedInNonSubscriber =
+    !IS_SELF_HOSTING_CLIENT && isFullyAuthenticated && !isSubscriber;
 
   // Track previous state to detect successful sign-in/sign-up
   const wasNotFullyAuthRef = useRef(!isFullyAuthenticated);
 
-  // Close modal when user successfully signs in/up (transitions to fully authenticated with verified email)
+  // Don't close modal on auth - instead we redirect to Stripe for new signups
+  // For sign-in, we close the modal
   useEffect(() => {
-    if (wasNotFullyAuthRef.current && isFullyAuthenticated && isOpen) {
+    // Only close for sign-in flow, not sign-up (sign-up goes to Stripe)
+    if (
+      wasNotFullyAuthRef.current &&
+      isFullyAuthenticated &&
+      isOpen &&
+      authFlow === "signIn"
+    ) {
       onClose();
     }
     wasNotFullyAuthRef.current = !isFullyAuthenticated;
-  }, [isFullyAuthenticated, isOpen, onClose]);
+  }, [isFullyAuthenticated, isOpen, onClose, authFlow]);
 
   // Close on escape key
   useEffect(() => {
@@ -135,8 +447,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   if (!isOpen) return null;
 
-  // Simplified modal for users who need to authenticate (anonymous OR unverified email)
-  // Keep showing this layout throughout the entire signup flow to prevent remounting
+  // Modal variant 1: Anonymous users need to sign up (or sign in)
   const needsAuth = !isFullyAuthenticated;
 
   if (needsAuth) {
@@ -156,89 +467,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             border: "1px solid var(--color-border-default)",
           }}
         >
-          {/* Left side - Branding */}
-          <div
-            className="relative flex flex-col flex-1 justify-between p-10 overflow-hidden"
-            style={{
-              backgroundColor: "var(--color-background-secondary)",
-              borderRight: "1px solid var(--color-border-muted)",
-            }}
-          >
-            {/* Decorative gradient orbs */}
-            <div
-              className="-top-32 -left-32 absolute opacity-30 blur-3xl rounded-full w-64 h-64"
-              style={{ backgroundColor: "var(--color-accent-primary)" }}
-            />
-            <div
-              className="-right-32 -bottom-32 absolute opacity-20 blur-3xl rounded-full w-96 h-96"
-              style={{ backgroundColor: "var(--color-accent-primary)" }}
-            />
-
-            {/* Logo and tagline */}
-            <div className="z-10 relative">
-              <h1
-                className="mb-3 font-bold text-4xl tracking-tight"
-                style={{ color: "var(--color-text-primary)" }}
-              >
-                Ourin
-              </h1>
-              <p
-                className="text-lg"
-                style={{ color: "var(--color-text-secondary)" }}
-              >
-                Your AI assistant, your way.
-              </p>
-            </div>
-
-            {/* Features list */}
-            <div className="z-10 relative space-y-6">
-              {[
-                {
-                  title: "All the best models",
-                  description: "GPT, Claude, and Gemini models in one place",
-                },
-                {
-                  title: "Secure and Open Source",
-                  description:
-                    "Fully auditable source code, no need to trust a black box",
-                },
-                {
-                  title: "Personalized experience",
-                  description:
-                    "Custom themes, dynamic system prompting, and keybinds",
-                },
-              ].map((feature) => (
-                <div key={feature.title} className="flex items-start gap-3">
-                  <div
-                    className="mt-[6px] rounded-full w-2 h-2 shrink-0"
-                    style={{ backgroundColor: "var(--color-accent-primary)" }}
-                  />
-                  <div>
-                    <h3
-                      className="font-medium text-sm"
-                      style={{ color: "var(--color-text-primary)" }}
-                    >
-                      {feature.title}
-                    </h3>
-                    <p
-                      className="text-sm"
-                      style={{ color: "var(--color-text-muted)" }}
-                    >
-                      {feature.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Footer */}
-            <p
-              className="z-10 relative text-xs"
-              style={{ color: "var(--color-text-muted)" }}
-            >
-              Free to start · No credit card required
-            </p>
-          </div>
+          {/* Left side - Pricing/Welcome panel */}
+          <PricingPanel variant={authFlow === "signIn" ? "signIn" : "signUp"} />
 
           {/* Right side - Auth form */}
           <div className="relative flex flex-col flex-1">
@@ -263,6 +493,34 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Modal variant 2: Signed-in but not subscribed - show subscribe modal
+  if (isSignedInNonSubscriber) {
+    return (
+      <div className="z-50 fixed inset-0 flex justify-center items-center">
+        {/* Backdrop */}
+        <div
+          className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+          onClick={onClose}
+        />
+
+        {/* Modal */}
+        <div
+          className="z-10 relative flex shadow-2xl mx-4 rounded-sm w-full max-w-[1000px] h-[780px] overflow-hidden animate-scale-in"
+          style={{
+            backgroundColor: "var(--color-background-elevated)",
+            border: "1px solid var(--color-border-default)",
+          }}
+        >
+          {/* Left side - Pricing panel */}
+          <PricingPanel variant="subscribe" />
+
+          {/* Right side - Subscribe button + logout */}
+          <SubscribePanel onClose={onClose} />
         </div>
       </div>
     );
