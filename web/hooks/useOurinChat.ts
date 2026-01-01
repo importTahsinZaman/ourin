@@ -884,26 +884,28 @@ export function useOurinChat({
           { coreNames, persistToDb: true }
         );
 
-        // Build final assistant message for UI state
-        const assistantMessage: UIMessage = {
-          id: assistantMessageId,
-          role: "assistant",
-          parts: [...orderedParts],
-          model,
-          createdAt: new Date(),
-          metadata: {
-            coreNames,
-            ...(reasoningLevel !== undefined && { reasoningLevel }),
-            ...(totalThinkingDuration > 0 && {
-              thinkingDuration: totalThinkingDuration,
-            }),
-          },
-        };
-
-        // Update local state with final assistant message (only if still viewing this conversation)
+        // Update the existing assistant message in place with final metadata
+        // This avoids replacing the message object, which would cause a flash/remount
         if (conversationIdRef.current === convId) {
-          const finalMessages = [...updatedMessages, assistantMessage];
-          setMessages(finalMessages);
+          setMessages((prev) => {
+            return prev.map((msg) => {
+              if (msg.id === assistantMessageId && msg.role === "assistant") {
+                return {
+                  ...msg,
+                  parts: [...orderedParts],
+                  metadata: {
+                    ...msg.metadata,
+                    coreNames,
+                    ...(reasoningLevel !== undefined && { reasoningLevel }),
+                    ...(totalThinkingDuration > 0 && {
+                      thinkingDuration: totalThinkingDuration,
+                    }),
+                  },
+                };
+              }
+              return msg;
+            });
+          });
         }
         // Always update completion state (global bookkeeping)
         setStatus("ready");
@@ -1069,28 +1071,30 @@ export function useOurinChat({
             { coreNames, persistToDb: true }
           );
 
-        // Build new assistant message for UI state
-        const assistantMessage: UIMessage = {
-          id: assistantMessageId,
-          role: "assistant",
-          parts: [...orderedParts],
-          model: regenModel,
-          createdAt: new Date(),
-          metadata: {
-            coreNames,
-            ...(regenReasoningLevel !== undefined && {
-              reasoningLevel: regenReasoningLevel,
-            }),
-            ...(totalThinkingDuration > 0 && {
-              thinkingDuration: totalThinkingDuration,
-            }),
-          },
-        };
-
-        // Update local state (only if still viewing this conversation)
+        // Update the existing assistant message in place with final metadata
+        // This avoids replacing the message object, which would cause a flash/remount
         if (conversationIdRef.current === convId) {
-          const finalMessages = [...messagesWithNewUser, assistantMessage];
-          setMessages(finalMessages);
+          setMessages((prev) => {
+            return prev.map((msg) => {
+              if (msg.id === assistantMessageId && msg.role === "assistant") {
+                return {
+                  ...msg,
+                  parts: [...orderedParts],
+                  metadata: {
+                    ...msg.metadata,
+                    coreNames,
+                    ...(regenReasoningLevel !== undefined && {
+                      reasoningLevel: regenReasoningLevel,
+                    }),
+                    ...(totalThinkingDuration > 0 && {
+                      thinkingDuration: totalThinkingDuration,
+                    }),
+                  },
+                };
+              }
+              return msg;
+            });
+          });
         }
         // Always update completion state (global bookkeeping)
         setStatus("ready");
@@ -1238,28 +1242,30 @@ export function useOurinChat({
             { coreNames, persistToDb: true }
           );
 
-        // Build assistant message for UI state
-        const assistantMessage: UIMessage = {
-          id: assistantMessageId,
-          role: "assistant",
-          parts: [...orderedParts],
-          model: editModel,
-          createdAt: new Date(),
-          metadata: {
-            coreNames,
-            ...(editReasoningLevel !== undefined && {
-              reasoningLevel: editReasoningLevel,
-            }),
-            ...(totalThinkingDuration > 0 && {
-              thinkingDuration: totalThinkingDuration,
-            }),
-          },
-        };
-
-        // Update local state (only if still viewing this conversation)
+        // Update the existing assistant message in place with final metadata
+        // This avoids replacing the message object, which would cause a flash/remount
         if (conversationIdRef.current === convId) {
-          const finalMessages = [...messagesWithEdited, assistantMessage];
-          setMessages(finalMessages);
+          setMessages((prev) => {
+            return prev.map((msg) => {
+              if (msg.id === assistantMessageId && msg.role === "assistant") {
+                return {
+                  ...msg,
+                  parts: [...orderedParts],
+                  metadata: {
+                    ...msg.metadata,
+                    coreNames,
+                    ...(editReasoningLevel !== undefined && {
+                      reasoningLevel: editReasoningLevel,
+                    }),
+                    ...(totalThinkingDuration > 0 && {
+                      thinkingDuration: totalThinkingDuration,
+                    }),
+                  },
+                };
+              }
+              return msg;
+            });
+          });
         }
         // Always update completion state (global bookkeeping)
         setStatus("ready");

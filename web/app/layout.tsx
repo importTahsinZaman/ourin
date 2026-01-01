@@ -171,6 +171,13 @@ export default async function RootLayout({
   return (
     <html lang="en" className={fontClasses} suppressHydrationWarning>
       <head>
+        {/* React Scan - dev only performance debugging */}
+        {process.env.NODE_ENV === "development" && (
+          <script
+            crossOrigin="anonymous"
+            src="https://unpkg.com/react-scan/dist/auto.global.js"
+          />
+        )}
         {/* Inject theme CSS to prevent flash */}
         <style
           id="ourin-theme"
