@@ -238,6 +238,9 @@ export function ChatArea({
   // Track previous status and conversation to detect transitions
   const prevStatusRef = useRef<string>(status);
   const prevConversationIdRef = useRef<string | null>(conversationId);
+  // Track when we just finished streaming to skip immediate sync (prevents flash)
+  // Use a counter to skip multiple render cycles (Convex update may arrive later)
+  const skipSyncCountRef = useRef(0);
 
   useEffect(() => {
     const wasStreaming =
@@ -245,6 +248,14 @@ export function ChatArea({
       prevStatusRef.current === "submitted";
     const conversationChanged =
       prevConversationIdRef.current !== conversationId;
+    const isNowReady = status === "ready";
+
+    // Detect when streaming just finished in this client
+    // Set counter to skip next few Convex syncs (prevents flash from double-update)
+    // We skip 2 cycles because Convex update may arrive in a later render
+    if (wasStreaming && isNowReady && !conversationChanged) {
+      skipSyncCountRef.current = 2;
+    }
 
     prevStatusRef.current = status;
     prevConversationIdRef.current = conversationId;
@@ -311,6 +322,20 @@ export function ChatArea({
       return;
     // Only sync if we have messages from Convex
     if (!persistedMessages || persistedMessages.length === 0) return;
+
+    // Skip sync if we just finished streaming in this client
+    // This prevents double-update flash (local state already updated by useOurinChat)
+    if (skipSyncCountRef.current > 0) {
+      skipSyncCountRef.current--;
+      // Still update lastSyncedRef to prevent sync on next render
+      const lastMessage = persistedMessages[persistedMessages.length - 1];
+      lastSyncedRef.current = {
+        length: persistedMessages.length,
+        lastMessageId: lastMessage?.id ?? null,
+        partsHash: lastMessage ? JSON.stringify(lastMessage.parts) : null,
+      };
+      return;
+    }
 
     // Check if Convex has more/different messages than our last sync
     const persistedLength = persistedMessages.length;
