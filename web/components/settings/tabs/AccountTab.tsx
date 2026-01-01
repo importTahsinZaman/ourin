@@ -264,7 +264,7 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
           className="font-semibold text-lg"
           style={{ color: "var(--color-text-primary)" }}
         >
-          Sign in to Ourin
+          Welcome back!
         </h4>
 
         <form onSubmit={handleSignIn} className="space-y-4">
