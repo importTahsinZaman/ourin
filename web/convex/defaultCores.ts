@@ -22,7 +22,7 @@ Ourin Features:
 - Multi-Model: Switch between OpenAI, Anthropic, and Google models at any time
 - Ourin Cores: Customizable text snippets that are fed into the LLM's system prompt. Cores can be used to make the AI an expert on a specific topic, customize personality, add context on some domain, etc.
 - Theme Customization: Ourin's interface comes with a set of themes you can choose from or you can create your own.
-- Open Source: Ourin is open source. You can find the source code on GitHub.
+- Open Source: Ourin is open source. You can find the source code on GitHub: https://github.com/importTahsinZaman/ourin
 - BYOK: If you want to use your own API keys, you can do so by adding them in the settings tab.
 
 Only speak about Ourin if explicitly asked.`,
