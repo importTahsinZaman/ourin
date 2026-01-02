@@ -261,12 +261,8 @@ export function StepsAccordion({
                 key={stepId}
                 className={cn(
                   "flex flex-row overflow-hidden shrink-0",
-                  hasContent &&
-                    !stepExpanded &&
-                    "hover:bg-[var(--color-background-hover)] cursor-pointer",
                   !isSingleItem && "pl-3"
                 )}
-                onClick={() => hasContent && toggleStepExpanded(stepId)}
               >
                 {/* Content column */}
                 <div className="flex flex-col w-full min-w-0">
@@ -274,8 +270,10 @@ export function StepsAccordion({
                   <div
                     className={cn(
                       "group/row flex flex-row justify-between items-center gap-4 px-3 py-2 h-[2.625rem]",
-                      hasContent && stepExpanded && "cursor-pointer"
+                      hasContent &&
+                        "hover:bg-[var(--color-background-hover)] cursor-pointer"
                     )}
+                    onClick={() => hasContent && toggleStepExpanded(stepId)}
                   >
                     <div className="flex flex-row items-center gap-2 min-w-0">
                       <div
@@ -346,15 +344,8 @@ export function StepsAccordion({
                 key={stepId}
                 className={cn(
                   "flex flex-row overflow-hidden shrink-0",
-                  !isSearching &&
-                    hasResults &&
-                    !stepExpanded &&
-                    "hover:bg-[var(--color-background-hover)] cursor-pointer",
                   !isSingleItem && "pl-3"
                 )}
-                onClick={() =>
-                  !isSearching && hasResults && toggleStepExpanded(stepId)
-                }
               >
                 {/* Content column */}
                 <div className="flex flex-col w-full min-w-0">
@@ -364,9 +355,11 @@ export function StepsAccordion({
                       "group/row flex flex-row justify-between items-center gap-4 px-3 py-2 h-[2.625rem]",
                       !isSearching &&
                         hasResults &&
-                        stepExpanded &&
-                        "cursor-pointer"
+                        "hover:bg-[var(--color-background-hover)] cursor-pointer"
                     )}
+                    onClick={() =>
+                      !isSearching && hasResults && toggleStepExpanded(stepId)
+                    }
                   >
                     <div className="flex flex-row items-center gap-2 min-w-0">
                       {/* Inline globe icon */}
