@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 
 /**
  * tests for chat component logic.
@@ -471,7 +471,7 @@ describe("Chat Component Logic", () => {
       it("can transition to error from any uploading state", () => {
         const errorableStates: AttachmentStatus[] = ["checking", "uploading"];
 
-        for (const state of errorableStates) {
+        for (const _state of errorableStates) {
           const canError = true;
           expect(canError).toBe(true);
         }
@@ -693,7 +693,7 @@ describe("Chat Component Logic", () => {
       });
 
       it("disabled when model doesn't support it", () => {
-        const isSubscriber = true;
+        const _isSubscriber = true;
         const modelSupportsWebSearch = false;
 
         const shouldShow = modelSupportsWebSearch;

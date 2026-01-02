@@ -367,7 +367,7 @@ function MarkdownRenderer({ content }: { content: string }) {
 }
 
 export const MemoizedMarkdown = memo(
-  function MemoizedMarkdown({ content, id }: MemoizedMarkdownProps) {
+  function MemoizedMarkdown({ content, id: _id }: MemoizedMarkdownProps) {
     return <MarkdownRenderer content={content} />;
   },
   (prevProps, nextProps) => {

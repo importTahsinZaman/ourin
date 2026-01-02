@@ -64,7 +64,7 @@ describe("POST /api/stripe/buy-credits", () => {
       });
 
       const response = await POST(request);
-      const data = await response.json();
+      const _data = await response.json();
 
       expect(response.status).toBe(401);
     });
@@ -81,7 +81,7 @@ describe("POST /api/stripe/buy-credits", () => {
       });
 
       const response = await POST(request);
-      const data = await response.json();
+      const _data = await response.json();
 
       expect(response.status).toBe(401);
     });

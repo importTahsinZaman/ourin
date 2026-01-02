@@ -1,6 +1,5 @@
-import { mutation, query } from "./_generated/server";
+import { mutation } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { v } from "convex/values";
 
 /**
  * generate a short-lived token for users to call the chat aPI.

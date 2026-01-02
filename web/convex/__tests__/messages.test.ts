@@ -426,7 +426,7 @@ describe("Streaming Message Logic", () => {
 
   describe("updateStreamingMessage", () => {
     it("replaces message parts", () => {
-      const originalParts = [{ type: "text" as const, text: "" }];
+      const _originalParts = [{ type: "text" as const, text: "" }];
       const newParts = [
         { type: "text" as const, text: "Hello " },
         { type: "reasoning" as const, text: "thinking...", id: "r1" },

@@ -187,7 +187,7 @@ describe("Account Linking Logic (createOrUpdateUser callback)", () => {
         emailVerificationTime: 1000000000000, // existing timestamp
       };
       const profile = { emailVerified: true };
-      const now = Date.now();
+      const _now = Date.now();
 
       // only set if not already set
       const shouldSetEmailVerificationTime =

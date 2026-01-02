@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
-import {
-  verifyChatToken,
-  extractChatToken,
-  type TokenVerificationError,
-} from "@/lib/verifyChatToken";
+import { verifyChatToken, extractChatToken } from "@/lib/verifyChatToken";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import { IS_SELF_HOSTING } from "@/lib/config";

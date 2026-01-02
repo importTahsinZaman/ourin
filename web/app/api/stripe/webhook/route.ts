@@ -121,6 +121,7 @@ export async function POST(req: Request) {
             centsPaid: price.unit_amount ?? 0,
           });
 
+          // eslint-disable-next-line no-console
           console.log(
             `Credit pack recorded for user ${userId}: ${config.creditPackAmount} credits`
           );
@@ -159,6 +160,7 @@ export async function POST(req: Request) {
             currentPeriodEnd: period.end,
           });
 
+          // eslint-disable-next-line no-console
           console.log(`Subscription created for user ${userId}`);
 
           await trackServerEvent(userId, "subscription_event", {
@@ -196,6 +198,7 @@ export async function POST(req: Request) {
           currentPeriodEnd: period.end,
         });
 
+        // eslint-disable-next-line no-console
         console.log(`Subscription period updated for ${subscriptionId}`);
         break;
       }
@@ -214,6 +217,7 @@ export async function POST(req: Request) {
           currentPeriodEnd: period.end,
         });
 
+        // eslint-disable-next-line no-console
         console.log(
           `Subscription ${subscriptionId} updated to ${subscription.status}`
         );
@@ -234,6 +238,7 @@ export async function POST(req: Request) {
           currentPeriodEnd: period.end,
         });
 
+        // eslint-disable-next-line no-console
         console.log(`Subscription ${subscriptionId} canceled`);
 
         // try to get userId from subscription metadata
@@ -248,6 +253,7 @@ export async function POST(req: Request) {
       }
 
       default:
+        // eslint-disable-next-line no-console
         console.log(`Unhandled event type: ${event.type}`);
     }
 

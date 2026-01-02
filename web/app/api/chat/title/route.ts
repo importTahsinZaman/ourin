@@ -1,10 +1,6 @@
 import { generateText } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
-import {
-  verifyChatToken,
-  extractChatToken,
-  type TokenVerificationError,
-} from "@/lib/verifyChatToken";
+import { verifyChatToken, extractChatToken } from "@/lib/verifyChatToken";
 
 /**
  * deterministically extract a clean title from model output.

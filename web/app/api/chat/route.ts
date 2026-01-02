@@ -2,18 +2,14 @@ import { streamText, CoreMessage } from "ai";
 import { anthropic, createAnthropic } from "@ai-sdk/anthropic";
 import { openai, createOpenAI } from "@ai-sdk/openai";
 import { google, createGoogleGenerativeAI } from "@ai-sdk/google";
-import {
-  verifyChatToken,
-  extractChatToken,
-  type TokenVerificationError,
-} from "@/lib/verifyChatToken";
+import { verifyChatToken, extractChatToken } from "@/lib/verifyChatToken";
 import { getModelInfo, FREE_MODEL_ID } from "@/lib/models";
 import { decryptApiKey } from "@/lib/encryption";
 import { fetchAndProcessImage } from "@/lib/imageProcessing";
 import { IS_SELF_HOSTING } from "@/lib/config";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
-import { encodingForModel, getEncoding } from "js-tiktoken";
+import { getEncoding } from "js-tiktoken";
 import { updateActiveTrace } from "@langfuse/tracing";
 
 // ============================================================================
@@ -167,6 +163,7 @@ async function fetchFileAsBase64(url: string): Promise<string> {
 
 // build web search tools based on provider
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function buildWebSearchTools(
   provider: string
 ): Record<string, any> | undefined {
@@ -377,6 +374,7 @@ async function convertMessages(
     }
 
     // use type assertion for content due to aI sDK v5 type changes
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     converted.push({ role: "user", content: contentParts as any });
   }
 
@@ -518,26 +516,6 @@ export async function POST(req: Request) {
     // convert messages to coreMessage format (images auto-resized to fit provider limits)
     const coreMessages = await convertMessages(messages, modelInfo.provider);
 
-    // log for debugging
-    const imageCount = coreMessages.reduce((count, msg) => {
-      if (msg.role === "user" && Array.isArray(msg.content)) {
-        return (
-          count +
-          msg.content.filter((p) => (p as ContentPart).type === "image").length
-        );
-      }
-      return count;
-    }, 0);
-
-    console.log("Processing chat request:", {
-      model: requestedModel,
-      userId,
-      tier: tier.tier,
-      useCustomKey,
-      messagesCount: messages.length,
-      imageCount,
-    });
-
     // update langfuse trace with session and user info
     if (conversationId) {
       updateActiveTrace({
@@ -574,8 +552,6 @@ export async function POST(req: Request) {
       reasoningLevel,
       modelInfo.reasoningParameter?.kind
     );
-
-    console.log("Provider options:", providerOptions);
 
     // build headers for interleaved thinking (anthropic only)
     // this allows reasoning tokens to appear between tool calls
@@ -643,8 +619,6 @@ export async function POST(req: Request) {
         // double-check before mutation to minimize race with onFinish
         if (onFinishCalled) return;
 
-        console.log(`Token checkpoint: ${inputTokens} in, ${outputTokens} out`);
-
         try {
           await convex.mutation(api.messages.updateTokens, {
             conversationId,
@@ -679,10 +653,6 @@ export async function POST(req: Request) {
       if (!onFinishCalled && accumulatedText.length > 0 && conversationId) {
         const inputTokens = getInputTokens();
         const outputTokens = countTokens(accumulatedText);
-
-        console.log(
-          `Stream aborted - final: ${inputTokens} in, ${outputTokens} out`
-        );
 
         try {
           await convex.mutation(api.messages.updateTokens, {
@@ -731,14 +701,9 @@ export async function POST(req: Request) {
       onError: (error) => {
         console.error("Stream error:", error);
       },
-      onFinish: async ({ usage, text, finishReason, sources }) => {
+      onFinish: async ({ usage, sources }) => {
         onFinishCalled = true;
         clearTokenInterval(); // stop checkpoint updates, we have exact tokens now
-        console.log("Stream finished:", {
-          finishReason,
-          textLength: text?.length || 0,
-          usage,
-        });
         // track token usage for all users (needed for billing calculations)
         if (usage && conversationId) {
           // cast to tokenUsage because property names vary across sDK versions
@@ -752,7 +717,7 @@ export async function POST(req: Request) {
             // update tokens and automatically deduct purchased credits if needed
             // this is atomic - convex handles subscription balance check and fIFO deduction
             // pass usedOwnKey to skip credit deduction when user's own aPI key was used
-            const result = await convex.mutation(api.messages.updateTokens, {
+            await convex.mutation(api.messages.updateTokens, {
               conversationId,
               userId,
               model: requestedModel,
@@ -761,15 +726,6 @@ export async function POST(req: Request) {
               usedOwnKey: useCustomKey,
               serverSecret: process.env.CHAT_AUTH_SECRET!,
             });
-            console.log(
-              `Usage tracked for ${userId}: ${inputTokens} in, ${outputTokens} out${
-                useCustomKey
-                  ? " (used own API key)"
-                  : result.creditsDeducted > 0
-                    ? `, deducted ${result.creditsDeducted} purchased credits`
-                    : ""
-              }`
-            );
           } catch (err) {
             // log error but don't fail the request (usage tracking is best-effort)
             console.error("Failed to track usage:", err);
@@ -811,7 +767,6 @@ export async function POST(req: Request) {
                 conversationId,
                 sources: mappedSources,
               });
-              console.log(`Saved ${mappedSources.length} web search sources`);
             }
           } catch (err) {
             console.error("Failed to save sources:", err);

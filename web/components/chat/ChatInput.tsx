@@ -23,7 +23,6 @@ import {
   validateFile,
   useFileUpload,
   shouldDeleteFromStorage,
-  MAX_FILE_SIZE,
   ALLOWED_TYPES,
 } from "@/hooks/useFileUpload";
 import { setCookie } from "@/lib/cookies";

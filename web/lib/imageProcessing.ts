@@ -110,11 +110,6 @@ export async function processImageForProvider(
       (quality > 50 || newWidth > 200)
     );
 
-    console.log(
-      `Image processed: ${(imageBuffer.length / 1024 / 1024).toFixed(2)}MB → ${(outputBuffer!.length / 1024 / 1024).toFixed(2)}MB ` +
-        `(${width}x${height} → ${newWidth}x${newHeight}, quality: ${quality})`
-    );
-
     return {
       buffer: outputBuffer!,
       mimeType: outputMimeType,
@@ -135,7 +130,7 @@ export async function fetchAndProcessImage(
   url: string,
   mimeType: string,
   provider: string,
-  fileName?: string
+  _fileName?: string
 ): Promise<{ base64: string; mimeType: string }> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
@@ -148,10 +143,6 @@ export async function fetchAndProcessImage(
 
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-
-    console.log(
-      `Fetched image: ${fileName || "unknown"} (${(buffer.length / 1024 / 1024).toFixed(2)}MB)`
-    );
 
     // process image to fit within provider limits
     const processed = await processImageForProvider(buffer, mimeType, provider);

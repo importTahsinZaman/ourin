@@ -1,11 +1,7 @@
 import { NextResponse } from "next/server";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
-import {
-  verifyChatToken,
-  extractChatToken,
-  type TokenVerificationError,
-} from "@/lib/verifyChatToken";
+import { verifyChatToken, extractChatToken } from "@/lib/verifyChatToken";
 import { encryptApiKey, getKeyHint, validateKeyFormat } from "@/lib/encryption";
 import { IS_SELF_HOSTING } from "@/lib/config";
 

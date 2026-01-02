@@ -2,7 +2,6 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { X, Check, Trash2, Undo2, Redo2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 const BASE_COLORS = [
   { name: "Red", value: "#e63946" },

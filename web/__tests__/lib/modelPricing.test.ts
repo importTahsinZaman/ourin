@@ -268,7 +268,7 @@ describe("modelPricing", () => {
     });
 
     it("model IDs are case-sensitive", () => {
-      const pricing1 = getModelPricing("anthropic:claude-3-5-haiku");
+      const _pricing1 = getModelPricing("anthropic:claude-3-5-haiku");
       const pricing2 = getModelPricing("ANTHROPIC:CLAUDE-3-5-HAIKU");
 
       // second should return default (unknown model)
