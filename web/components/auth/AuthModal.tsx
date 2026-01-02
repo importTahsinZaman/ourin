@@ -56,7 +56,15 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         // For signin, signingIn: false means wrong credentials
         setError("Invalid email or password");
         setLoading(false);
+      } else {
+        // Success - reset loading state immediately
+        // Modal close is handled by parent component via auth state,
+        // but we reset loading here in case of any delay
+        setLoading(false);
       }
+    } else {
+      // Unexpected result format - reset loading to avoid stuck state
+      setLoading(false);
     }
     // On success, auth state updates automatically and HomeClient will re-render
   };
@@ -75,6 +83,9 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
     if (result && "signingIn" in result && !result.signingIn) {
       setError("Invalid verification code. Please try again.");
+      setLoading(false);
+    } else {
+      // Success - reset loading state immediately
       setLoading(false);
     }
     // On success, auth state updates automatically

@@ -115,10 +115,16 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
           setError("Invalid email or password");
           setLoading(false);
         } else {
-          // Success
+          // Success - reset loading state immediately
+          // Modal close is handled by SettingsModal's auth state effect,
+          // but we reset loading here in case of any delay
+          setLoading(false);
           analytics.trackSignIn("email");
           toast.success("Welcome back!");
         }
+      } else {
+        // Unexpected result format - reset loading to avoid stuck state
+        setLoading(false);
       }
     } catch {
       setError("Invalid email or password");
