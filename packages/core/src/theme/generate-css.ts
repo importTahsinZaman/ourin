@@ -75,7 +75,7 @@ function deriveAllColors(
   const vars: string[] = [];
 
   // Background variations
-  const bgSecondary = isLight ? darken(background, 2) : lighten(background, 3);
+  const bgSecondary = isLight ? darken(background, 2) : darken(background, 0.5);
   const bgTertiary = isLight ? darken(background, 4) : lighten(background, 5);
   const bgElevated = isLight ? lighten(background, 2) : lighten(background, 4);
   // Hover/active colors incorporate accent for a subtle tint
