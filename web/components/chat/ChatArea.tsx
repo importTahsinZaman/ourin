@@ -528,11 +528,17 @@ export function ChatArea({
   const handleRegenerate = useCallback(
     (
       messageId: string,
-      model?: string,
-      reasoningLevelOverride?: string | number
+      options?: {
+        model?: string;
+        reasoningLevel?: string | number;
+        webSearchEnabled?: boolean;
+      }
     ) => {
       // scroll to show the regenerated user message
       shouldScrollToUserMessageRef.current = true;
+
+      const model = options?.model;
+      const reasoningLevelOverride = options?.reasoningLevel;
 
       // update current configuration to match what's being regenerated
       if (model && model !== selectedModel) {
@@ -542,7 +548,12 @@ export function ChatArea({
         onReasoningLevelChange(reasoningLevelOverride);
       }
 
-      regenerate({ messageId, model, reasoningLevel: reasoningLevelOverride });
+      regenerate({
+        messageId,
+        model,
+        reasoningLevel: reasoningLevelOverride,
+        webSearchEnabled: options?.webSearchEnabled,
+      });
 
       const effectiveModel = model ?? selectedModel;
       analytics.trackMessageRegenerated({
@@ -643,7 +654,6 @@ export function ChatArea({
       onModelChange={handleModelChange}
       reasoningLevel={reasoningLevel}
       onReasoningLevelChange={onReasoningLevelChange}
-      isAuthenticated={isAuthenticated}
       initialDraft={initialNewChatDraft}
       canSend={sendRestriction.canSend}
       sendBlockedReason={sendRestriction.reason}
@@ -699,7 +709,6 @@ export function ChatArea({
             onRegenerate={handleRegenerate}
             onFork={handleFork}
             currentModel={selectedModel}
-            isAuthenticated={isAuthenticated}
           />
         </div>
       </div>

@@ -958,6 +958,7 @@ export function useOurinChat({
       messageId?: string;
       model?: string;
       reasoningLevel?: string | number;
+      webSearchEnabled?: boolean;
     }) => {
       const currentMessages = messagesRef.current;
       const convId = conversationIdRef.current;
@@ -967,6 +968,7 @@ export function useOurinChat({
       // use override model/reasoningLevel if provided, otherwise use current values
       const regenModel = options?.model ?? model;
       const regenReasoningLevel = options?.reasoningLevel ?? reasoningLevel;
+      const regenWebSearchEnabled = options?.webSearchEnabled ?? false;
 
       // get current core names for metadata
       const coreNames = getActiveCoreNames?.() ?? [];
@@ -1019,6 +1021,9 @@ export function useOurinChat({
           ...(regenReasoningLevel !== undefined && {
             reasoningLevel: regenReasoningLevel,
           }),
+          ...(regenWebSearchEnabled && {
+            webSearchEnabled: regenWebSearchEnabled,
+          }),
         },
       };
 
@@ -1067,7 +1072,7 @@ export function useOurinChat({
             controller,
             regenModel,
             regenReasoningLevel,
-            undefined, // webSearchEnabled
+            regenWebSearchEnabled,
             { coreNames, persistToDb: true }
           );
 
@@ -1085,6 +1090,9 @@ export function useOurinChat({
                     coreNames,
                     ...(regenReasoningLevel !== undefined && {
                       reasoningLevel: regenReasoningLevel,
+                    }),
+                    ...(regenWebSearchEnabled && {
+                      webSearchEnabled: regenWebSearchEnabled,
                     }),
                     ...(totalThinkingDuration > 0 && {
                       thinkingDuration: totalThinkingDuration,
