@@ -958,6 +958,8 @@ export function useOurinChat({
       messageId?: string;
       model?: string;
       reasoningLevel?: string | number;
+      attachments?: FilePart[];
+      webSearchEnabled?: boolean;
     }) => {
       const currentMessages = messagesRef.current;
       const convId = conversationIdRef.current;
@@ -967,6 +969,8 @@ export function useOurinChat({
       // use override model/reasoningLevel if provided, otherwise use current values
       const regenModel = options?.model ?? model;
       const regenReasoningLevel = options?.reasoningLevel ?? reasoningLevel;
+      const regenWebSearchEnabled = options?.webSearchEnabled ?? false;
+      const regenAttachments = options?.attachments ?? [];
 
       // get current core names for metadata
       const coreNames = getActiveCoreNames?.() ?? [];
@@ -1008,16 +1012,25 @@ export function useOurinChat({
       const messagesBeforeUser = currentMessages.slice(0, userMessageIndex);
 
       // create a new copy of the user message (for token tracking)
+      // if new attachments are provided, append them to the existing parts
+      const updatedParts =
+        regenAttachments.length > 0
+          ? [...userMessageToRegen.parts, ...regenAttachments]
+          : userMessageToRegen.parts;
+
       const newUserMessage: UIMessage = {
         id: crypto.randomUUID(),
         role: "user",
-        parts: userMessageToRegen.parts,
+        parts: updatedParts,
         model: regenModel,
         createdAt: new Date(),
         metadata: {
           coreNames,
           ...(regenReasoningLevel !== undefined && {
             reasoningLevel: regenReasoningLevel,
+          }),
+          ...(regenWebSearchEnabled && {
+            webSearchEnabled: regenWebSearchEnabled,
           }),
         },
       };
@@ -1067,7 +1080,7 @@ export function useOurinChat({
             controller,
             regenModel,
             regenReasoningLevel,
-            undefined, // webSearchEnabled
+            regenWebSearchEnabled,
             { coreNames, persistToDb: true }
           );
 
@@ -1085,6 +1098,9 @@ export function useOurinChat({
                     coreNames,
                     ...(regenReasoningLevel !== undefined && {
                       reasoningLevel: regenReasoningLevel,
+                    }),
+                    ...(regenWebSearchEnabled && {
+                      webSearchEnabled: regenWebSearchEnabled,
                     }),
                     ...(totalThinkingDuration > 0 && {
                       thinkingDuration: totalThinkingDuration,

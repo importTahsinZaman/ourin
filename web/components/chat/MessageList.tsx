@@ -30,7 +30,6 @@ import {
 import { cn, isImageFile } from "@/lib/utils";
 import { getModelDisplayName, getModelInfo } from "@/lib/models";
 import { MemoizedMarkdown } from "@/components/ui/MemoizedMarkdown";
-import { RegenerateConfigPopover } from "./RegenerateConfigPopover";
 import { StepsAccordion } from "./StepsAccordion";
 import { ModelCoresDropdown } from "./ModelCoresDropdown";
 import { ReasoningDropdown } from "./ReasoningDropdown";
@@ -253,8 +252,12 @@ interface MessageListProps {
   ) => Promise<void>;
   onRegenerate: (
     messageId: string,
-    model?: string,
-    reasoningLevel?: string | number
+    options?: {
+      model?: string;
+      reasoningLevel?: string | number;
+      attachments?: FilePart[];
+      webSearchEnabled?: boolean;
+    }
   ) => void;
   onFork: (messageId: string) => void;
   currentModel: string; // used as fallback if message has no model
@@ -332,26 +335,19 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
       url: string;
       fileName: string;
     } | null>(null);
-    const [regeneratePopoverMessageId, setRegeneratePopoverMessageId] =
-      useState<string | null>(null);
-    const regenerateButtonRefs = useRef<Map<string, HTMLButtonElement>>(
-      new Map()
-    );
 
-    // clean up stale refs when messages change
-    const messageIds = useMemo(
-      () => new Set(messages.map((m) => m.id)),
-      [messages]
-    );
-    // remove refs for messages that no longer exist
-    useMemo(() => {
-      const refs = regenerateButtonRefs.current;
-      for (const id of refs.keys()) {
-        if (!messageIds.has(id)) {
-          refs.delete(id);
-        }
-      }
-    }, [messageIds]);
+    // regenerate config state (inline bar, similar to edit mode)
+    const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
+    const [regenModel, setRegenModel] = useState<string>("");
+    const [regenReasoningLevel, setRegenReasoningLevel] = useState<
+      string | number
+    >("medium");
+    const [regenAttachments, setRegenAttachments] = useState<FilePart[]>([]);
+    const [regenWebSearchEnabled, setRegenWebSearchEnabled] = useState(false);
+
+    // file upload state and refs for regen mode
+    const regenFileInputRef = useRef<HTMLInputElement>(null);
+    const [isUploadingRegenFile, setIsUploadingRegenFile] = useState(false);
 
     // dynamic spacer height - shrinks as assistant response grows
     // start with 0 to avoid hydration mismatch, will be calculated on mount
@@ -522,6 +518,51 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
       setEditWebSearchEnabled(false);
     };
 
+    // regenerate handlers (inline bar)
+    const handleStartRegenerate = (message: UIMessage) => {
+      const messageModel = message.model || currentModel;
+      setRegeneratingId(message.id);
+      setRegenModel(messageModel);
+      setRegenReasoningLevel(
+        message.metadata?.reasoningLevel ??
+          getDefaultReasoningLevel(messageModel)
+      );
+      setRegenAttachments([]);
+      setRegenWebSearchEnabled(message.metadata?.webSearchEnabled ?? false);
+    };
+
+    const handleCancelRegenerate = () => {
+      setRegeneratingId(null);
+      setRegenModel("");
+      setRegenReasoningLevel("medium");
+      setRegenAttachments([]);
+      setRegenWebSearchEnabled(false);
+    };
+
+    const handleConfirmRegenerate = () => {
+      if (!regeneratingId) return;
+
+      const regenModelInfo = getModelInfo(regenModel);
+      onRegenerate(regeneratingId, {
+        model: regenModel,
+        reasoningLevel: regenModelInfo.reasoningParameter
+          ? regenReasoningLevel
+          : undefined,
+        attachments: regenAttachments.length > 0 ? regenAttachments : undefined,
+        webSearchEnabled: regenWebSearchEnabled,
+      });
+
+      setRegeneratingId(null);
+      setRegenModel("");
+      setRegenReasoningLevel("medium");
+      setRegenAttachments([]);
+      setRegenWebSearchEnabled(false);
+    };
+
+    const handleRemoveRegenAttachment = (index: number) => {
+      setRegenAttachments((prev) => prev.filter((_, i) => i !== index));
+    };
+
     // helper to process a file and add to edit attachments
     const processEditFile = useCallback(
       async (file: File, category?: "image" | "document") => {
@@ -618,6 +659,59 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
         }
       },
       [processEditFile]
+    );
+
+    // helper to process a file and add to regen attachments
+    const processRegenFile = useCallback(
+      async (file: File, category?: "image" | "document") => {
+        const attachment = {
+          id: crypto.randomUUID(),
+          file,
+          status: "checking" as const,
+        };
+
+        const result = await processFile(attachment, category);
+
+        if (result.status === "ready" && result.storageId) {
+          setRegenAttachments((prev) => [
+            ...prev,
+            {
+              type: "file" as const,
+              mediaType: file.type,
+              url: result.url ?? "",
+              storageId: result.storageId,
+              fileName: file.name,
+              fileSize: file.size,
+            },
+          ]);
+        }
+      },
+      [processFile]
+    );
+
+    // handle file upload in regen mode
+    const handleRegenFileSelect = useCallback(
+      async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+
+        setIsUploadingRegenFile(true);
+
+        try {
+          for (const file of Array.from(files)) {
+            await processRegenFile(file);
+          }
+        } catch (error) {
+          console.error("Failed to upload file:", error);
+        } finally {
+          setIsUploadingRegenFile(false);
+          // reset the input
+          if (regenFileInputRef.current) {
+            regenFileInputRef.current.value = "";
+          }
+        }
+      },
+      [processRegenFile]
     );
 
     const getTextContent = (message: UIMessage): string => {
@@ -1104,61 +1198,228 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
                 )}
 
                 {/* action buttons - hidden while streaming */}
-                {!(isLastAssistant && isStreaming) && (
-                  <div className="relative flex gap-1 opacity-0 group-hover:opacity-100 mt-2 transition-opacity">
-                    <button
-                      onClick={() => handleCopy(textContent, message.id)}
-                      className="hover:bg-[var(--color-background-hover)] p-1.5 rounded-sm transition-colors"
-                      style={{ color: "var(--color-text-muted)" }}
-                      title="Copy"
-                    >
-                      {copiedId === message.id ? (
-                        <Check className="w-3.5 h-3.5" />
-                      ) : (
-                        <Copy className="w-3.5 h-3.5" />
-                      )}
-                    </button>
-                    <div className="relative">
+                {!(isLastAssistant && isStreaming) &&
+                  regeneratingId !== message.id && (
+                    <div className="relative flex gap-1 opacity-0 group-hover:opacity-100 mt-2 transition-opacity">
                       <button
-                        ref={(el) => {
-                          if (el)
-                            regenerateButtonRefs.current.set(message.id, el);
-                        }}
-                        onClick={() =>
-                          setRegeneratePopoverMessageId(message.id)
-                        }
+                        onClick={() => handleCopy(textContent, message.id)}
+                        className="hover:bg-[var(--color-background-hover)] p-1.5 rounded-sm transition-colors"
+                        style={{ color: "var(--color-text-muted)" }}
+                        title="Copy"
+                      >
+                        {copiedId === message.id ? (
+                          <Check className="w-3.5 h-3.5" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleStartRegenerate(message)}
                         className="hover:bg-[var(--color-background-hover)] p-1.5 rounded-sm transition-colors"
                         style={{ color: "var(--color-text-muted)" }}
                         title="Regenerate"
                       >
                         <RefreshCw className="w-3.5 h-3.5" />
                       </button>
-                      <RegenerateConfigPopover
-                        isOpen={regeneratePopoverMessageId === message.id}
-                        onClose={() => setRegeneratePopoverMessageId(null)}
-                        onRegenerate={(model, reasoningLevel) => {
-                          onRegenerate(message.id, model, reasoningLevel);
-                          setRegeneratePopoverMessageId(null);
-                        }}
-                        messageModel={message.model}
-                        messageReasoningLevel={message.metadata?.reasoningLevel}
-                        messageCoreNames={message.metadata?.coreNames}
-                        fallbackModel={currentModel}
-                        anchorRef={{
-                          current:
-                            regenerateButtonRefs.current.get(message.id) ??
-                            null,
-                        }}
-                      />
+                      <button
+                        onClick={() => onFork(message.id)}
+                        className="hover:bg-[var(--color-background-hover)] p-1.5 rounded-sm transition-colors"
+                        style={{ color: "var(--color-text-muted)" }}
+                        title="Fork conversation"
+                      >
+                        <GitFork className="w-3.5 h-3.5" />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => onFork(message.id)}
-                      className="hover:bg-[var(--color-background-hover)] p-1.5 rounded-sm transition-colors"
-                      style={{ color: "var(--color-text-muted)" }}
-                      title="Fork conversation"
+                  )}
+
+                {/* regenerate config bar - inline, similar to edit mode */}
+                {regeneratingId === message.id && (
+                  <div className="mt-2">
+                    {/* show attached files above the bar */}
+                    {regenAttachments.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {regenAttachments.map((filePart, i) => {
+                          const isImage = isImageFile(filePart.mediaType);
+
+                          if (isImage && filePart.url) {
+                            return (
+                              <div
+                                key={i}
+                                className="group/attachment relative rounded-sm overflow-hidden"
+                                style={{
+                                  backgroundColor:
+                                    "var(--color-background-secondary)",
+                                  border:
+                                    "1px solid var(--color-border-default)",
+                                }}
+                              >
+                                <img
+                                  src={filePart.url}
+                                  alt={filePart.fileName}
+                                  className="w-20 h-20 object-cover"
+                                />
+                                <button
+                                  onClick={() => handleRemoveRegenAttachment(i)}
+                                  className="top-1 right-1 absolute bg-black/60 hover:bg-black/80 opacity-0 group-hover/attachment:opacity-100 p-1 rounded-full text-white transition-opacity"
+                                  title="Remove attachment"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div
+                              key={i}
+                              className="group/attachment relative flex items-center gap-2 px-3 py-2 rounded-sm"
+                              style={{
+                                backgroundColor:
+                                  "var(--color-background-secondary)",
+                                border: "1px solid var(--color-border-default)",
+                              }}
+                            >
+                              <span
+                                className="font-medium text-xs"
+                                style={{ color: "var(--color-text-secondary)" }}
+                              >
+                                {truncateFileName(filePart.fileName, 20)}
+                              </span>
+                              <span
+                                className="px-1.5 py-0.5 rounded font-medium text-[10px]"
+                                style={{
+                                  backgroundColor:
+                                    "var(--color-background-tertiary)",
+                                  color: "var(--color-text-muted)",
+                                }}
+                              >
+                                {getFileExtension(
+                                  filePart.fileName,
+                                  filePart.mediaType
+                                )}
+                              </span>
+                              <button
+                                onClick={() => handleRemoveRegenAttachment(i)}
+                                className="opacity-60 hover:opacity-100 p-0.5 rounded-full transition-opacity"
+                                style={{ color: "var(--color-text-muted)" }}
+                                title="Remove attachment"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* config bar */}
+                    <div
+                      className="flex items-center gap-1 px-2 py-1.5 rounded-sm"
+                      style={{
+                        backgroundColor: "var(--color-background-secondary)",
+                        border: "1px solid var(--color-border-default)",
+                      }}
                     >
-                      <GitFork className="w-3.5 h-3.5" />
-                    </button>
+                      {/* hidden file input */}
+                      <input
+                        ref={regenFileInputRef}
+                        type="file"
+                        multiple
+                        accept="image/*,.pdf,.doc,.docx,.txt,.json,.csv,.xml,.md"
+                        onChange={handleRegenFileSelect}
+                        className="hidden"
+                      />
+
+                      {/* model & cores selector */}
+                      <ModelCoresDropdown
+                        selectedModel={regenModel}
+                        onModelChange={(modelId) => {
+                          setRegenModel(modelId);
+                          setRegenReasoningLevel(
+                            getDefaultReasoningLevel(modelId)
+                          );
+                        }}
+                        isAuthenticated={isAuthenticated}
+                      />
+
+                      {/* reasoning selector */}
+                      <ReasoningDropdown
+                        selectedModel={regenModel}
+                        reasoningLevel={regenReasoningLevel}
+                        onReasoningLevelChange={setRegenReasoningLevel}
+                      />
+
+                      {/* attach button */}
+                      <button
+                        onClick={() => regenFileInputRef.current?.click()}
+                        disabled={isUploadingRegenFile}
+                        className="flex items-center gap-1 hover:bg-[var(--color-background-hover)] disabled:opacity-50 p-1.5 rounded-sm transition-colors"
+                        style={{ color: "var(--color-text-secondary)" }}
+                        title="Attach files"
+                      >
+                        {isUploadingRegenFile ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Paperclip className="w-4 h-4" />
+                        )}
+                      </button>
+
+                      {/* web search toggle (only for models that support it) */}
+                      {(() => {
+                        const regenModelInfo = getModelInfo(regenModel);
+                        if (!regenModelInfo.supportsWebSearch) return null;
+
+                        return (
+                          <button
+                            onClick={() =>
+                              setRegenWebSearchEnabled(!regenWebSearchEnabled)
+                            }
+                            className={cn(
+                              "flex items-center gap-1 hover:bg-[var(--color-background-hover)] p-1.5 rounded-sm transition-colors"
+                            )}
+                            style={{
+                              color: regenWebSearchEnabled
+                                ? "var(--color-accent-primary)"
+                                : "var(--color-text-secondary)",
+                            }}
+                            title={
+                              regenWebSearchEnabled
+                                ? "Disable web search"
+                                : "Enable web search"
+                            }
+                          >
+                            <Globe className="w-4 h-4" />
+                          </button>
+                        );
+                      })()}
+
+                      {/* spacer */}
+                      <div className="flex-1" />
+
+                      {/* cancel button */}
+                      <button
+                        onClick={handleCancelRegenerate}
+                        className="flex items-center gap-1.5 hover:bg-[var(--color-background-hover)] px-2.5 py-1 rounded-sm text-sm transition-colors"
+                        style={{ color: "var(--color-text-muted)" }}
+                      >
+                        <X className="w-3.5 h-3.5" />
+                        Cancel
+                      </button>
+
+                      {/* regenerate button */}
+                      <button
+                        onClick={handleConfirmRegenerate}
+                        disabled={isUploadingRegenFile}
+                        className="flex items-center gap-1.5 disabled:opacity-50 px-3 py-1 rounded-sm font-medium text-sm transition-colors"
+                        style={{
+                          backgroundColor: "var(--color-accent-primary)",
+                          color: "var(--color-text-inverse)",
+                        }}
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        Regenerate
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

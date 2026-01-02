@@ -528,11 +528,18 @@ export function ChatArea({
   const handleRegenerate = useCallback(
     (
       messageId: string,
-      model?: string,
-      reasoningLevelOverride?: string | number
+      options?: {
+        model?: string;
+        reasoningLevel?: string | number;
+        attachments?: FilePart[];
+        webSearchEnabled?: boolean;
+      }
     ) => {
       // scroll to show the regenerated user message
       shouldScrollToUserMessageRef.current = true;
+
+      const model = options?.model;
+      const reasoningLevelOverride = options?.reasoningLevel;
 
       // update current configuration to match what's being regenerated
       if (model && model !== selectedModel) {
@@ -542,7 +549,13 @@ export function ChatArea({
         onReasoningLevelChange(reasoningLevelOverride);
       }
 
-      regenerate({ messageId, model, reasoningLevel: reasoningLevelOverride });
+      regenerate({
+        messageId,
+        model,
+        reasoningLevel: reasoningLevelOverride,
+        attachments: options?.attachments,
+        webSearchEnabled: options?.webSearchEnabled,
+      });
 
       const effectiveModel = model ?? selectedModel;
       analytics.trackMessageRegenerated({

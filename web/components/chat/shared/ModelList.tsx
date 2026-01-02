@@ -12,7 +12,7 @@ interface ModelListProps {
   canAccessModel: (modelId: string) => boolean;
   getLockReason: () => string;
   canAccessAllModels: boolean;
-  /** Show checkmark on selected model (used in RegenerateConfigPopover) */
+  /** Show checkmark on selected model */
   showCheckmark?: boolean;
 }
 
