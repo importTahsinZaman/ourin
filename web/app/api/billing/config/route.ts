@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { stripe, CREDIT_PACK_PRICE_ID } from "@/lib/stripe";
+import {
+  stripe,
+  CREDIT_PACK_PRICE_ID,
+  SUBSCRIPTION_PRICE_ID,
+} from "@/lib/stripe";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import { IS_SELF_HOSTING } from "@/lib/config";
@@ -17,6 +21,7 @@ export async function GET() {
     return NextResponse.json({
       isSelfHosting: true,
       subscriptionCredits: null,
+      subscriptionPriceCents: null,
       creditPackAmount: null,
       creditPackPriceCents: null,
     });
@@ -24,14 +29,19 @@ export async function GET() {
 
   try {
     // Fetch in parallel
-    const [convexConfig, creditPackPrice] = await Promise.all([
-      convex.query(api.config.getBillingConfig, {}),
-      stripe.prices.retrieve(CREDIT_PACK_PRICE_ID),
-    ]);
+    const [convexConfig, subscriptionPrice, creditPackPrice] =
+      await Promise.all([
+        convex.query(api.config.getBillingConfig, {}),
+        SUBSCRIPTION_PRICE_ID
+          ? stripe.prices.retrieve(SUBSCRIPTION_PRICE_ID)
+          : Promise.resolve(null),
+        stripe.prices.retrieve(CREDIT_PACK_PRICE_ID),
+      ]);
 
     return NextResponse.json({
       isSelfHosting: false,
       subscriptionCredits: convexConfig.subscriptionCredits,
+      subscriptionPriceCents: subscriptionPrice?.unit_amount ?? 1000,
       creditPackAmount: convexConfig.creditPackAmount,
       creditPackPriceCents: creditPackPrice.unit_amount ?? 2000,
     });
@@ -41,6 +51,7 @@ export async function GET() {
     return NextResponse.json({
       isSelfHosting: false,
       subscriptionCredits: 10000,
+      subscriptionPriceCents: 1000,
       creditPackAmount: 20000,
       creditPackPriceCents: 2000,
     });

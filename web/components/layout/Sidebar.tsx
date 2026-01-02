@@ -8,6 +8,7 @@ import {
   Palette,
   Settings,
   LogIn,
+  CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConversationList } from "@/components/sidebar/ConversationList";
@@ -62,16 +63,31 @@ export function Sidebar({
   const floatingSidebarRef = useRef<HTMLElement>(null);
   const hoverDelayRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Check if user is anonymous (show "Sign in" instead of "Settings")
-  // In self-hosting mode, always show "Settings" (no sign-in needed)
+  // Check user state to determine sidebar button (Sign up / Subscribe / Settings)
+  // In self-hosting mode, always show "Settings" (no sign-in/billing needed)
   const { isAuthenticated } = useConvexAuth();
   const currentUser = useQuery(
     api.settings.getCurrentUser,
     isAuthenticated ? {} : "skip"
   );
+  const tierInfo = useQuery(
+    api.billing.getUserTier,
+    IS_SELF_HOSTING_CLIENT ? "skip" : {}
+  );
+
+  // Determine button state: anonymous → "Sign up", non-subscriber → "Subscribe", subscriber → "Settings"
   const isAnonymousUser = IS_SELF_HOSTING_CLIENT
     ? false
     : !isAuthenticated || currentUser?.isAnonymous;
+  // Must match SettingsModal's definition to ensure consistent behavior
+  const isFullyAuthenticated =
+    isAuthenticated && currentUser?.emailVerified && !currentUser?.isAnonymous;
+  const isSubscriber = IS_SELF_HOSTING_CLIENT
+    ? true
+    : tierInfo?.tier === "subscriber";
+  // Use isFullyAuthenticated (not just !isAnonymousUser) to match SettingsModal logic
+  const isSignedInNonSubscriber =
+    !IS_SELF_HOSTING_CLIENT && isFullyAuthenticated && !isSubscriber;
 
   // Detect Mac vs Windows
   useEffect(() => {
@@ -277,7 +293,12 @@ export function Sidebar({
                   {isAnonymousUser ? (
                     <>
                       <LogIn className="w-4 h-4 shrink-0" />
-                      <span className="font-medium text-sm">Sign in</span>
+                      <span className="font-medium text-sm">Sign up</span>
+                    </>
+                  ) : isSignedInNonSubscriber ? (
+                    <>
+                      <CreditCard className="w-4 h-4 shrink-0" />
+                      <span className="font-medium text-sm">Subscribe</span>
                     </>
                   ) : (
                     <>
@@ -288,7 +309,13 @@ export function Sidebar({
                 </button>
               </TooltipTrigger>
               <TooltipContent side="right">
-                <span>{isAnonymousUser ? "Sign in" : "Settings"}</span>
+                <span>
+                  {isAnonymousUser
+                    ? "Sign up"
+                    : isSignedInNonSubscriber
+                      ? "Subscribe"
+                      : "Settings"}
+                </span>
                 <span className="opacity-60 ml-2">{shortcuts.settings}</span>
               </TooltipContent>
             </Tooltip>
@@ -300,6 +327,7 @@ export function Sidebar({
       collapsed,
       currentConversationId,
       isAnonymousUser,
+      isSignedInNonSubscriber,
       onCollapsedChange,
       onConversationSelect,
       onNewChat,
@@ -489,13 +517,21 @@ export function Sidebar({
                 >
                   {isAnonymousUser ? (
                     <LogIn className="w-4 h-4" />
+                  ) : isSignedInNonSubscriber ? (
+                    <CreditCard className="w-4 h-4" />
                   ) : (
                     <Settings className="w-4 h-4" />
                   )}
                 </button>
               </TooltipTrigger>
               <TooltipContent side="top">
-                <span>{isAnonymousUser ? "Sign in" : "Settings"}</span>
+                <span>
+                  {isAnonymousUser
+                    ? "Sign up"
+                    : isSignedInNonSubscriber
+                      ? "Subscribe"
+                      : "Settings"}
+                </span>
                 <span className="opacity-60 ml-2">{shortcuts.settings}</span>
               </TooltipContent>
             </Tooltip>

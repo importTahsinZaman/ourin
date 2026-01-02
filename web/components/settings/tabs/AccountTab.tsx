@@ -194,13 +194,15 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
         setError("That code didn't work. Please check and try again.");
         setLoading(false);
       } else {
-        // Success: auth state changes, modal closes automatically
+        // Success: track analytics - Stripe redirect handled by SettingsModal
         analytics.trackSignUp("email");
         if (currentUser?.isAnonymous) {
           analytics.trackAccountUpgraded();
         }
-        toast.success("Account created successfully!");
+        toast.success("Account created!");
+        // Reset loading state in case Stripe redirect fails and user returns to form
         setLoading(false);
+        // Auth state will update, SettingsModal will handle Stripe redirect
       }
     } catch (err) {
       // Convex auth throws an error when verification code is wrong
@@ -264,7 +266,7 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
           className="font-semibold text-lg"
           style={{ color: "var(--color-text-primary)" }}
         >
-          Sign in to Ourin
+          Welcome back!
         </h4>
 
         <form onSubmit={handleSignIn} className="space-y-4">

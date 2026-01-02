@@ -77,6 +77,31 @@ describe("GET /api/billing/config", () => {
       expect(data.creditPackPriceCents).toBe(1999);
     });
 
+    it("returns subscription price from Stripe in cents", async () => {
+      mockConvexQuery.mockResolvedValue({
+        subscriptionCredits: 10000,
+        creditPackAmount: 20000,
+      });
+
+      // First call is for subscription price, second for credit pack
+      mockStripePricesRetrieve
+        .mockResolvedValueOnce({
+          id: "price_subscription",
+          unit_amount: 1000,
+          currency: "usd",
+        } as any)
+        .mockResolvedValueOnce({
+          id: "price_credits",
+          unit_amount: 2000,
+          currency: "usd",
+        } as any);
+
+      const response = await GET();
+      const data = await response.json();
+
+      expect(data.subscriptionPriceCents).toBe(1000);
+    });
+
     it("defaults creditPackPriceCents to 2000 when unit_amount is null", async () => {
       mockConvexQuery.mockResolvedValue({
         subscriptionCredits: 10000,
@@ -144,6 +169,7 @@ describe("GET /api/billing/config", () => {
       // Returns defaults on error
       expect(response.status).toBe(200);
       expect(data.subscriptionCredits).toBe(10000);
+      expect(data.subscriptionPriceCents).toBe(1000);
       expect(data.creditPackAmount).toBe(20000);
       expect(data.creditPackPriceCents).toBe(2000);
     });
@@ -222,6 +248,24 @@ describe("GET /api/billing/config", () => {
       const data = await response.json();
 
       expect(typeof data.creditPackPriceCents).toBe("number");
+    });
+
+    it("returns subscriptionPriceCents as number", async () => {
+      mockConvexQuery.mockResolvedValue({
+        subscriptionCredits: 10000,
+        creditPackAmount: 20000,
+      });
+
+      mockStripePricesRetrieve.mockResolvedValue({
+        id: "price_123",
+        unit_amount: 1000,
+        currency: "usd",
+      } as any);
+
+      const response = await GET();
+      const data = await response.json();
+
+      expect(typeof data.subscriptionPriceCents).toBe("number");
     });
   });
 });
