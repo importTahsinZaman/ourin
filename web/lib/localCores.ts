@@ -4,7 +4,6 @@ import { DEFAULT_CORES as DEFAULT_CORE_DATA } from "@/convex/defaultCores";
 import { setCookie } from "@/lib/cookies";
 
 const LOCAL_CORES_KEY = "ourin-local-cores";
-const ACTIVE_CORES_COUNT_KEY = "ourin-active-cores-count";
 
 export interface LocalCore {
   id: string;

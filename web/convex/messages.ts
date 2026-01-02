@@ -8,7 +8,6 @@ import {
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { calculateCredits, getSubscriptionCredits } from "./pricing";
 import { isSelfHosting } from "./config";
-import { internal } from "./_generated/api";
 import { Id, Doc } from "./_generated/dataModel";
 
 // ============================================================================
@@ -158,27 +157,6 @@ async function deductCreditsFromPurchases(
 
   return amount - remainingToDeduct;
 }
-
-// metadata validator - flexible but typed
-const metadataValidator = v.optional(
-  v.object({
-    coreNames: v.optional(v.array(v.string())),
-    reasoningLevel: v.optional(v.union(v.string(), v.number())),
-    thinkingDuration: v.optional(v.number()),
-    webSearchEnabled: v.optional(v.boolean()),
-    model: v.optional(v.string()), // for backwards compatibility
-  })
-);
-
-// tool invocation args validator - jSON-serializable values
-const toolArgsValidator = v.union(
-  v.string(),
-  v.number(),
-  v.boolean(),
-  v.null(),
-  v.array(v.any()),
-  v.object({})
-);
 
 // message part validator
 const messagePartValidator = v.union(

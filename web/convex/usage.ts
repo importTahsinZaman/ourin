@@ -3,7 +3,6 @@ import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { calculateCredits, getSubscriptionCredits } from "./pricing";
 import { isSelfHosting } from "./config";
-import type { Doc } from "./_generated/dataModel";
 
 /**
  * calculate usage summary for the current billing period.

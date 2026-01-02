@@ -212,7 +212,7 @@ describe("MODEL_PRICING", () => {
   });
 
   it("has valid pricing structure for all models", () => {
-    for (const [model, pricing] of Object.entries(MODEL_PRICING)) {
+    for (const [_model, pricing] of Object.entries(MODEL_PRICING)) {
       expect(pricing).toHaveProperty("input");
       expect(pricing).toHaveProperty("output");
       expect(typeof pricing.input).toBe("number");

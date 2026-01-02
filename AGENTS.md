@@ -86,7 +86,7 @@ bun run format:check
 - Prettier for consistent code formatting
 - Both tools are configured at root and package level
 - Run `lint:fix` and `format` before committing
-- Aways write comments in lowercase
+- ALWAYS WRITE COMMENTS USING LOWER CASE LETTERS
 
 ### Pricing Generation
 

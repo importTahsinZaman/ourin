@@ -3,7 +3,7 @@ import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { calculateCredits, getSubscriptionCredits } from "./pricing";
 import { isSelfHosting } from "./config";
-import type { Id, Doc } from "./_generated/dataModel";
+import type { Id } from "./_generated/dataModel";
 
 const FREE_MODEL_ID = "google:gemini-2.5-flash-lite";
 const FREE_MESSAGE_LIMIT = 10;
@@ -228,7 +228,7 @@ export const canUseModel = query({
     modelId: v.string(),
     modelProvider: v.string(),
   },
-  handler: async (ctx, { modelId, modelProvider }) => {
+  handler: async (ctx, { modelId, modelProvider: _modelProvider }) => {
     // self-hosting mode: allow all models
     if (isSelfHosting()) {
       return true;

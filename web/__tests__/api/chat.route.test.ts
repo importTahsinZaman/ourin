@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 
 // set up environment
 process.env.CHAT_AUTH_SECRET = "test-secret";
@@ -67,7 +67,7 @@ describe("Chat API Route Logic", () => {
           canSendMessage: true,
           providers: [],
         };
-        const requestedModel = "anthropic:claude-opus-4-5-20251101";
+        const _requestedModel = "anthropic:claude-opus-4-5-20251101";
 
         const canAccess = checkSubscriberAccess(tier);
         expect(canAccess.allowed).toBe(true);
@@ -120,7 +120,7 @@ describe("Chat API Route Logic", () => {
   describe("Self-Hosted Tier Access", () => {
     it("allows any model for self-hosted user", () => {
       const tier = { tier: "self_hosted", canSendMessage: true };
-      const requestedModel = "anthropic:claude-opus-4-5-20251101";
+      const _requestedModel = "anthropic:claude-opus-4-5-20251101";
 
       const canAccess = checkSelfHostedAccess(tier);
       expect(canAccess.allowed).toBe(true);

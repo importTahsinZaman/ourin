@@ -13,9 +13,9 @@ https://github.com/user-attachments/assets/9d9c3c20-e3fd-47f2-a80e-7bf3889e88a8
 
 - Image Gen
 - Mobile app
-- More models
+- Superpowered web search / deep research (parallel.ai and/or exa.ai)
 - Semantic Search over full chat contents
-- Local-Only mode (message content will only ever be saved locally)
+- More models
 - Memories
 - Automation
 - Mac app

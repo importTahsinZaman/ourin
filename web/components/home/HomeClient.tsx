@@ -14,7 +14,6 @@ import { toast } from "sonner";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { ChatArea } from "@/components/chat/ChatArea";
 import {
-  clearNewChatDraft,
   clearNewChatAttachmentDraft,
   setNewChatDraft,
   type ChatInputHandle,

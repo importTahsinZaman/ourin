@@ -434,6 +434,7 @@ export function StepsAccordion({
                               <div className="flex flex-row items-center gap-2 min-w-0">
                                 {/* favicon */}
                                 <div className="flex justify-center items-center w-5 h-5 shrink-0">
+                                  {/* eslint-disable-next-line @next/next/no-img-element -- external favicon from google api */}
                                   <img
                                     alt=""
                                     loading="lazy"

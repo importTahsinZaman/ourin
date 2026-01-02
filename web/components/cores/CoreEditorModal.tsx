@@ -46,6 +46,7 @@ export function CoreEditorModal({
     }
 
     return () => document.removeEventListener("keydown", handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handleSave changes on every render, only need isOpen and onCancel
   }, [isOpen, onCancel]);
 
   // prevent body scroll when modal is open

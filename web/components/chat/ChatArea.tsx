@@ -21,6 +21,7 @@ import { getModelInfo, FREE_MODEL_ID } from "@/lib/models";
 import { setCookie } from "@/lib/cookies";
 import type { Id } from "@/convex/_generated/dataModel";
 import type { UIMessage, FilePart } from "@/types/chat";
+import { toUIMessages, type ConvexMessage } from "@/lib/messageMapper";
 
 // get default reasoning level for a model
 function getDefaultReasoningLevel(modelId: string): string | number {
@@ -150,7 +151,7 @@ export function ChatArea({
     }
 
     return { canSend: true, reason: null };
-  }, [isAuthenticated, tierInfo, selectedModel, modelInfo]);
+  }, [isAuthenticated, tierInfo, selectedModel]);
 
   // persist user tier to cookie when it changes (for preventing flash on reload)
   useEffect(() => {
@@ -213,7 +214,9 @@ export function ChatArea({
     forkConversation,
   } = useOurinChat({
     conversationId,
-    initialMessages: (persistedMessages as unknown as UIMessage[]) ?? [],
+    initialMessages: persistedMessages
+      ? toUIMessages(persistedMessages as ConvexMessage[])
+      : [],
     model: selectedModel,
     reasoningLevel,
     onConversationCreate,
@@ -268,7 +271,7 @@ export function ChatArea({
       hasLoadedRef.current = conversationId;
       // use startTransition to prevent blocking uI during heavy message rendering
       startTransition(() => {
-        setMessages(persistedMessages as unknown as UIMessage[]);
+        setMessages(toUIMessages(persistedMessages as ConvexMessage[]));
       });
       // flag to scroll to bottom after messages are loaded
       shouldScrollToBottomOnLoadRef.current = true;
@@ -344,7 +347,7 @@ export function ChatArea({
         partsHash,
       };
       startTransition(() => {
-        setMessages(persistedMessages as unknown as UIMessage[]);
+        setMessages(toUIMessages(persistedMessages as ConvexMessage[]));
       });
       return;
     }
@@ -355,7 +358,7 @@ export function ChatArea({
       if (partsHash !== lastSynced.partsHash) {
         lastSyncedRef.current = { ...lastSynced, partsHash };
         startTransition(() => {
-          setMessages(persistedMessages as unknown as UIMessage[]);
+          setMessages(toUIMessages(persistedMessages as ConvexMessage[]));
         });
       }
     }

@@ -68,6 +68,7 @@ export function AttachmentChip({
           )}
           onClick={handleClick}
         >
+          {/* eslint-disable-next-line @next/next/no-img-element -- user-uploaded content with data urls, dimensions unknown */}
           <img
             src={preview}
             alt={fileName}
@@ -126,6 +127,7 @@ export function AttachmentChip({
                 className="rounded-sm overflow-hidden"
                 style={{ backgroundColor: "var(--color-background-secondary)" }}
               >
+                {/* eslint-disable-next-line @next/next/no-img-element -- user-uploaded content with data urls, dimensions unknown */}
                 <img
                   src={preview}
                   alt={fileName}

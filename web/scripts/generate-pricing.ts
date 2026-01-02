@@ -31,6 +31,7 @@ ${pricingEntries.join("\n")}
 `;
 
   fs.writeFileSync(OUTPUT_PATH, content);
+  // eslint-disable-next-line no-console
   console.log(`Generated ${OUTPUT_PATH}`);
 }
 

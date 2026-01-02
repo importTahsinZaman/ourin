@@ -694,6 +694,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
                                     "1px solid var(--color-border-default)",
                                 }}
                               >
+                                {/* eslint-disable-next-line @next/next/no-img-element -- user-uploaded content with dynamic urls */}
                                 <img
                                   src={filePart.url}
                                   alt={filePart.fileName}
@@ -922,6 +923,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
                                       })
                                     }
                                   >
+                                    {/* eslint-disable-next-line @next/next/no-img-element -- user-uploaded content with dynamic urls */}
                                     <img
                                       src={filePart.url}
                                       alt={filePart.fileName}
@@ -1296,6 +1298,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
                 className="rounded-sm overflow-hidden"
                 style={{ backgroundColor: "var(--color-background-secondary)" }}
               >
+                {/* eslint-disable-next-line @next/next/no-img-element -- user-uploaded content with dynamic urls */}
                 <img
                   src={previewImage.url}
                   alt={previewImage.fileName}

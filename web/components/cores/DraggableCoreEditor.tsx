@@ -50,6 +50,7 @@ export function DraggableCoreEditor() {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handleSave changes on every render, only bind on open/close and form state
   }, [isOpen, closeEditor, name, content]);
 
   const handleSave = useCallback(async () => {

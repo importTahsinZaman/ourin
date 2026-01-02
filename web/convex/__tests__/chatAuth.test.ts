@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { verifyChatToken } from "../chatAuth";
 
 const TEST_SECRET = "test-secret-key-for-testing-purposes";

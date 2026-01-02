@@ -47,7 +47,7 @@ describe("GET /api/billing/config", () => {
         recurring: { interval: "month" },
       } as any);
 
-      const request = new Request("http://localhost/api/billing/config", {
+      const _request = new Request("http://localhost/api/billing/config", {
         method: "GET",
       });
 

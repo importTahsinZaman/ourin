@@ -40,7 +40,7 @@ export function useOurinChat({
   getActivePrompt,
 }: UseOurinChatOptions) {
   // get anonymous auth helper - this manages auto sign-in
-  const { ensureAuthenticated, isAuthenticated } = useAnonymousAuth();
+  const { ensureAuthenticated } = useAnonymousAuth();
 
   const [messages, setMessages] = useState<UIMessage[]>(initialMessages);
   const [status, setStatus] = useState<ChatStatus>("ready");
@@ -869,20 +869,16 @@ export function useOurinChat({
       try {
         // stream the response with 250ms persistence interval
         // assistant message is created and updated in dB by streamResponse
-        const {
-          aborted,
-          orderedParts,
-          totalThinkingDuration,
-          assistantMessageId,
-        } = await streamResponse(
-          updatedMessages,
-          convId,
-          controller,
-          undefined, // modelOverride
-          undefined, // reasoningLevelOverride
-          options?.webSearchEnabled,
-          { coreNames, persistToDb: true }
-        );
+        const { orderedParts, totalThinkingDuration, assistantMessageId } =
+          await streamResponse(
+            updatedMessages,
+            convId,
+            controller,
+            undefined, // modelOverride
+            undefined, // reasoningLevelOverride
+            options?.webSearchEnabled,
+            { coreNames, persistToDb: true }
+          );
 
         // update the existing assistant message in place with final metadata
         // this avoids replacing the message object, which would cause a flash/remount
