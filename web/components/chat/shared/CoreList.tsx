@@ -67,7 +67,11 @@ export function CoreList({
       if (draggedIndex !== -1 && dropIndex !== -1) {
         orderedIds.splice(draggedIndex, 1);
         orderedIds.splice(dropIndex, 0, draggedId);
-        await onReorder(orderedIds);
+        try {
+          await onReorder(orderedIds);
+        } catch (error) {
+          console.error("Failed to reorder cores:", error);
+        }
       }
     }
     setDraggedId(null);
