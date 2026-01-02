@@ -200,7 +200,7 @@ export function ThemeEditorPanel({
   return (
     <div
       className={cn(
-        "relative h-full transition-all duration-300 ease-out",
+        "relative h-full transition-[width,opacity] duration-300 ease-out",
         isOpen ? "w-[320px]" : "w-0"
       )}
       ref={panelRef}
@@ -310,7 +310,7 @@ export function ThemeEditorPanel({
         className={cn(
           "relative h-full overflow-hidden",
           isOpen && (side === "right" ? "border-l" : "border-r"),
-          "transition-all duration-300 ease-out",
+          "transition-[width,opacity] duration-300 ease-out",
           isOpen ? "w-[320px]" : "w-0"
         )}
         style={{
@@ -452,7 +452,7 @@ export function ThemeEditorPanel({
                       <button
                         key={font.id}
                         onClick={() => setFont(font.id)}
-                        className="flex justify-between items-center px-3 py-2 rounded-sm w-full text-left transition-all"
+                        className="flex justify-between items-center px-3 py-2 rounded-sm w-full text-left transition-colors"
                         style={{
                           border: `1px solid ${
                             isActive
@@ -489,7 +489,7 @@ export function ThemeEditorPanel({
                 </h3>
                 <button
                   onClick={onFlipSidebar}
-                  className="flex justify-between items-center px-3 py-2 rounded-sm w-full text-left transition-all"
+                  className="flex justify-between items-center px-3 py-2 rounded-sm w-full text-left transition-colors"
                   style={{
                     border: "1px solid var(--color-border-default)",
                     backgroundColor: "transparent",

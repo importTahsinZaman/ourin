@@ -471,7 +471,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       <div className="z-50 fixed inset-0 flex justify-center items-center">
         {/* Backdrop */}
         <div
-          className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+          className="absolute inset-0 bg-black/50"
           onClick={isRedirectingToStripe ? undefined : onClose}
         />
 
@@ -535,10 +535,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     return (
       <div className="z-50 fixed inset-0 flex justify-center items-center">
         {/* Backdrop */}
-        <div
-          className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-          onClick={onClose}
-        />
+        <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
         {/* Modal */}
         <div

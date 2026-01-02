@@ -73,10 +73,7 @@ export function CoreEditorModal({
   return (
     <div className="z-50 fixed inset-0 flex justify-center items-center">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={onCancel}
-      />
+      <div className="absolute inset-0 bg-black/50" onClick={onCancel} />
 
       {/* Modal */}
       <div

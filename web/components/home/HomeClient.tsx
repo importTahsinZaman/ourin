@@ -349,7 +349,7 @@ export function HomeClient({
   );
 
   const mainContent = (
-    <main className="flex flex-col flex-1 w-full min-w-0 transition-all duration-300">
+    <main className="flex flex-col flex-1 w-full min-w-0">
       <ChatArea
         conversationId={currentConversationId}
         onConversationCreate={handleConversationCreate}

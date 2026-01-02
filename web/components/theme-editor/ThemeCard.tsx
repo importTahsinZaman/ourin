@@ -56,7 +56,7 @@ export const ThemeCard = memo(function ThemeCard({
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className="relative p-2 rounded-sm text-left transition-all"
+      className="relative p-2 rounded-sm text-left transition-colors"
       style={{
         border: `2px solid ${
           isActive

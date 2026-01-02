@@ -347,7 +347,7 @@ export function Sidebar({
           "relative h-full overflow-hidden",
           side === "left" ? "border-r" : "border-l",
           collapsed ? "w-0 opacity-0" : "opacity-100",
-          !isResizing && "transition-all duration-300 ease-out"
+          !isResizing && "transition-[width,opacity] duration-300 ease-out"
         )}
         style={{
           backgroundColor: "var(--color-background-secondary)",
@@ -458,13 +458,13 @@ export function Sidebar({
           {/* Backdrop */}
           <div
             className={cn(
-              "z-40 fixed inset-0 backdrop-blur-[1px]",
+              "z-40 fixed inset-0",
               "transition-opacity duration-200",
               showFloatingSidebar
                 ? "opacity-100"
                 : "opacity-0 pointer-events-none"
             )}
-            style={{ backgroundColor: "rgba(0,0,0,0.2)" }}
+            style={{ backgroundColor: "rgba(0,0,0,0.3)" }}
             onMouseDown={() => onShowFloatingSidebarChange(false)}
           />
 
@@ -474,7 +474,7 @@ export function Sidebar({
             className={cn(
               "top-3 bottom-3 z-50 fixed flex flex-col shadow-2xl border rounded-sm",
               side === "left" ? "left-3" : "right-3",
-              "transition-all duration-200 ease-out",
+              "transition-[transform,opacity] duration-200 ease-out",
               showFloatingSidebar
                 ? "translate-x-0 opacity-100"
                 : side === "left"

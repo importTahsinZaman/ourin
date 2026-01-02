@@ -452,8 +452,8 @@ export function DrawingEditor({
     <div className="z-50 fixed inset-0 flex justify-center items-center p-8">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 backdrop-blur-sm"
-        style={{ backgroundColor: "rgba(0, 0, 0, 0.4)" }}
+        className="absolute inset-0"
+        style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
         onClick={onClose}
       />
 
@@ -551,7 +551,7 @@ export function DrawingEditor({
             {/* Pencil Tool */}
             <button
               onClick={() => setIsErasing(false)}
-              className="flex justify-center items-center rounded-sm w-9 h-9 transition-all"
+              className="flex justify-center items-center rounded-sm w-9 h-9 transition-colors"
               style={{
                 backgroundColor: !isErasing
                   ? "var(--color-background-hover)"
@@ -568,7 +568,7 @@ export function DrawingEditor({
             {/* Eraser Tool */}
             <button
               onClick={() => setIsErasing(true)}
-              className="flex justify-center items-center rounded-sm w-9 h-9 transition-all"
+              className="flex justify-center items-center rounded-sm w-9 h-9 transition-colors"
               style={{
                 backgroundColor: isErasing
                   ? "var(--color-background-hover)"
@@ -592,7 +592,7 @@ export function DrawingEditor({
             <div className="relative" ref={colorPickerRef}>
               <button
                 onClick={() => setShowColorPicker(!showColorPicker)}
-                className="flex justify-center items-center rounded-sm w-8 h-8 transition-all"
+                className="flex justify-center items-center rounded-sm w-8 h-8 transition-colors"
                 style={{
                   backgroundColor: showColorPicker
                     ? "var(--color-background-hover)"
@@ -655,7 +655,7 @@ export function DrawingEditor({
                 <button
                   key={size.value}
                   onClick={() => setBrushSize(size.value)}
-                  className="flex justify-center items-center rounded-sm w-8 h-8 transition-all"
+                  className="flex justify-center items-center rounded-sm w-8 h-8 transition-colors"
                   style={{
                     backgroundColor:
                       brushSize === size.value
@@ -687,7 +687,7 @@ export function DrawingEditor({
           {/* Save Button - matches toolbar: py-1 padding + h-9 inner */}
           <button
             onClick={handleSave}
-            className="right-4 bottom-4 absolute flex justify-center items-center gap-1.5 hover:opacity-90 shadow-lg px-3 py-1 rounded-sm font-medium text-sm transition-all"
+            className="right-4 bottom-4 absolute flex justify-center items-center gap-1.5 hover:opacity-90 shadow-lg px-3 py-1 rounded-sm font-medium text-sm transition-opacity"
             style={{
               backgroundColor: "var(--color-background-elevated)",
               color: "var(--color-text-primary)",
