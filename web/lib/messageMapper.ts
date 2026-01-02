@@ -1,8 +1,8 @@
 import type { UIMessage, MessagePart, MessageMetadata } from "@/types/chat";
 
 /**
- * Raw message format from Convex queries (api.messages.getByConversation).
- * This matches the return type of the getByConversation query.
+ * raw message format from convex queries (api.messages.getByConversation).
+ * this matches the return type of the getByConversation query.
  */
 export interface ConvexMessage {
   id: string;
@@ -13,16 +13,26 @@ export interface ConvexMessage {
   metadata?: MessageMetadata;
 }
 
+// type guard to validate message role
+function isValidRole(role: string): role is UIMessage["role"] {
+  return role === "user" || role === "assistant" || role === "system";
+}
+
 /**
- * Convert a single Convex message to UIMessage format.
- * Handles type conversions:
+ * convert a single convex message to uimessage format.
+ * handles type conversions:
  * - role: string -> "user" | "assistant" | "system"
- * - createdAt: number (timestamp) -> Date
+ * - createdAt: number (timestamp) -> date
  */
 export function toUIMessage(message: ConvexMessage): UIMessage {
+  if (!isValidRole(message.role)) {
+    console.error(
+      `invalid message role: ${message.role}, defaulting to 'user'`
+    );
+  }
   return {
     id: message.id,
-    role: message.role as UIMessage["role"],
+    role: isValidRole(message.role) ? message.role : "user",
     parts: message.parts,
     model: message.model,
     createdAt: message.createdAt ? new Date(message.createdAt) : undefined,
@@ -31,7 +41,7 @@ export function toUIMessage(message: ConvexMessage): UIMessage {
 }
 
 /**
- * Convert an array of Convex messages to UIMessage format.
+ * convert an array of convex messages to uimessage format.
  */
 export function toUIMessages(messages: ConvexMessage[]): UIMessage[] {
   return messages.map(toUIMessage);

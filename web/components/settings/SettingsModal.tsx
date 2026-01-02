@@ -329,7 +329,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     IS_SELF_HOSTING_CLIENT ? "skip" : {}
   );
 
-  const _isAnonymousUser = !isAuthenticated || currentUser?.isAnonymous;
   const isFullyAuthenticated =
     isAuthenticated && currentUser?.emailVerified && !currentUser?.isAnonymous;
   const isSubscriber = IS_SELF_HOSTING_CLIENT
