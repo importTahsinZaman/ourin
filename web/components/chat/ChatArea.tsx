@@ -531,7 +531,6 @@ export function ChatArea({
       options?: {
         model?: string;
         reasoningLevel?: string | number;
-        attachments?: FilePart[];
         webSearchEnabled?: boolean;
       }
     ) => {
@@ -553,7 +552,6 @@ export function ChatArea({
         messageId,
         model,
         reasoningLevel: reasoningLevelOverride,
-        attachments: options?.attachments,
         webSearchEnabled: options?.webSearchEnabled,
       });
 

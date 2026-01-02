@@ -958,7 +958,6 @@ export function useOurinChat({
       messageId?: string;
       model?: string;
       reasoningLevel?: string | number;
-      attachments?: FilePart[];
       webSearchEnabled?: boolean;
     }) => {
       const currentMessages = messagesRef.current;
@@ -970,7 +969,6 @@ export function useOurinChat({
       const regenModel = options?.model ?? model;
       const regenReasoningLevel = options?.reasoningLevel ?? reasoningLevel;
       const regenWebSearchEnabled = options?.webSearchEnabled ?? false;
-      const regenAttachments = options?.attachments ?? [];
 
       // get current core names for metadata
       const coreNames = getActiveCoreNames?.() ?? [];
@@ -1012,16 +1010,10 @@ export function useOurinChat({
       const messagesBeforeUser = currentMessages.slice(0, userMessageIndex);
 
       // create a new copy of the user message (for token tracking)
-      // if new attachments are provided, append them to the existing parts
-      const updatedParts =
-        regenAttachments.length > 0
-          ? [...userMessageToRegen.parts, ...regenAttachments]
-          : userMessageToRegen.parts;
-
       const newUserMessage: UIMessage = {
         id: crypto.randomUUID(),
         role: "user",
-        parts: updatedParts,
+        parts: userMessageToRegen.parts,
         model: regenModel,
         createdAt: new Date(),
         metadata: {
