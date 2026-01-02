@@ -1,5 +1,7 @@
 <img src="./ourin_banner.svg" width="100%" alt="ourin banner">
 
+https://github.com/user-attachments/assets/9d9c3c20-e3fd-47f2-a80e-7bf3889e88a8
+
 ### Features
 
 - **Multi-Provider AI** - GPT, Claude, and Gemini models in one interface
