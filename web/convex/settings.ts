@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
-// Get user settings
+// get user settings
 export const get = query({
   args: {},
   handler: async (ctx) => {
@@ -18,7 +18,7 @@ export const get = query({
   },
 });
 
-// Update user settings
+// update user settings
 export const update = mutation({
   args: {
     defaultModel: v.optional(v.string()),
@@ -47,7 +47,7 @@ export const update = mutation({
   },
 });
 
-// Get current user info
+// get current user info
 export const getCurrentUser = query({
   args: {},
   handler: async (ctx) => {
@@ -69,7 +69,7 @@ export const getCurrentUser = query({
   },
 });
 
-// Get keybinds (JSON string of overrides)
+// get keybinds (jSON string of overrides)
 export const getKeybinds = query({
   args: {},
   handler: async (ctx) => {
@@ -85,7 +85,7 @@ export const getKeybinds = query({
   },
 });
 
-// Update keybinds
+// update keybinds
 export const updateKeybinds = mutation({
   args: { keybinds: v.string() },
   handler: async (ctx, { keybinds }) => {
@@ -108,24 +108,24 @@ export const updateKeybinds = mutation({
   },
 });
 
-// Register pending account link (for anonymous -> real account upgrades)
-// Called before signup starts to store the mapping
+// register pending account link (for anonymous -> real account upgrades)
+// called before signup starts to store the mapping
 export const registerPendingAccountLink = mutation({
   args: { email: v.string() },
   handler: async (ctx, { email }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
-    // Verify current user is anonymous
+    // verify current user is anonymous
     const user = await ctx.db.get(userId);
     if (!user || !user.isAnonymous) {
-      // Not anonymous, no need to link
+      // not anonymous, no need to link
       return { success: false, reason: "not_anonymous" };
     }
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Delete any existing pending link for this email
+    // delete any existing pending link for this email
     const existing = await ctx.db
       .query("pendingAccountLinks")
       .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
@@ -134,7 +134,7 @@ export const registerPendingAccountLink = mutation({
       await ctx.db.delete(existing._id);
     }
 
-    // Create new pending link with 10-minute expiration
+    // create new pending link with 10-minute expiration
     const now = Date.now();
     await ctx.db.insert("pendingAccountLinks", {
       email: normalizedEmail,

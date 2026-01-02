@@ -1,18 +1,18 @@
 /**
- * API Key Encryption Utilities
+ * aPI key encryption utilities
  *
- * Uses AES-GCM for symmetric encryption of user API keys.
- * Keys are encrypted before storing in the database and decrypted when needed for API calls.
+ * uses aES-gCM for symmetric encryption of user aPI keys.
+ * keys are encrypted before storing in the database and decrypted when needed for aPI calls.
  *
- * Environment variable required:
- * - API_KEY_ENCRYPTION_SECRET: A 32+ character secret for key derivation
+ * environment variable required:
+ * - aPI_kEY_eNCRYPTION_sECRET: a 32+ character secret for key derivation
  */
 
 const SALT = "ourin-api-key-salt-v1";
 const ITERATIONS = 100000;
 
 /**
- * Derive an AES-256 key from the encryption secret.
+ * derive an aES-256 key from the encryption secret.
  */
 async function deriveKey(secret: string): Promise<CryptoKey> {
   const encoder = new TextEncoder();
@@ -40,8 +40,8 @@ async function deriveKey(secret: string): Promise<CryptoKey> {
 }
 
 /**
- * Encrypt an API key.
- * Returns a base64-encoded string containing the IV and encrypted data.
+ * encrypt an aPI key.
+ * returns a base64-encoded string containing the iV and encrypted data.
  */
 export async function encryptApiKey(plainKey: string): Promise<string> {
   const secret = process.env.API_KEY_ENCRYPTION_SECRET;
@@ -55,7 +55,7 @@ export async function encryptApiKey(plainKey: string): Promise<string> {
   const data = encoder.encode(plainKey);
   const key = await deriveKey(secret);
 
-  // Generate a random IV for each encryption
+  // generate a random iV for each encryption
   const iv = crypto.getRandomValues(new Uint8Array(12));
 
   const encrypted = await crypto.subtle.encrypt(
@@ -64,18 +64,18 @@ export async function encryptApiKey(plainKey: string): Promise<string> {
     data
   );
 
-  // Combine IV + encrypted data
+  // combine iV + encrypted data
   const combined = new Uint8Array(iv.length + encrypted.byteLength);
   combined.set(iv);
   combined.set(new Uint8Array(encrypted), iv.length);
 
-  // Return as base64
+  // return as base64
   return btoa(String.fromCharCode(...combined));
 }
 
 /**
- * Decrypt an API key.
- * Takes a base64-encoded string and returns the original plaintext key.
+ * decrypt an aPI key.
+ * takes a base64-encoded string and returns the original plaintext key.
  */
 export async function decryptApiKey(encryptedKey: string): Promise<string> {
   const secret = process.env.API_KEY_ENCRYPTION_SECRET;
@@ -85,10 +85,10 @@ export async function decryptApiKey(encryptedKey: string): Promise<string> {
     );
   }
 
-  // Decode from base64
+  // decode from base64
   const combined = Uint8Array.from(atob(encryptedKey), (c) => c.charCodeAt(0));
 
-  // Extract IV and encrypted data
+  // extract iV and encrypted data
   const iv = combined.slice(0, 12);
   const data = combined.slice(12);
 
@@ -104,8 +104,8 @@ export async function decryptApiKey(encryptedKey: string): Promise<string> {
 }
 
 /**
- * Get the hint (last 4 characters) from an API key.
- * Used for display purposes without exposing the full key.
+ * get the hint (last 4 characters) from an aPI key.
+ * used for display purposes without exposing the full key.
  */
 export function getKeyHint(apiKey: string): string {
   if (apiKey.length < 4) return "****";
@@ -113,23 +113,23 @@ export function getKeyHint(apiKey: string): string {
 }
 
 /**
- * Validate that an API key looks valid for a given provider.
- * This is a basic format check, not a verification that the key works.
+ * validate that an aPI key looks valid for a given provider.
+ * this is a basic format check, not a verification that the key works.
  */
 export function validateKeyFormat(provider: string, apiKey: string): boolean {
   const trimmed = apiKey.trim();
 
   switch (provider) {
     case "openai":
-      // OpenAI keys start with "sk-" and are typically 51+ characters
+      // openAI keys start with "sk-" and are typically 51+ characters
       return trimmed.startsWith("sk-") && trimmed.length >= 40;
 
     case "anthropic":
-      // Anthropic keys start with "sk-ant-" and are typically 100+ characters
+      // anthropic keys start with "sk-ant-" and are typically 100+ characters
       return trimmed.startsWith("sk-ant-") && trimmed.length >= 40;
 
     case "google":
-      // Google AI keys are typically 39 characters starting with "AIza"
+      // google aI keys are typically 39 characters starting with "aIza"
       return trimmed.startsWith("AIza") && trimmed.length >= 30;
 
     default:

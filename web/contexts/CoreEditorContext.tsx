@@ -36,7 +36,7 @@ function getStoredPosition(): Position | null {
       return JSON.parse(stored);
     }
   } catch {
-    // Ignore
+    // ignore
   }
   return null;
 }
@@ -46,7 +46,7 @@ function storePosition(pos: Position): void {
   try {
     localStorage.setItem(POSITION_STORAGE_KEY, JSON.stringify(pos));
   } catch {
-    // Ignore
+    // ignore
   }
 }
 
@@ -55,7 +55,7 @@ export function CoreEditorProvider({ children }: { children: ReactNode }) {
   const [editingCore, setEditingCore] = useState<Core | null>(null);
   const [position, setPositionState] = useState<Position>({ x: -1, y: -1 });
 
-  // Load stored position on mount
+  // load stored position on mount
   useEffect(() => {
     const stored = getStoredPosition();
     if (stored) {

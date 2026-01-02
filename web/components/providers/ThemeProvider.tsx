@@ -23,7 +23,7 @@ import { setCookie, deleteCookie, getCookie } from "@/lib/cookies";
 import { useAnalytics } from "@/hooks/useAnalytics";
 
 interface ThemeContextValue {
-  // Theme
+  // theme
   theme: OurinTheme;
   themeId: string;
   setTheme: (themeId: string) => void;
@@ -33,7 +33,7 @@ interface ThemeContextValue {
   addCustomTheme: (theme: OurinTheme, autoSelect?: boolean) => void;
   removeCustomTheme: (themeId: string) => void;
 
-  // Font
+  // font
   fontId: string;
   setFont: (fontId: string) => void;
   availableFonts: FontOption[];
@@ -58,8 +58,8 @@ export function ThemeProvider({
   const [customThemes, setCustomThemes] = useState<OurinTheme[]>([]);
   const [customTheme, setCustomThemeState] = useState<OurinTheme | null>(null);
 
-  // On mount, sync theme state with system preference for first-time visitors
-  // The cookie was already set by the inline script, so we read it to sync state
+  // on mount, sync theme state with system preference for first-time visitors
+  // the cookie was already set by the inline script, so we read it to sync state
   useEffect(() => {
     const cookieTheme = getCookie("ourin-theme");
 
@@ -68,14 +68,14 @@ export function ThemeProvider({
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Get current theme
+  // get current theme
   const theme =
     customTheme ||
     getThemeById(themeId) ||
     customThemes.find((t) => t.id === themeId) ||
     defaultTheme;
 
-  // Generate favicon SVG with theme colors (lotus icon)
+  // generate favicon sVG with theme colors (lotus icon)
   const generateFaviconSvg = useCallback(
     (colors: { text: string; background: string; accent: string }) => {
       return `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -91,14 +91,14 @@ export function ThemeProvider({
     []
   );
 
-  // Update favicon with theme colors
+  // update favicon with theme colors
   const updateFavicon = useCallback(
     (colors: { text: string; background: string; accent: string }) => {
       const svg = generateFaviconSvg(colors);
       const blob = new Blob([svg], { type: "image/svg+xml" });
       const url = URL.createObjectURL(blob);
 
-      // Remove any existing dynamic favicons
+      // remove any existing dynamic favicons
       const existingIcons = document.querySelectorAll(
         "link[rel='icon'][data-dynamic='true']"
       );
@@ -110,7 +110,7 @@ export function ThemeProvider({
         icon.remove();
       });
 
-      // Create fresh favicon link
+      // create fresh favicon link
       const link = document.createElement("link");
       link.rel = "icon";
       link.type = "image/svg+xml";
@@ -121,7 +121,7 @@ export function ThemeProvider({
     [generateFaviconSvg]
   );
 
-  // Update theme CSS in DOM
+  // update theme cSS in dOM
   const updateThemeCSS = useCallback(
     (newTheme: OurinTheme) => {
       const styleEl = document.getElementById("ourin-theme");
@@ -137,7 +137,7 @@ export function ThemeProvider({
     [updateFavicon]
   );
 
-  // Update font CSS in DOM
+  // update font cSS in dOM
   const updateFontCSS = useCallback((newFontId: string) => {
     const fontFamily = getFontFamily(newFontId);
     const styleEl = document.getElementById("ourin-font");
@@ -146,7 +146,7 @@ export function ThemeProvider({
     }
   }, []);
 
-  // Set theme by ID
+  // set theme by iD
   const setTheme = useCallback(
     (newThemeId: string) => {
       const newTheme =
@@ -161,9 +161,9 @@ export function ThemeProvider({
           newThemeId,
           newThemeId.startsWith("custom-")
         );
-        // Save to cookie
+        // save to cookie
         setCookie("ourin-theme", newThemeId);
-        // For custom themes, also save colors to cookie for SSR
+        // for custom themes, also save colors to cookie for sSR
         if (newThemeId.startsWith("custom-")) {
           const colorsJson = JSON.stringify({
             type: newTheme.type,
@@ -171,7 +171,7 @@ export function ThemeProvider({
           });
           setCookie("ourin-custom-theme-data", encodeURIComponent(colorsJson));
         } else {
-          // Clear custom theme data cookie for built-in themes
+          // clear custom theme data cookie for built-in themes
           deleteCookie("ourin-custom-theme-data");
         }
       }
@@ -179,7 +179,7 @@ export function ThemeProvider({
     [customThemes, updateThemeCSS, analytics]
   );
 
-  // Set custom theme (for live preview)
+  // set custom theme (for live preview)
   const setCustomTheme = useCallback(
     (newTheme: OurinTheme) => {
       setCustomThemeState(newTheme);
@@ -188,48 +188,48 @@ export function ThemeProvider({
     [updateThemeCSS]
   );
 
-  // Set UI font
+  // set uI font
   const setFont = useCallback(
     (newFontId: string) => {
       setFontId(newFontId);
       updateFontCSS(newFontId);
-      // Save to cookie
+      // save to cookie
       setCookie("ourin-font", newFontId);
     },
     [updateFontCSS]
   );
 
-  // Add custom theme (also applies CSS if it's the current theme)
-  // If autoSelect is true, immediately selects the new theme (avoids stale closure issues)
+  // add custom theme (also applies cSS if it's the current theme)
+  // if autoSelect is true, immediately selects the new theme (avoids stale closure issues)
   const addCustomTheme = useCallback(
     (newTheme: OurinTheme, autoSelect?: boolean) => {
       setCustomThemes((prev) => {
         const filtered = prev.filter((t) => t.id !== newTheme.id);
         const updated = [...filtered, newTheme];
-        // Save to localStorage
+        // save to localStorage
         localStorage.setItem("ourin-custom-themes", JSON.stringify(updated));
         return updated;
       });
 
-      // Auto-select the new theme immediately (used when creating new themes)
+      // auto-select the new theme immediately (used when creating new themes)
       if (autoSelect) {
         setThemeId(newTheme.id);
         setCustomThemeState(null);
         updateThemeCSS(newTheme);
         recordThemeUsage(newTheme.id);
-        // Save to cookie
+        // save to cookie
         setCookie("ourin-theme", newTheme.id);
-        // Save custom theme colors to cookie for SSR
+        // save custom theme colors to cookie for sSR
         const colorsJson = JSON.stringify({
           type: newTheme.type,
           colors: newTheme.colors,
         });
         setCookie("ourin-custom-theme-data", encodeURIComponent(colorsJson));
       }
-      // If this is already the current theme (editing), apply CSS changes
+      // if this is already the current theme (editing), apply cSS changes
       else if (newTheme.id === themeId) {
         updateThemeCSS(newTheme);
-        // Update custom theme data cookie for SSR
+        // update custom theme data cookie for sSR
         const colorsJson = JSON.stringify({
           type: newTheme.type,
           colors: newTheme.colors,
@@ -240,7 +240,7 @@ export function ThemeProvider({
     [themeId, updateThemeCSS]
   );
 
-  // Remove custom theme
+  // remove custom theme
   const removeCustomTheme = useCallback(
     (removeThemeId: string) => {
       setCustomThemes((prev) => {
@@ -248,7 +248,7 @@ export function ThemeProvider({
         localStorage.setItem("ourin-custom-themes", JSON.stringify(updated));
         return updated;
       });
-      // If current theme was removed, switch to default and clear cookie
+      // if current theme was removed, switch to default and clear cookie
       if (themeId === removeThemeId) {
         deleteCookie("ourin-custom-theme-data");
         setTheme(defaultTheme.id);
@@ -257,7 +257,7 @@ export function ThemeProvider({
     [themeId, setTheme]
   );
 
-  // Update favicon on mount and when theme changes
+  // update favicon on mount and when theme changes
   useEffect(() => {
     updateFavicon({
       text: theme.colors.text,
@@ -271,18 +271,18 @@ export function ThemeProvider({
     updateFavicon,
   ]);
 
-  // Load custom themes from localStorage on mount
-  // Includes migration from old nested format to new 3-color format
+  // load custom themes from localStorage on mount
+  // includes migration from old nested format to new 3-color format
   useEffect(() => {
     const stored = localStorage.getItem("ourin-custom-themes");
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed)) {
-          // Migrate old format themes to new 3-color format
+          // migrate old format themes to new 3-color format
           const migrated = parsed.map(
             (t: OurinTheme | Record<string, unknown>) => {
-              // Check if it's old format (colors.background is an object)
+              // check if it's old format (colors.background is an object)
               if (
                 t.colors &&
                 typeof (t.colors as Record<string, unknown>).background ===
@@ -305,11 +305,11 @@ export function ThemeProvider({
             }
           );
           setCustomThemes(migrated as OurinTheme[]);
-          // Save migrated themes back
+          // save migrated themes back
           localStorage.setItem("ourin-custom-themes", JSON.stringify(migrated));
         }
       } catch {
-        // Ignore parse errors
+        // ignore parse errors
       }
     }
   }, []);

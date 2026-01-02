@@ -3,7 +3,7 @@ import { shouldDeleteFromStorage, validateFile } from "@/hooks/useFileUpload";
 import type { Attachment } from "@/hooks/useDraft";
 import type { Id } from "@/convex/_generated/dataModel";
 
-// Helper to create a mock attachment
+// helper to create a mock attachment
 function createAttachment(
   overrides: Partial<Attachment> & { id: string }
 ): Attachment {
@@ -36,9 +36,9 @@ describe("shouldDeleteFromStorage", () => {
       const attachment2 = createAttachment({ id: "2", storageId });
       const allAttachments = [attachment1, attachment2];
 
-      // Removing attachment1 - attachment2 still uses the same storageId
+      // removing attachment1 - attachment2 still uses the same storageId
       expect(shouldDeleteFromStorage(attachment1, allAttachments)).toBe(false);
-      // Removing attachment2 - attachment1 still uses the same storageId
+      // removing attachment2 - attachment1 still uses the same storageId
       expect(shouldDeleteFromStorage(attachment2, allAttachments)).toBe(false);
     });
 
@@ -71,7 +71,7 @@ describe("shouldDeleteFromStorage", () => {
       const attachment2 = createAttachment({ id: "2", storageId: storageId2 });
       const allAttachments = [attachment1, attachment2];
 
-      // Each has unique storageId, so both should be deletable
+      // each has unique storageId, so both should be deletable
       expect(shouldDeleteFromStorage(attachment1, allAttachments)).toBe(true);
       expect(shouldDeleteFromStorage(attachment2, allAttachments)).toBe(true);
     });
@@ -101,7 +101,7 @@ describe("shouldDeleteFromStorage", () => {
         id: "1",
         storageId: "storage123" as Id<"_storage">,
       });
-      // Attachment not in the list - should still return true based on logic
+      // attachment not in the list - should still return true based on logic
       expect(shouldDeleteFromStorage(attachment, [])).toBe(true);
     });
 
@@ -119,18 +119,18 @@ describe("shouldDeleteFromStorage", () => {
     it("correctly identifies when duplicates are removed one by one", () => {
       const storageId = "storage123" as Id<"_storage">;
 
-      // Start with 3 copies
+      // start with 3 copies
       const a1 = createAttachment({ id: "1", storageId });
       const a2 = createAttachment({ id: "2", storageId });
       const a3 = createAttachment({ id: "3", storageId });
 
-      // Remove first - 2 remain, don't delete
+      // remove first - 2 remain, don't delete
       expect(shouldDeleteFromStorage(a1, [a1, a2, a3])).toBe(false);
 
-      // After a1 removed, check a2 with [a2, a3] - still don't delete
+      // after a1 removed, check a2 with [a2, a3] - still don't delete
       expect(shouldDeleteFromStorage(a2, [a2, a3])).toBe(false);
 
-      // After a2 removed, check a3 with [a3] - now delete
+      // after a2 removed, check a3 with [a3] - now delete
       expect(shouldDeleteFromStorage(a3, [a3])).toBe(true);
     });
   });
@@ -157,7 +157,7 @@ describe("validateFile", () => {
   });
 
   it("rejects file exceeding size limit", () => {
-    // Create a file larger than 25MB
+    // create a file larger than 25mB
     const largeContent = new Array(26 * 1024 * 1024).fill("a").join("");
     const file = new File([largeContent], "large.png", { type: "image/png" });
     const result = validateFile(file);
@@ -166,7 +166,7 @@ describe("validateFile", () => {
   });
 
   it("accepts file at exactly the size limit", () => {
-    // Create a file exactly at 25MB
+    // create a file exactly at 25mB
     const content = new Array(25 * 1024 * 1024).fill("a").join("");
     const file = new File([content], "exact.png", { type: "image/png" });
     expect(validateFile(file)).toEqual({ valid: true });

@@ -63,8 +63,8 @@ export function Sidebar({
   const floatingSidebarRef = useRef<HTMLElement>(null);
   const hoverDelayRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Check user state to determine sidebar button (Sign up / Subscribe / Settings)
-  // In self-hosting mode, always show "Settings" (no sign-in/billing needed)
+  // check user state to determine sidebar button (sign up / subscribe / settings)
+  // in self-hosting mode, always show "settings" (no sign-in/billing needed)
   const { isAuthenticated } = useConvexAuth();
   const currentUser = useQuery(
     api.settings.getCurrentUser,
@@ -75,26 +75,26 @@ export function Sidebar({
     IS_SELF_HOSTING_CLIENT ? "skip" : {}
   );
 
-  // Determine button state: anonymous → "Sign up", non-subscriber → "Subscribe", subscriber → "Settings"
+  // determine button state: anonymous → "sign up", non-subscriber → "subscribe", subscriber → "settings"
   const isAnonymousUser = IS_SELF_HOSTING_CLIENT
     ? false
     : !isAuthenticated || currentUser?.isAnonymous;
-  // Must match SettingsModal's definition to ensure consistent behavior
+  // must match settingsModal's definition to ensure consistent behavior
   const isFullyAuthenticated =
     isAuthenticated && currentUser?.emailVerified && !currentUser?.isAnonymous;
   const isSubscriber = IS_SELF_HOSTING_CLIENT
     ? true
     : tierInfo?.tier === "subscriber";
-  // Use isFullyAuthenticated (not just !isAnonymousUser) to match SettingsModal logic
+  // use isFullyAuthenticated (not just !isAnonymousUser) to match settingsModal logic
   const isSignedInNonSubscriber =
     !IS_SELF_HOSTING_CLIENT && isFullyAuthenticated && !isSubscriber;
 
-  // Detect Mac vs Windows
+  // detect mac vs windows
   useEffect(() => {
     setIsMac(navigator.platform.toUpperCase().indexOf("MAC") >= 0);
   }, []);
 
-  // Detect small screen for responsive tab layout
+  // detect small screen for responsive tab layout
   useEffect(() => {
     const checkScreenSize = () => {
       setIsSmallScreen(window.innerWidth < 1045);
@@ -104,10 +104,10 @@ export function Sidebar({
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
-  // Whether to hide floating buttons (small screen + right sidebar)
+  // whether to hide floating buttons (small screen + right sidebar)
   const hideFloatingButtons = isSmallScreen && side === "right";
 
-  // Get formatted shortcuts based on current keybinds and sidebar position
+  // get formatted shortcuts based on current keybinds and sidebar position
   const shortcuts = useMemo(
     () => ({
       sidebar: formatKeybind(
@@ -124,7 +124,7 @@ export function Sidebar({
     [keybinds, side, isMac]
   );
 
-  // Handle resize
+  // handle resize
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     setIsResizing(true);
@@ -157,7 +157,7 @@ export function Sidebar({
     };
   }, [isResizing, onWidthChange, side]);
 
-  // Handle floating sidebar visibility with delay
+  // handle floating sidebar visibility with delay
   const handleFloatingAreaEnter = useCallback(() => {
     if (collapsed) {
       hoverDelayRef.current = setTimeout(() => {
@@ -173,7 +173,7 @@ export function Sidebar({
     }
   }, []);
 
-  // Cleanup hover delay timeout on unmount
+  // cleanup hover delay timeout on unmount
   useEffect(() => {
     return () => {
       if (hoverDelayRef.current) {
@@ -182,12 +182,12 @@ export function Sidebar({
     };
   }, []);
 
-  // Sidebar content (shared between normal and floating) - memoized to prevent scroll reset
+  // sidebar content (shared between normal and floating) - memoized to prevent scroll reset
   const sidebarContent = useMemo(
     () => (
       <TooltipProvider delayDuration={1000}>
         <div className="flex flex-col h-full">
-          {/* Header */}
+          {/* header */}
           <div className="flex justify-between items-center px-4 pt-3 pb-1">
             <span
               className="font-bold text-lg tracking-tight"
@@ -212,7 +212,7 @@ export function Sidebar({
             </Tooltip>
           </div>
 
-          {/* New Chat button */}
+          {/* new chat button */}
           <div className="px-2 pt-2">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -232,7 +232,7 @@ export function Sidebar({
             </Tooltip>
           </div>
 
-          {/* Search button */}
+          {/* search button */}
           <div className="px-2 pb-2">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -254,7 +254,7 @@ export function Sidebar({
             </Tooltip>
           </div>
 
-          {/* Conversation list */}
+          {/* conversation list */}
           <div className="flex-1 px-2 overflow-y-auto">
             <ConversationList
               currentConversationId={currentConversationId}
@@ -262,7 +262,7 @@ export function Sidebar({
             />
           </div>
 
-          {/* Footer */}
+          {/* footer */}
           <div
             className="px-2 py-2"
             style={{ borderColor: "var(--color-border-muted)" }}
@@ -340,7 +340,7 @@ export function Sidebar({
 
   return (
     <>
-      {/* Normal sidebar (expanded) */}
+      {/* normal sidebar (expanded) */}
       <aside
         ref={sidebarRef}
         className={cn(
@@ -355,11 +355,11 @@ export function Sidebar({
           width: collapsed ? 0 : width,
         }}
       >
-        {/* Fixed-width inner container - content doesn't resize during animation */}
+        {/* fixed-width inner container - content doesn't resize during animation */}
         <div className="flex flex-col h-full" style={{ width }}>
           {sidebarContent}
 
-          {/* Resize handle */}
+          {/* resize handle */}
           <div
             onMouseDown={handleMouseDown}
             className={cn(
@@ -372,7 +372,7 @@ export function Sidebar({
         </div>
       </aside>
 
-      {/* Hover trigger zone for floating sidebar (collapsed state) */}
+      {/* hover trigger zone for floating sidebar (collapsed state) */}
       {collapsed && (
         <div
           className={cn(
@@ -384,7 +384,7 @@ export function Sidebar({
         />
       )}
 
-      {/* Floating action bar (collapsed state) */}
+      {/* floating action bar (collapsed state) */}
       {collapsed && (
         <TooltipProvider delayDuration={1000}>
           <div
@@ -452,10 +452,10 @@ export function Sidebar({
         </TooltipProvider>
       )}
 
-      {/* Floating sidebar overlay (hover state when collapsed) */}
+      {/* floating sidebar overlay (hover state when collapsed) */}
       {collapsed && (
         <>
-          {/* Backdrop */}
+          {/* backdrop */}
           <div
             className={cn(
               "z-40 fixed inset-0",
@@ -468,7 +468,7 @@ export function Sidebar({
             onMouseDown={() => onShowFloatingSidebarChange(false)}
           />
 
-          {/* Floating sidebar */}
+          {/* floating sidebar */}
           <aside
             ref={floatingSidebarRef}
             className={cn(
@@ -495,7 +495,7 @@ export function Sidebar({
         </>
       )}
 
-      {/* Bottom floating buttons (collapsed state) */}
+      {/* bottom floating buttons (collapsed state) */}
       {collapsed && !hideFloatingButtons && (
         <TooltipProvider delayDuration={1000}>
           <div

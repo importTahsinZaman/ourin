@@ -15,8 +15,8 @@ interface ThemeCardProps {
 }
 
 /**
- * A card displaying a theme preview with color swatches.
- * Memoized to prevent unnecessary re-renders.
+ * a card displaying a theme preview with color swatches.
+ * memoized to prevent unnecessary re-renders.
  */
 export const ThemeCard = memo(function ThemeCard({
   theme: t,
@@ -68,7 +68,7 @@ export const ThemeCard = memo(function ThemeCard({
           : "transparent",
       }}
     >
-      {/* Preview swatch */}
+      {/* preview swatch */}
       <div
         className="mb-2 rounded h-10"
         style={{

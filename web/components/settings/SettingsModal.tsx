@@ -25,7 +25,7 @@ const allTabs: { id: Tab; label: string; icon: typeof CreditCard }[] = [
   { id: "keybinds", label: "Keybinds", icon: Keyboard },
 ];
 
-// Reusable section component for consistent layout
+// reusable section component for consistent layout
 interface SettingsSectionProps {
   title: string;
   description?: string;
@@ -60,7 +60,7 @@ export function SettingsSection({
   );
 }
 
-// Horizontal divider between sections
+// horizontal divider between sections
 export function SettingsDivider() {
   return (
     <div
@@ -70,7 +70,7 @@ export function SettingsDivider() {
   );
 }
 
-// Pricing features for the left side panel (sign-up / subscribe)
+// pricing features for the left side panel (sign-up / subscribe)
 const SUBSCRIPTION_FEATURES = [
   {
     title: "Premium Models",
@@ -90,13 +90,13 @@ const SUBSCRIPTION_FEATURES = [
   },
 ];
 
-// Format price from cents to display string (e.g., 1000 -> "$10")
+// format price from cents to display string (e.g., 1000 -> "$10")
 function formatPrice(cents: number): string {
   const dollars = cents / 100;
   return dollars % 1 === 0 ? `$${dollars}` : `$${dollars.toFixed(2)}`;
 }
 
-// Left side pricing panel component
+// left side pricing panel component
 function PricingPanel({
   variant,
   priceCents,
@@ -114,7 +114,7 @@ function PricingPanel({
         borderRight: "1px solid var(--color-border-muted)",
       }}
     >
-      {/* Decorative gradient orbs */}
+      {/* decorative gradient orbs */}
       <div
         className="-top-32 -left-32 absolute opacity-30 blur-3xl rounded-full w-64 h-64"
         style={{ backgroundColor: "var(--color-accent-primary)" }}
@@ -124,7 +124,7 @@ function PricingPanel({
         style={{ backgroundColor: "var(--color-accent-primary)" }}
       />
 
-      {/* Header */}
+      {/* header */}
       <div className="z-10 relative">
         <h1
           className="mb-3 font-bold text-4xl tracking-tight"
@@ -137,7 +137,7 @@ function PricingPanel({
         </p>
       </div>
 
-      {/* Features list */}
+      {/* features list */}
       <div className="z-10 relative space-y-4">
         {SUBSCRIPTION_FEATURES.map((feature) => (
           <div key={feature.title}>
@@ -154,7 +154,7 @@ function PricingPanel({
         ))}
       </div>
 
-      {/* Footer - pricing */}
+      {/* footer - pricing */}
       <div className="z-10 relative">
         {!isSignIn && (
           <div className="mb-2">
@@ -182,7 +182,7 @@ function PricingPanel({
   );
 }
 
-// Subscribe panel for signed-in non-subscribers
+// subscribe panel for signed-in non-subscribers
 function SubscribePanel({
   onClose,
   priceCents,
@@ -236,7 +236,7 @@ function SubscribePanel({
 
   return (
     <div className="relative flex flex-col flex-1">
-      {/* Close button */}
+      {/* close button */}
       <button
         onClick={onClose}
         className="top-4 right-4 z-10 absolute hover:bg-[var(--color-background-hover)] p-1.5 rounded-sm transition-colors"
@@ -245,7 +245,7 @@ function SubscribePanel({
         <X className="w-5 h-5" />
       </button>
 
-      {/* Centered content */}
+      {/* centered content */}
       <div className="flex flex-col flex-1 justify-center items-center px-12 py-8">
         <div className="space-y-8 w-full max-w-sm text-center">
           <div>
@@ -301,7 +301,7 @@ function SubscribePanel({
 }
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
-  // Filter out API Keys tab in self-hosting mode
+  // filter out aPI keys tab in self-hosting mode
   const tabs = useMemo(
     () =>
       IS_SELF_HOSTING_CLIENT
@@ -313,12 +313,12 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<Tab>("subscription");
   const { signOut } = useAuthActions();
 
-  // Auth form state - lifted here to survive AccountTab remounts during auth state changes
+  // auth form state - lifted here to survive accountTab remounts during auth state changes
   const [signUpStep, setSignUpStep] = useState<SignUpStep>("profile");
-  // Default to signUp flow for new users
+  // default to signUp flow for new users
   const [authFlow, setAuthFlow] = useState<AuthFlow>("signUp");
 
-  // Check if user is anonymous
+  // check if user is anonymous
   const { isAuthenticated } = useConvexAuth();
   const currentUser = useQuery(
     api.settings.getCurrentUser,
@@ -338,17 +338,17 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const isSignedInNonSubscriber =
     !IS_SELF_HOSTING_CLIENT && isFullyAuthenticated && !isSubscriber;
 
-  // Track previous state to detect successful sign-in/sign-up
+  // track previous state to detect successful sign-in/sign-up
   const wasNotFullyAuthRef = useRef(!isFullyAuthenticated);
   const isMountedRef = useRef(true);
   const generateChatToken = useMutation(api.chatAuth.generateChatToken);
   const analytics = useAnalytics();
   const [isRedirectingToStripe, setIsRedirectingToStripe] = useState(false);
 
-  // Subscription price from billing config (fallback to $10 = 1000 cents)
+  // subscription price from billing config (fallback to $10 = 1000 cents)
   const [subscriptionPriceCents, setSubscriptionPriceCents] = useState(1000);
 
-  // Fetch billing config to get dynamic subscription price
+  // fetch billing config to get dynamic subscription price
   useEffect(() => {
     if (!isOpen || IS_SELF_HOSTING_CLIENT) return;
 
@@ -361,13 +361,13 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           setSubscriptionPriceCents(config.subscriptionPriceCents);
         }
       } catch {
-        // Silently fail - use fallback price
+        // silently fail - use fallback price
       }
     };
     fetchBillingConfig();
   }, [isOpen]);
 
-  // Track mounted state to prevent state updates after unmount
+  // track mounted state to prevent state updates after unmount
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
@@ -375,15 +375,15 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     };
   }, []);
 
-  // Handle auth state changes - close for sign-in, redirect to Stripe for sign-up
+  // handle auth state changes - close for sign-in, redirect to stripe for sign-up
   useEffect(() => {
-    // User just became fully authenticated
+    // user just became fully authenticated
     if (wasNotFullyAuthRef.current && isFullyAuthenticated && isOpen) {
       if (authFlow === "signIn") {
-        // Sign-in: just close the modal
+        // sign-in: just close the modal
         onClose();
       } else {
-        // Sign-up: redirect to Stripe checkout
+        // sign-up: redirect to stripe checkout
         setIsRedirectingToStripe(true);
         const redirectToStripe = async () => {
           try {
@@ -433,7 +433,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     analytics,
   ]);
 
-  // Close on escape key
+  // close on escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -448,7 +448,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Prevent body scroll when modal is open
+  // prevent body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -462,20 +462,20 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   if (!isOpen) return null;
 
-  // Modal variant 1: Anonymous users need to sign up (or sign in)
-  // Also show this while redirecting to Stripe to avoid flash of subscribe modal
+  // modal variant 1: anonymous users need to sign up (or sign in)
+  // also show this while redirecting to stripe to avoid flash of subscribe modal
   const needsAuth = !isFullyAuthenticated || isRedirectingToStripe;
 
   if (needsAuth) {
     return (
       <div className="z-50 fixed inset-0 flex justify-center items-center">
-        {/* Backdrop */}
+        {/* backdrop */}
         <div
           className="absolute inset-0 bg-black/50"
           onClick={isRedirectingToStripe ? undefined : onClose}
         />
 
-        {/* Modal - same size as full settings modal */}
+        {/* modal - same size as full settings modal */}
         <div
           className="z-10 relative flex shadow-2xl mx-4 rounded-sm w-full max-w-[1000px] h-[780px] overflow-hidden animate-scale-in"
           style={{
@@ -483,15 +483,15 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             border: "1px solid var(--color-border-default)",
           }}
         >
-          {/* Left side - Pricing/Welcome panel */}
+          {/* left side - pricing/welcome panel */}
           <PricingPanel
             variant={authFlow === "signIn" ? "signIn" : "signUp"}
             priceCents={subscriptionPriceCents}
           />
 
-          {/* Right side - Auth form or redirecting state */}
+          {/* right side - auth form or redirecting state */}
           <div className="relative flex flex-col flex-1">
-            {/* Close button - hide while redirecting */}
+            {/* close button - hide while redirecting */}
             {!isRedirectingToStripe && (
               <button
                 onClick={onClose}
@@ -502,7 +502,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </button>
             )}
 
-            {/* Centered form or redirecting state */}
+            {/* centered form or redirecting state */}
             <div className="flex flex-1 justify-center items-center px-12 py-8">
               <div className="w-full max-w-sm">
                 {isRedirectingToStripe ? (
@@ -530,14 +530,14 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     );
   }
 
-  // Modal variant 2: Signed-in but not subscribed - show subscribe modal
+  // modal variant 2: signed-in but not subscribed - show subscribe modal
   if (isSignedInNonSubscriber) {
     return (
       <div className="z-50 fixed inset-0 flex justify-center items-center">
-        {/* Backdrop */}
+        {/* backdrop */}
         <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
-        {/* Modal */}
+        {/* modal */}
         <div
           className="z-10 relative flex shadow-2xl mx-4 rounded-sm w-full max-w-[1000px] h-[780px] overflow-hidden animate-scale-in"
           style={{
@@ -545,13 +545,13 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             border: "1px solid var(--color-border-default)",
           }}
         >
-          {/* Left side - Pricing panel */}
+          {/* left side - pricing panel */}
           <PricingPanel
             variant="subscribe"
             priceCents={subscriptionPriceCents}
           />
 
-          {/* Right side - Subscribe button + logout */}
+          {/* right side - subscribe button + logout */}
           <SubscribePanel
             onClose={onClose}
             priceCents={subscriptionPriceCents}
@@ -563,13 +563,13 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   return (
     <div className="z-50 fixed inset-0 flex justify-center items-center">
-      {/* Backdrop */}
+      {/* backdrop */}
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Modal - 30% larger */}
+      {/* modal - 30% larger */}
       <div
         className="z-10 relative flex shadow-2xl mx-4 rounded-sm w-full max-w-[1000px] h-[780px] overflow-hidden animate-scale-in"
         style={{
@@ -577,7 +577,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           border: "1px solid var(--color-border-default)",
         }}
       >
-        {/* Sidebar - wider with more generous padding */}
+        {/* sidebar - wider with more generous padding */}
         <div
           className="flex flex-col flex-shrink-0 px-4 py-5 w-56"
           style={{
@@ -622,7 +622,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </nav>
           </div>
 
-          {/* User info at bottom */}
+          {/* user info at bottom */}
           <div
             className="-mx-4 px-4 pt-4 border-t"
             style={{ borderColor: "var(--color-border-muted)" }}
@@ -655,12 +655,12 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           </div>
         </div>
 
-        {/* Content */}
+        {/* content */}
         <div
           className="relative flex flex-col flex-1"
           style={{ backgroundColor: "var(--color-background-elevated)" }}
         >
-          {/* Close button - absolute positioned in corner */}
+          {/* close button - absolute positioned in corner */}
           <button
             onClick={onClose}
             className="top-4 right-4 z-10 absolute hover:bg-[var(--color-background-hover)] p-1.5 rounded-sm transition-colors"
@@ -669,7 +669,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             <X className="w-5 h-5" />
           </button>
 
-          {/* Tab content - more generous padding */}
+          {/* tab content - more generous padding */}
           <div className="flex-1 px-8 py-6 overflow-y-auto">
             {activeTab === "subscription" && (
               <AccountTab

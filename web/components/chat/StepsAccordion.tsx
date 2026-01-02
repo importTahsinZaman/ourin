@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { MemoizedMarkdown } from "@/components/ui/MemoizedMarkdown";
 import type { ToolInvocationPart, MessagePart } from "@/types/chat";
 
-// Types for web search results from different providers
+// types for web search results from different providers
 interface AnthropicSearchResult {
   type: "web_search_result";
   url: string;
@@ -31,7 +31,7 @@ interface OpenAIWebSearchResult {
   results?: OpenAISearchResult[];
 }
 
-// Extract search data from tool invocation based on provider format
+// extract search data from tool invocation based on provider format
 function extractSearchData(part: ToolInvocationPart): {
   query: string | undefined;
   results: Array<{ url: string; title: string; domain: string }>;
@@ -41,7 +41,7 @@ function extractSearchData(part: ToolInvocationPart): {
   const isSearching = part.state !== "result";
   const query = args?.query;
 
-  // Helper to extract domain from URL
+  // helper to extract domain from uRL
   const getDomain = (url: string) => {
     try {
       return new URL(url).hostname;
@@ -50,7 +50,7 @@ function extractSearchData(part: ToolInvocationPart): {
     }
   };
 
-  // Helper to map results array to our format
+  // helper to map results array to our format
   const mapResults = (
     arr: Array<{ url?: string; title?: string; type?: string }>
   ) =>
@@ -62,18 +62,18 @@ function extractSearchData(part: ToolInvocationPart): {
         domain: getDomain(r.url!),
       }));
 
-  // Case 1: result is directly an array (Anthropic via Vercel AI SDK)
+  // case 1: result is directly an array (anthropic via vercel aI sDK)
   if (Array.isArray(part.result)) {
     return { query, results: mapResults(part.result), isSearching };
   }
 
-  // Case 2: result has content array (raw Anthropic format)
+  // case 2: result has content array (raw anthropic format)
   const anthropicResult = part.result as AnthropicWebSearchResult | undefined;
   if (anthropicResult?.content && Array.isArray(anthropicResult.content)) {
     return { query, results: mapResults(anthropicResult.content), isSearching };
   }
 
-  // Case 3: OpenAI format with action.query and results array
+  // case 3: openAI format with action.query and results array
   const openaiResult = part.result as OpenAIWebSearchResult | undefined;
   if (openaiResult?.action?.query || openaiResult?.results) {
     const openaiQuery = openaiResult.action?.query || query;
@@ -87,7 +87,7 @@ function extractSearchData(part: ToolInvocationPart): {
   return { query, results: [], isSearching };
 }
 
-// Globe icon SVG (phosphor style)
+// globe icon sVG (phosphor style)
 function GlobeIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -103,7 +103,7 @@ function GlobeIcon({ className }: { className?: string }) {
   );
 }
 
-// Chevron icon SVG
+// chevron icon sVG
 function ChevronIcon({
   className,
   expanded,
@@ -132,7 +132,7 @@ function ChevronIcon({
   );
 }
 
-// Type for steps that can be either search or reasoning
+// type for steps that can be either search or reasoning
 type StepItem =
   | { type: "search"; data: ToolInvocationPart }
   | {
@@ -149,17 +149,17 @@ interface StepsAccordionProps {
   isStreaming?: boolean;
 }
 
-// Collapsible steps container for reasoning and tool calls
+// collapsible steps container for reasoning and tool calls
 export function StepsAccordion({
   parts,
   isActivelyThinking,
   isStreaming,
 }: StepsAccordionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  // Accordion behavior - only one step can be expanded at a time
+  // accordion behavior - only one step can be expanded at a time
   const [expandedStep, setExpandedStep] = useState<string | null>(null);
 
-  // Build steps from parts array in order - this preserves interleaving
+  // build steps from parts array in order - this preserves interleaving
   const steps: StepItem[] = [];
 
   for (const part of parts) {
@@ -171,7 +171,7 @@ export function StepsAccordion({
         duration?: number;
       };
       if (reasoningPart.text.trim()) {
-        // Mark as thinking if streaming and no duration yet (still being generated)
+        // mark as thinking if streaming and no duration yet (still being generated)
         const isStillThinking = !!(isStreaming && !reasoningPart.duration);
         steps.push({
           type: "reasoning",
@@ -183,14 +183,14 @@ export function StepsAccordion({
       }
     } else if (part.type === "tool-invocation") {
       const toolPart = part as ToolInvocationPart;
-      // Only include web search tools
+      // only include web search tools
       if (toolPart.toolName.toLowerCase().includes("search")) {
         steps.push({ type: "search", data: toolPart });
       }
     }
   }
 
-  // Add actively thinking indicator as last reasoning step if needed
+  // add actively thinking indicator as last reasoning step if needed
   if (isActivelyThinking) {
     const lastStep = steps[steps.length - 1];
     if (lastStep && lastStep.type === "reasoning") {
@@ -204,22 +204,22 @@ export function StepsAccordion({
     }
   }
 
-  // Don't render if no steps at all
+  // don't render if no steps at all
   if (steps.length === 0) return null;
 
-  // Accordion toggle
+  // accordion toggle
   const toggleStepExpanded = (stepId: string) => {
     setExpandedStep((prev) => (prev === stepId ? null : stepId));
   };
 
-  // Determine which steps to show based on collapsed/expanded state
-  // If 2 or fewer steps, always show all (no collapse behavior needed)
-  // If 3+ steps: collapsed shows last 2 (most recent), expanded shows all
+  // determine which steps to show based on collapsed/expanded state
+  // if 2 or fewer steps, always show all (no collapse behavior needed)
+  // if 3+ steps: collapsed shows last 2 (most recent), expanded shows all
   const canCollapse = steps.length > 2;
   const visibleSteps = canCollapse && !isExpanded ? steps.slice(-2) : steps;
   const showHeader = canCollapse;
 
-  // For single item, skip the extra left padding
+  // for single item, skip the extra left padding
   const isSingleItem = steps.length === 1;
 
   return (
@@ -227,7 +227,7 @@ export function StepsAccordion({
       className="mb-4 rounded-sm overflow-hidden"
       style={{ backgroundColor: "var(--color-background-steps)" }}
     >
-      {/* Header - only show if more than 2 steps */}
+      {/* header - only show if more than 2 steps */}
       {showHeader && (
         <button
           type="button"
@@ -248,7 +248,7 @@ export function StepsAccordion({
         </button>
       )}
 
-      {/* Steps list */}
+      {/* steps list */}
       <div className="overflow-hidden shrink-0">
         {visibleSteps.map((step, index) => {
           if (step.type === "reasoning") {
@@ -264,9 +264,9 @@ export function StepsAccordion({
                   !isSingleItem && "pl-3"
                 )}
               >
-                {/* Content column */}
+                {/* content column */}
                 <div className="flex flex-col w-full min-w-0">
-                  {/* Header */}
+                  {/* header */}
                   <div
                     className={cn(
                       "group/row flex flex-row justify-between items-center gap-4 px-3 py-2 h-[2.625rem]",
@@ -302,7 +302,7 @@ export function StepsAccordion({
                     )}
                   </div>
 
-                  {/* Expanded reasoning content */}
+                  {/* expanded reasoning content */}
                   {stepExpanded && hasContent && (
                     <div
                       className="min-h-0"
@@ -331,7 +331,7 @@ export function StepsAccordion({
               </div>
             );
           } else {
-            // Search step
+            // search step
             const { query, results, isSearching } = extractSearchData(
               step.data
             );
@@ -347,9 +347,9 @@ export function StepsAccordion({
                   !isSingleItem && "pl-3"
                 )}
               >
-                {/* Content column */}
+                {/* content column */}
                 <div className="flex flex-col w-full min-w-0">
-                  {/* Header */}
+                  {/* header */}
                   <div
                     className={cn(
                       "group/row flex flex-row justify-between items-center gap-4 px-3 py-2 h-[2.625rem]",
@@ -362,7 +362,7 @@ export function StepsAccordion({
                     }
                   >
                     <div className="flex flex-row items-center gap-2 min-w-0">
-                      {/* Inline globe icon */}
+                      {/* inline globe icon */}
                       <div
                         className="flex justify-center items-center shrink-0"
                         style={{ color: "var(--color-text-muted)" }}
@@ -406,7 +406,7 @@ export function StepsAccordion({
                     </div>
                   </div>
 
-                  {/* Expanded search results */}
+                  {/* expanded search results */}
                   {stepExpanded && hasResults && (
                     <div
                       className="min-h-0"
@@ -432,7 +432,7 @@ export function StepsAccordion({
                               className="flex flex-row justify-between items-center gap-4 hover:bg-[var(--color-background-hover)] mx-0.5 px-1.5 rounded-sm w-full min-w-0 h-8 transition-colors shrink-0"
                             >
                               <div className="flex flex-row items-center gap-2 min-w-0">
-                                {/* Favicon */}
+                                {/* favicon */}
                                 <div className="flex justify-center items-center w-5 h-5 shrink-0">
                                   <img
                                     alt=""
@@ -452,14 +452,14 @@ export function StepsAccordion({
                                     }}
                                   />
                                 </div>
-                                {/* Title */}
+                                {/* title */}
                                 <p
                                   className="relative overflow-hidden text-sm text-ellipsis whitespace-nowrap shrink"
                                   style={{ color: "var(--color-text-primary)" }}
                                 >
                                   {result.title}
                                 </p>
-                                {/* Domain */}
+                                {/* domain */}
                                 <p
                                   className="bottom-[1px] relative text-xs line-clamp-1 shrink-0"
                                   style={{ color: "var(--color-text-muted)" }}

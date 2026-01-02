@@ -26,7 +26,7 @@ import {
 } from "@ourin/core";
 import "./globals.css";
 
-// Font definitions
+// font definitions
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -94,17 +94,17 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Read theme and font preferences from cookies (SSR-safe)
+  // read theme and font preferences from cookies (sSR-safe)
   const cookieStore = await cookies();
   const themeIdCookie = cookieStore.get("ourin-theme")?.value;
   const fontId = cookieStore.get("ourin-font")?.value || "lato";
   const customThemeDataStr = cookieStore.get("ourin-custom-theme-data")?.value;
 
-  // Check if this is a first-time visitor (no theme cookie)
+  // check if this is a first-time visitor (no theme cookie)
   const isFirstVisit = !themeIdCookie;
   const themeId = themeIdCookie || defaultTheme.id;
 
-  // Get theme object - for custom themes, reconstruct from cookie data
+  // get theme object - for custom themes, reconstruct from cookie data
   let theme = getThemeById(themeId);
   if (!theme && themeId.startsWith("custom-") && customThemeDataStr) {
     try {
@@ -123,8 +123,8 @@ export default async function RootLayout({
     theme = defaultTheme;
   }
 
-  // Generate theme CSS
-  // For first visit, use media queries to match system preference
+  // generate theme cSS
+  // for first visit, use media queries to match system preference
   let themeCSS: string;
   if (isFirstVisit) {
     const lightTheme = getThemeById("ourin-light") || defaultTheme;
@@ -143,7 +143,7 @@ export default async function RootLayout({
     themeCSS = generateThemeCSSBlock(theme);
   }
 
-  // Script to set theme cookie on first visit based on system preference
+  // script to set theme cookie on first visit based on system preference
   const firstVisitScript = isFirstVisit
     ? `(function(){
         var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -152,10 +152,10 @@ export default async function RootLayout({
       })();`
     : "";
 
-  // Get font CSS variable
+  // get font cSS variable
   const fontFamily = getFontFamily(fontId);
 
-  // Combine all font variables
+  // combine all font variables
   const fontClasses = [
     inter.variable,
     GeistSans.variable,
@@ -171,26 +171,26 @@ export default async function RootLayout({
   return (
     <html lang="en" className={fontClasses} suppressHydrationWarning>
       <head>
-        {/* React Scan - dev only performance debugging */}
+        {/* react scan - dev only performance debugging */}
         {process.env.NODE_ENV === "development" && (
           <script
             crossOrigin="anonymous"
             src="https://unpkg.com/react-scan/dist/auto.global.js"
           />
         )}
-        {/* Inject theme CSS to prevent flash */}
+        {/* inject theme cSS to prevent flash */}
         <style
           id="ourin-theme"
           dangerouslySetInnerHTML={{ __html: themeCSS }}
         />
-        {/* Set font family */}
+        {/* set font family */}
         <style
           id="ourin-font"
           dangerouslySetInnerHTML={{
             __html: `:root { --font-family: ${fontFamily}; }`,
           }}
         />
-        {/* Set theme cookie on first visit based on system preference */}
+        {/* set theme cookie on first visit based on system preference */}
         {firstVisitScript && (
           <script dangerouslySetInnerHTML={{ __html: firstVisitScript }} />
         )}

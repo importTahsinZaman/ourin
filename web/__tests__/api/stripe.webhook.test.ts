@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 
 /**
- * Tests for Stripe webhook handling logic.
- * These tests verify event parsing, signature validation,
+ * tests for stripe webhook handling logic.
+ * these tests verify event parsing, signature validation,
  * and the business logic for each event type.
  */
 
@@ -17,7 +17,7 @@ describe("Stripe Webhook Logic", () => {
     it("rejects invalid signatures", () => {
       const invalidSignature = "invalid";
 
-      // Stripe signature format: t=timestamp,v1=signature
+      // stripe signature format: t=timestamp,v1=signature
       const isValidFormat = /^t=\d+,v1=/.test(invalidSignature);
       expect(isValidFormat).toBe(false);
     });
@@ -269,7 +269,7 @@ describe("Stripe Webhook Logic", () => {
         items: {
           data: [
             {
-              current_period_start: 1706745600, // New period
+              current_period_start: 1706745600, // new period
               current_period_end: 1709424000,
             },
           ],
@@ -368,7 +368,7 @@ describe("Stripe Webhook Logic", () => {
         end: subscription.items.data[0].current_period_end * 1000,
       };
 
-      // Period data is preserved even on cancellation
+      // period data is preserved even on cancellation
       expect(period.start).toBe(1704067200000);
       expect(period.end).toBe(1706745600000);
     });
@@ -403,8 +403,8 @@ describe("Stripe Webhook Logic", () => {
     });
 
     it("returns success for unhandled events", () => {
-      // Unhandled events should still return 200
-      // This prevents Stripe from retrying the webhook
+      // unhandled events should still return 200
+      // this prevents stripe from retrying the webhook
       const response = { received: true };
       expect(response.received).toBe(true);
     });
@@ -545,32 +545,32 @@ describe("Stripe Webhook Logic", () => {
 
   describe("Balance Reset on Period Change", () => {
     it("new period start means balance recalculation", () => {
-      // When period changes, balance = SUBSCRIPTION_CREDITS - sum(messages where createdAt >= new periodStart)
-      // So messages from old period are no longer counted
+      // when period changes, balance = sUBSCRIPTION_cREDITS - sum(messages where createdAt >= new periodStart)
+      // so messages from old period are no longer counted
 
       const oldPeriod = {
-        start: 1704067200000, // Jan 1
-        end: 1706745600000, // Feb 1
+        start: 1704067200000, // jan 1
+        end: 1706745600000, // feb 1
       };
 
       const newPeriod = {
-        start: 1706745600000, // Feb 1
-        end: 1709424000000, // Mar 1
+        start: 1706745600000, // feb 1
+        end: 1709424000000, // mar 1
       };
 
       const messages = [
-        { createdAt: 1704500000000, credits: 100 }, // Jan - old period
-        { createdAt: 1707000000000, credits: 50 }, // Feb - new period
+        { createdAt: 1704500000000, credits: 100 }, // jan - old period
+        { createdAt: 1707000000000, credits: 50 }, // feb - new period
       ];
 
-      // Old period usage
+      // old period usage
       const oldUsage = messages
         .filter(
           (m) => m.createdAt >= oldPeriod.start && m.createdAt < oldPeriod.end
         )
         .reduce((sum, m) => sum + m.credits, 0);
 
-      // New period usage
+      // new period usage
       const newUsage = messages
         .filter(
           (m) => m.createdAt >= newPeriod.start && m.createdAt < newPeriod.end
@@ -616,7 +616,7 @@ describe("Webhook Security", () => {
 
       expect(isFirstTime).toBe(true);
 
-      // Second attempt
+      // second attempt
       const isSecondTime = !processedEvents.has(eventId);
       expect(isSecondTime).toBe(false);
     });
@@ -625,7 +625,7 @@ describe("Webhook Security", () => {
   describe("Environment Variables", () => {
     it("requires WEBHOOK_SECRET", () => {
       const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-      // In tests, this might be undefined, but the check is important
+      // in tests, this might be undefined, but the check is important
       expect(
         typeof webhookSecret === "string" || webhookSecret === undefined
       ).toBe(true);

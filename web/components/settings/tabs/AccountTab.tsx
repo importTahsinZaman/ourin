@@ -23,7 +23,7 @@ import { useProductionMode } from "@/hooks/useProductionMode";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { IS_SELF_HOSTING_CLIENT } from "@/lib/config";
 
-// Billing config type
+// billing config type
 interface BillingConfig {
   isSelfHosting?: boolean;
   subscriptionCredits: number | null;
@@ -31,7 +31,7 @@ interface BillingConfig {
   creditPackPriceCents: number | null;
 }
 
-// Default config (fallback)
+// default config (fallback)
 const DEFAULT_CONFIG: BillingConfig = {
   isSelfHosting: true,
   subscriptionCredits: 10000,
@@ -39,11 +39,11 @@ const DEFAULT_CONFIG: BillingConfig = {
   creditPackPriceCents: 2000,
 };
 
-// Free tier limits
+// free tier limits
 const FREE_TIER_MESSAGE_LIMIT = 10;
 const FREE_TIER_WARNING_THRESHOLD = 8;
 
-// Password validation helper
+// password validation helper
 function validatePassword(password: string, confirmPassword: string) {
   return {
     minLength: password.length >= 8,
@@ -70,7 +70,7 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
   const { signIn } = useAuthActions();
   const analytics = useAnalytics();
 
-  // Get current user to pass for account linking (anonymous -> real account)
+  // get current user to pass for account linking (anonymous -> real account)
   const { isAuthenticated } = useConvexAuth();
   const currentUser = useQuery(
     api.settings.getCurrentUser,
@@ -80,7 +80,7 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
     api.settings.registerPendingAccountLink
   );
 
-  // Form fields
+  // form fields
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -92,11 +92,11 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Password validation
+  // password validation
   const passwordValidation = validatePassword(password, confirmPassword);
   const isPasswordValid = Object.values(passwordValidation).every(Boolean);
 
-  // Handle sign-in submission
+  // handle sign-in submission
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -115,15 +115,15 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
           setError("Invalid email or password");
           setLoading(false);
         } else {
-          // Success - reset loading state immediately
-          // Modal close is handled by SettingsModal's auth state effect,
+          // success - reset loading state immediately
+          // modal close is handled by settingsModal's auth state effect,
           // but we reset loading here in case of any delay
           setLoading(false);
           analytics.trackSignIn("email");
           toast.success("Welcome back!");
         }
       } else {
-        // Unexpected result format - reset loading to avoid stuck state
+        // unexpected result format - reset loading to avoid stuck state
         setLoading(false);
       }
     } catch {
@@ -132,14 +132,14 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
     }
   };
 
-  // Handle sign-up step 1 -> step 2
+  // handle sign-up step 1 -> step 2
   const handleProfileContinue = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSignUpStep("password");
   };
 
-  // Handle sign-up step 2 -> submit & go to verification
+  // handle sign-up step 2 -> submit & go to verification
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isPasswordValid) {
@@ -150,14 +150,14 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
     setLoading(true);
     setError(null);
 
-    // Register pending account link BEFORE calling signIn
-    // This stores the anonymous userId -> email mapping in the database
+    // register pending account link bEFORE calling signIn
+    // this stores the anonymous userId -> email mapping in the database
     if (currentUser?.isAnonymous) {
       try {
         await registerPendingLink({ email: email.toLowerCase().trim() });
       } catch (err) {
         console.error("Failed to register pending link:", err);
-        // Continue anyway - worst case is conversations don't transfer
+        // continue anyway - worst case is conversations don't transfer
       }
     }
 
@@ -178,7 +178,7 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
     }
   };
 
-  // Handle verification code submission
+  // handle verification code submission
   const handleVerificationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -188,7 +188,7 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
     formData.set("email", email);
     formData.set("code", verificationCode);
     formData.set("flow", "email-verification");
-    // Pass profile data - user is created during verification step
+    // pass profile data - user is created during verification step
     formData.set("firstName", firstName);
     formData.set("lastName", lastName);
 
@@ -200,18 +200,18 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
         setError("That code didn't work. Please check and try again.");
         setLoading(false);
       } else {
-        // Success: track analytics - Stripe redirect handled by SettingsModal
+        // success: track analytics - stripe redirect handled by settingsModal
         analytics.trackSignUp("email");
         if (currentUser?.isAnonymous) {
           analytics.trackAccountUpgraded();
         }
         toast.success("Account created!");
-        // Reset loading state in case Stripe redirect fails and user returns to form
+        // reset loading state in case stripe redirect fails and user returns to form
         setLoading(false);
-        // Auth state will update, SettingsModal will handle Stripe redirect
+        // auth state will update, settingsModal will handle stripe redirect
       }
     } catch (err) {
-      // Convex auth throws an error when verification code is wrong
+      // convex auth throws an error when verification code is wrong
       const errorMessage = err instanceof Error ? err.message : "";
       if (
         errorMessage.includes("verify code") ||
@@ -226,7 +226,7 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
     }
   };
 
-  // Resend verification code
+  // resend verification code
   const handleResendCode = async () => {
     setLoading(true);
     setError(null);
@@ -243,7 +243,7 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
     setError("Verification code resent to your email.");
   };
 
-  // Navigation
+  // navigation
   const handleBackToPassword = () => {
     setSignUpStep("password");
     setVerificationCode("");
@@ -264,7 +264,7 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
     setVerificationCode("");
   };
 
-  // ==================== SIGN IN FLOW ====================
+  // ==================== sIGN iN fLOW ====================
   if (flow === "signIn") {
     return (
       <div className="space-y-6">
@@ -288,7 +288,7 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
             </div>
           )}
 
-          {/* Email */}
+          {/* email */}
           <div>
             <label
               className="block mb-1.5 font-medium text-sm"
@@ -311,7 +311,7 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
             />
           </div>
 
-          {/* Password */}
+          {/* password */}
           <div>
             <label
               className="block mb-1.5 font-medium text-sm"
@@ -348,7 +348,7 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
             </div>
           </div>
 
-          {/* Submit button */}
+          {/* submit button */}
           <button
             type="submit"
             disabled={loading}
@@ -362,7 +362,7 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
             )}
           </button>
 
-          {/* Toggle to sign up */}
+          {/* toggle to sign up */}
           <p
             className="text-sm text-center"
             style={{ color: "var(--color-text-secondary)" }}
@@ -382,9 +382,9 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
     );
   }
 
-  // ==================== SIGN UP FLOW ====================
+  // ==================== sIGN uP fLOW ====================
 
-  // Step 3: Verification
+  // step 3: verification
   if (signUpStep === "verification") {
     return (
       <div className="space-y-6">
@@ -428,7 +428,7 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
             </div>
           )}
 
-          {/* Verification Code */}
+          {/* verification code */}
           <div>
             <label
               className="block mb-1.5 font-medium text-sm"
@@ -456,7 +456,7 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
             />
           </div>
 
-          {/* Submit button */}
+          {/* submit button */}
           <button
             type="submit"
             disabled={loading || verificationCode.length < 6}
@@ -470,7 +470,7 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
             )}
           </button>
 
-          {/* Resend */}
+          {/* resend */}
           <p
             className="text-sm text-center"
             style={{ color: "var(--color-text-secondary)" }}
@@ -491,7 +491,7 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
     );
   }
 
-  // Step 2: Password
+  // step 2: password
   if (signUpStep === "password") {
     return (
       <div className="space-y-6">
@@ -526,7 +526,7 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
             </div>
           )}
 
-          {/* Password */}
+          {/* password */}
           <div>
             <label
               className="block mb-1.5 font-medium text-sm"
@@ -563,7 +563,7 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
             </div>
           </div>
 
-          {/* Confirm Password */}
+          {/* confirm password */}
           <div>
             <label
               className="block mb-1.5 font-medium text-sm"
@@ -600,16 +600,16 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
             </div>
           </div>
 
-          {/* Password requirements - dynamic coloring */}
+          {/* password requirements - dynamic coloring */}
           <p className="text-xs leading-relaxed">
             {password.length === 0 ? (
-              // Empty state - all muted
+              // empty state - all muted
               <span style={{ color: "var(--color-text-muted)" }}>
                 Passwords must match, be at least 8 characters long, and include
                 a mix of lowercase and uppercase letters, numbers, and symbols.
               </span>
             ) : (
-              // Active state - colored based on validation
+              // active state - colored based on validation
               <>
                 <span
                   style={{
@@ -672,7 +672,7 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
             )}
           </p>
 
-          {/* Submit button */}
+          {/* submit button */}
           <button
             type="submit"
             disabled={loading || !isPasswordValid}
@@ -686,7 +686,7 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
             )}
           </button>
 
-          {/* Toggle to sign in */}
+          {/* toggle to sign in */}
           <p
             className="text-sm text-center"
             style={{ color: "var(--color-text-secondary)" }}
@@ -706,7 +706,7 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
     );
   }
 
-  // Step 1: Profile (First Name, Last Name, Email)
+  // step 1: profile (first name, last name, email)
   return (
     <div className="space-y-6">
       <h4
@@ -729,7 +729,7 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
           </div>
         )}
 
-        {/* First Name / Last Name row */}
+        {/* first name / last name row */}
         <div className="flex gap-3">
           <div className="flex-1">
             <label
@@ -775,7 +775,7 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
           </div>
         </div>
 
-        {/* Email */}
+        {/* email */}
         <div>
           <label
             className="block mb-1.5 font-medium text-sm"
@@ -798,7 +798,7 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
           />
         </div>
 
-        {/* Continue button */}
+        {/* continue button */}
         <button
           type="submit"
           disabled={loading || !firstName || !lastName || !email}
@@ -808,7 +808,7 @@ function AuthForm({ signUpStep, setSignUpStep, flow, setFlow }: AuthFormProps) {
           Continue
         </button>
 
-        {/* Toggle to sign in */}
+        {/* toggle to sign in */}
         <p
           className="text-sm text-center"
           style={{ color: "var(--color-text-secondary)" }}
@@ -834,7 +834,7 @@ function AuthenticatedAccount() {
   const { isSelfHosting, isLoading: isLoadingProductionMode } =
     useProductionMode();
 
-  // Billing state
+  // billing state
   const [isLoadingCheckout, setIsLoadingCheckout] = useState(false);
   const [isLoadingPortal, setIsLoadingPortal] = useState(false);
   const [isLoadingBuyCredits, setIsLoadingBuyCredits] = useState(false);
@@ -843,7 +843,7 @@ function AuthenticatedAccount() {
   const [showPurchaseHistory, setShowPurchaseHistory] = useState(false);
   const historyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Billing queries - skip in self-hosting mode
+  // billing queries - skip in self-hosting mode
   const tierInfo = useQuery(
     api.billing.getUserTier,
     isSelfHosting ? "skip" : {}
@@ -1000,7 +1000,7 @@ function AuthenticatedAccount() {
     );
   }
 
-  // In self-hosting mode, show a simple message - no billing UI
+  // in self-hosting mode, show a simple message - no billing uI
   if (isSelfHosting) {
     return (
       <div className="space-y-6">
@@ -1043,8 +1043,8 @@ function AuthenticatedAccount() {
     );
   }
 
-  // After the early returns above, tierInfo is guaranteed to be defined
-  // in non-self-hosting mode. Add explicit guard for TypeScript narrowing.
+  // after the early returns above, tierInfo is guaranteed to be defined
+  // in non-self-hosting mode. add explicit guard for typeScript narrowing.
   if (!tierInfo) {
     return null;
   }
@@ -1054,7 +1054,7 @@ function AuthenticatedAccount() {
 
   return (
     <div className="space-y-6">
-      {/* Current plan - for non-subscribers (free tier) */}
+      {/* current plan - for non-subscribers (free tier) */}
       {!isSubscriber && (
         <>
           <SettingsSection title="Current Plan">
@@ -1131,7 +1131,7 @@ function AuthenticatedAccount() {
 
           <SettingsDivider />
 
-          {/* Upgrade to Pro */}
+          {/* upgrade to pro */}
           <div
             className="p-5 rounded-md"
             style={{
@@ -1139,7 +1139,7 @@ function AuthenticatedAccount() {
               border: "1px solid var(--color-border-default)",
             }}
           >
-            {/* Header */}
+            {/* header */}
             <div className="flex justify-between items-center mb-4">
               <h4
                 className="font-semibold text-base"
@@ -1163,7 +1163,7 @@ function AuthenticatedAccount() {
               </div>
             </div>
 
-            {/* Feature list */}
+            {/* feature list */}
             <ul className="space-y-3 mb-5">
               {[
                 {
@@ -1213,7 +1213,7 @@ function AuthenticatedAccount() {
               ))}
             </ul>
 
-            {/* Upgrade button */}
+            {/* upgrade button */}
             <button
               onClick={handleSubscribe}
               disabled={isLoadingCheckout}
@@ -1235,7 +1235,7 @@ function AuthenticatedAccount() {
         </>
       )}
 
-      {/* Subscriber sections */}
+      {/* subscriber sections */}
       {isSubscriber && usageSummary && (
         <>
           <SettingsSection title="Usage">
@@ -1482,9 +1482,9 @@ export function AccountTab({
     );
   }
 
-  // In self-hosting mode, skip auth form - go straight to AuthenticatedAccount
-  // (which shows "Self-Hosted Mode" message)
-  // In production mode, show auth form if not authenticated, anonymous, or email not verified
+  // in self-hosting mode, skip auth form - go straight to authenticatedAccount
+  // (which shows "self-hosted mode" message)
+  // in production mode, show auth form if not authenticated, anonymous, or email not verified
   if (
     !IS_SELF_HOSTING_CLIENT &&
     (!isAuthenticated ||
@@ -1501,7 +1501,7 @@ export function AccountTab({
     );
   }
 
-  // Still loading user data
+  // still loading user data
   if (currentUser === undefined) {
     return (
       <div className="flex justify-center items-center py-12">

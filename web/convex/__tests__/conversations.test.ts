@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 
 /**
- * Tests for the Conversation management logic.
- * These tests verify CRUD operations, forking, and soft-delete behavior.
+ * tests for the conversation management logic.
+ * these tests verify cRUD operations, forking, and soft-delete behavior.
  */
 
 describe("Conversation Management Logic", () => {
@@ -203,7 +203,7 @@ describe("Conversation Management Logic", () => {
     });
 
     it("preserves messages for billing accuracy", () => {
-      // Soft delete doesn't actually remove data - just marks it
+      // soft delete doesn't actually remove data - just marks it
       const message = {
         id: "msg1",
         inputTokens: 1000,
@@ -213,7 +213,7 @@ describe("Conversation Management Logic", () => {
 
       message.discardedAt = Date.now();
 
-      // Token data is preserved for billing
+      // token data is preserved for billing
       expect(message.inputTokens).toBe(1000);
       expect(message.outputTokens).toBe(500);
     });
@@ -286,7 +286,7 @@ describe("Conversation Management Logic", () => {
     it("excludes discarded messages", () => {
       const messages = [
         { messageId: "msg1", discardedAt: undefined },
-        { messageId: "msg2", discardedAt: Date.now() }, // Discarded
+        { messageId: "msg2", discardedAt: Date.now() }, // discarded
         { messageId: "msg3", discardedAt: undefined },
       ];
 
@@ -304,7 +304,7 @@ describe("Conversation Management Logic", () => {
       };
 
       const now = Date.now();
-      // First fork gets (1) prefix
+      // first fork gets (1) prefix
       const forkedConversation = {
         title: sourceConversation.title
           ? `(1) ${sourceConversation.title}`
@@ -370,7 +370,7 @@ describe("Conversation Management Logic", () => {
       };
 
       expect(forkedMessage.wasForked).toBe(true);
-      // Original token data is preserved
+      // original token data is preserved
       expect(forkedMessage.inputTokens).toBe(100);
       expect(forkedMessage.outputTokens).toBe(50);
     });
@@ -378,7 +378,7 @@ describe("Conversation Management Logic", () => {
     it("forked messages are excluded from billing", () => {
       const messages = [
         { inputTokens: 100, outputTokens: 50, wasForked: false },
-        { inputTokens: 200, outputTokens: 100, wasForked: true }, // Forked - excluded
+        { inputTokens: 200, outputTokens: 100, wasForked: true }, // forked - excluded
         { inputTokens: 150, outputTokens: 75, wasForked: false },
       ];
 

@@ -39,7 +39,7 @@ describe("modelPricing", () => {
 
     it("returns default pricing for unknown model", () => {
       const pricing = getModelPricing("unknown-model-xyz");
-      expect(pricing.input).toBe(15000); // Claude Opus default
+      expect(pricing.input).toBe(15000); // claude opus default
       expect(pricing.output).toBe(75000);
     });
 
@@ -58,13 +58,13 @@ describe("modelPricing", () => {
 
     it("calculates cost for input tokens only", () => {
       const cost = calculateCost("anthropic:claude-3-5-haiku", 1000000, 0);
-      // 1M input tokens at haiku pricing
+      // 1m input tokens at haiku pricing
       expect(cost).toBeGreaterThan(0);
     });
 
     it("calculates cost for output tokens only", () => {
       const cost = calculateCost("anthropic:claude-3-5-haiku", 0, 1000000);
-      // 1M output tokens at haiku pricing
+      // 1m output tokens at haiku pricing
       expect(cost).toBeGreaterThan(0);
     });
 
@@ -79,19 +79,19 @@ describe("modelPricing", () => {
       const outputOnly = calculateCost("anthropic:claude-3-5-haiku", 0, 500);
       const combined = calculateCost("anthropic:claude-3-5-haiku", 1000, 500);
 
-      // Combined should be approximately sum (might differ due to ceiling)
+      // combined should be approximately sum (might differ due to ceiling)
       expect(combined).toBeGreaterThanOrEqual(Math.max(inputOnly, outputOnly));
     });
 
     it("rounds up to nearest credit (never undercharges)", () => {
-      // Very small token count that would result in fraction
+      // very small token count that would result in fraction
       const cost = calculateCost("anthropic:claude-3-5-haiku", 1, 1);
-      expect(cost).toBeGreaterThanOrEqual(1); // At least 1 credit
+      expect(cost).toBeGreaterThanOrEqual(1); // at least 1 credit
       expect(Number.isInteger(cost)).toBe(true);
     });
 
     it("handles large token counts without overflow", () => {
-      // Very large numbers
+      // very large numbers
       const cost = calculateCost(
         "anthropic:claude-opus-4-1",
         10000000,
@@ -103,7 +103,7 @@ describe("modelPricing", () => {
 
     it("uses default pricing for unknown models", () => {
       const unknownCost = calculateCost("unknown-model", 1000, 1000);
-      // Should use conservative Claude Opus rates
+      // should use conservative claude opus rates
       expect(unknownCost).toBeGreaterThan(0);
     });
 
@@ -125,11 +125,11 @@ describe("modelPricing", () => {
     });
 
     it("uses integer arithmetic to avoid floating point issues", () => {
-      // Test a case that would cause floating point errors
+      // test a case that would cause floating point errors
       const cost1 = calculateCost("anthropic:claude-3-5-haiku", 333333, 666666);
       const cost2 = calculateCost("anthropic:claude-3-5-haiku", 333333, 666666);
 
-      // Should be exactly equal, not off by floating point error
+      // should be exactly equal, not off by floating point error
       expect(cost1).toBe(cost2);
     });
   });
@@ -192,7 +192,7 @@ describe("modelPricing", () => {
 
   describe("getModelTier", () => {
     it('returns "economy" or "standard" for cheap models', () => {
-      // Haiku should be economy or standard tier
+      // haiku should be economy or standard tier
       const tier = getModelTier("anthropic:claude-3-5-haiku");
       expect(["economy", "standard"]).toContain(tier);
     });
@@ -208,7 +208,7 @@ describe("modelPricing", () => {
     });
 
     it("uses default pricing for unknown models", () => {
-      // Unknown model should use Opus pricing -> enterprise tier
+      // unknown model should use opus pricing -> enterprise tier
       const tier = getModelTier("unknown-model");
       expect(["premium", "enterprise"]).toContain(tier);
     });
@@ -222,7 +222,7 @@ describe("modelPricing", () => {
 
   describe("pricing accuracy", () => {
     it("calculates Haiku pricing correctly", () => {
-      // Haiku: $0.80/$4.00 per million tokens = 800/4000 credits
+      // haiku: $0.80/$4.00 per million tokens = 800/4000 credits
       const haikuPricing = getModelPricing("anthropic:claude-3-5-haiku");
 
       expect(haikuPricing.input).toBe(800);
@@ -232,7 +232,7 @@ describe("modelPricing", () => {
     it("calculates Sonnet pricing correctly", () => {
       const sonnetPricing = getModelPricing("anthropic:claude-sonnet-4");
 
-      // Sonnet 4 is $3/$15 per million tokens = 3000/15000 credits
+      // sonnet 4 is $3/$15 per million tokens = 3000/15000 credits
       expect(sonnetPricing.input).toBe(3000);
       expect(sonnetPricing.output).toBe(15000);
     });
@@ -240,7 +240,7 @@ describe("modelPricing", () => {
     it("calculates Opus pricing correctly", () => {
       const opusPricing = getModelPricing("anthropic:claude-opus-4-1");
 
-      // Opus 4.1 is $15/$75 per million tokens = 15000/75000 credits
+      // opus 4.1 is $15/$75 per million tokens = 15000/75000 credits
       expect(opusPricing.input).toBe(15000);
       expect(opusPricing.output).toBe(75000);
     });
@@ -248,9 +248,9 @@ describe("modelPricing", () => {
 
   describe("edge cases", () => {
     it("handles negative token counts gracefully", () => {
-      // Negative tokens result in negative microcredits, ceiling to 0 or negative
-      // The implementation uses Math.ceil which may give unexpected results
-      // This test just verifies it doesn't crash
+      // negative tokens result in negative microcredits, ceiling to 0 or negative
+      // the implementation uses math.ceil which may give unexpected results
+      // this test just verifies it doesn't crash
       const cost = calculateCost("anthropic:claude-3-5-haiku", -1000, -500);
       expect(Number.isFinite(cost)).toBe(true);
     });
@@ -262,7 +262,7 @@ describe("modelPricing", () => {
     });
 
     it("handles fractional credits by ceiling", () => {
-      // Any usage should result in at least 1 credit
+      // any usage should result in at least 1 credit
       const cost = calculateCost("anthropic:claude-3-5-haiku", 100, 10);
       expect(cost).toBeGreaterThanOrEqual(1);
     });
@@ -271,7 +271,7 @@ describe("modelPricing", () => {
       const pricing1 = getModelPricing("anthropic:claude-3-5-haiku");
       const pricing2 = getModelPricing("ANTHROPIC:CLAUDE-3-5-HAIKU");
 
-      // Second should return default (unknown model)
+      // second should return default (unknown model)
       expect(pricing2.input).toBe(15000);
     });
   });

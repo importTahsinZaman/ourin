@@ -22,16 +22,16 @@ import { setCookie } from "@/lib/cookies";
 import type { Id } from "@/convex/_generated/dataModel";
 import type { UIMessage, FilePart } from "@/types/chat";
 
-// Get default reasoning level for a model
+// get default reasoning level for a model
 function getDefaultReasoningLevel(modelId: string): string | number {
   const modelInfo = getModelInfo(modelId);
   if (!modelInfo.reasoningParameter) {
-    return "medium"; // Fallback
+    return "medium"; // fallback
   }
   return modelInfo.reasoningParameter.defaultValue ?? "medium";
 }
 
-// Easing function for smooth scroll animation (defined outside to avoid recreation)
+// easing function for smooth scroll animation (defined outside to avoid recreation)
 const easeInOutCubic = (t: number): number =>
   t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
@@ -74,11 +74,11 @@ export function ChatArea({
   const analytics = useAnalytics();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Internal ref for ChatInput - use provided ref or create our own
+  // internal ref for chatInput - use provided ref or create our own
   const internalChatInputRef = useRef<ChatInputHandle>(null);
   const effectiveChatInputRef = chatInputRef ?? internalChatInputRef;
 
-  // Handle files dropped via drag-and-drop
+  // handle files dropped via drag-and-drop
   const handleFilesDrop = useCallback(
     (files: File[]) => {
       effectiveChatInputRef.current?.addFiles(files);
@@ -86,40 +86,40 @@ export function ChatArea({
     [effectiveChatInputRef]
   );
 
-  // Set up drag-and-drop
+  // set up drag-and-drop
   const { isDragging, dropHandlers } = useFileDrop({
     onDrop: handleFilesDrop,
   });
 
-  // Get user tier info to determine if they can send messages
+  // get user tier info to determine if they can send messages
   const tierInfo = useQuery(
     api.billing.getUserTier,
     isAuthenticated ? {} : "skip"
   );
 
-  // Memoize model info to avoid multiple getModelInfo calls
+  // memoize model info to avoid multiple getModelInfo calls
   const modelInfo = useMemo(() => getModelInfo(selectedModel), [selectedModel]);
 
-  // Compute send restriction based on tier and selected model
+  // compute send restriction based on tier and selected model
   const sendRestriction = useMemo(() => {
-    // Still loading tier info - allow sending (will be checked server-side)
+    // still loading tier info - allow sending (will be checked server-side)
     if (isAuthenticated && tierInfo === undefined) {
       return { canSend: true, reason: null };
     }
 
-    // Not authenticated - check handled client-side in useOurinChat via localStorage
+    // not authenticated - check handled client-side in useOurinChat via localStorage
     if (!isAuthenticated) {
       return { canSend: true, reason: null };
     }
 
-    // Check tier-specific restrictions
+    // check tier-specific restrictions
     if (tierInfo) {
-      // Self-hosted tier: no restrictions
+      // self-hosted tier: no restrictions
       if (tierInfo.tier === "self_hosted") {
         return { canSend: true, reason: null };
       }
 
-      // Free tier: model restriction + message limit
+      // free tier: model restriction + message limit
       if (tierInfo.tier === "free") {
         if (selectedModel !== FREE_MODEL_ID) {
           return {
@@ -137,7 +137,7 @@ export function ChatArea({
         }
       }
 
-      // Subscriber tier: check credits
+      // subscriber tier: check credits
       if (tierInfo.tier === "subscriber") {
         if (!tierInfo.canSendMessage) {
           return {
@@ -152,36 +152,36 @@ export function ChatArea({
     return { canSend: true, reason: null };
   }, [isAuthenticated, tierInfo, selectedModel, modelInfo]);
 
-  // Persist user tier to cookie when it changes (for preventing flash on reload)
+  // persist user tier to cookie when it changes (for preventing flash on reload)
   useEffect(() => {
     if (tierInfo?.tier) {
       setCookie(USER_TIER_COOKIE, tierInfo.tier);
     }
   }, [tierInfo?.tier]);
 
-  // Check if current model supports web search (uses memoized modelInfo)
+  // check if current model supports web search (uses memoized modelInfo)
   const modelSupportsWebSearch = modelInfo.supportsWebSearch;
 
-  // Check if user can use web search (subscriber or self-hosted)
+  // check if user can use web search (subscriber or self-hosted)
   const canUseWebSearch = useMemo(() => {
-    // While auth is loading, use the cookie value to prevent flash
+    // while auth is loading, use the cookie value to prevent flash
     if (isAuthLoading) {
       return (
         initialUserTier === "subscriber" || initialUserTier === "self_hosted"
       );
     }
     if (!isAuthenticated) return false;
-    // Use tierInfo if loaded, otherwise fall back to initialUserTier from cookie
+    // use tierInfo if loaded, otherwise fall back to initialUserTier from cookie
     const effectiveTier = tierInfo?.tier ?? initialUserTier;
     return effectiveTier === "subscriber" || effectiveTier === "self_hosted";
   }, [isAuthLoading, isAuthenticated, tierInfo, initialUserTier]);
 
-  // Reset reasoning level and web search when model changes
+  // reset reasoning level and web search when model changes
   const handleModelChange = useCallback(
     (newModel: string) => {
       onModelChange(newModel);
       onReasoningLevelChange(getDefaultReasoningLevel(newModel));
-      // Reset web search if new model doesn't support it
+      // reset web search if new model doesn't support it
       const newModelInfo = getModelInfo(newModel);
       if (!newModelInfo.supportsWebSearch) {
         onWebSearchEnabledChange(false);
@@ -190,10 +190,10 @@ export function ChatArea({
     [onModelChange, onReasoningLevelChange, onWebSearchEnabledChange]
   );
 
-  // Get active core names and prompt for message metadata
+  // get active core names and prompt for message metadata
   const { getActiveCoreNames, getActivePrompt } = useCores();
 
-  // Load persisted messages if we have a conversation
+  // load persisted messages if we have a conversation
   const persistedMessages = useQuery(
     api.messages.getByConversation,
     conversationId
@@ -201,7 +201,7 @@ export function ChatArea({
       : "skip"
   );
 
-  // Initialize chat hook
+  // initialize chat hook
   const {
     messages,
     status,
@@ -221,15 +221,15 @@ export function ChatArea({
     getActivePrompt,
   });
 
-  // Track if this is the initial load for this conversation
+  // track if this is the initial load for this conversation
   const hasLoadedRef = useRef<string | null>(null);
   const shouldScrollToUserMessageRef = useRef(false);
   const shouldScrollToBottomOnLoadRef = useRef(false);
-  // Track previous status and conversation to detect transitions
+  // track previous status and conversation to detect transitions
   const prevStatusRef = useRef<string>(status);
   const prevConversationIdRef = useRef<string | null>(conversationId);
-  // Track when we just finished streaming to skip immediate sync (prevents flash)
-  // Use a counter to skip multiple render cycles (Convex update may arrive later)
+  // track when we just finished streaming to skip immediate sync (prevents flash)
+  // use a counter to skip multiple render cycles (convex update may arrive later)
   const skipSyncCountRef = useRef(0);
 
   useEffect(() => {
@@ -240,9 +240,9 @@ export function ChatArea({
       prevConversationIdRef.current !== conversationId;
     const isNowReady = status === "ready";
 
-    // Detect when streaming just finished in this client
-    // Set counter to skip next few Convex syncs (prevents flash from double-update)
-    // We skip 2 cycles because Convex update may arrive in a later render
+    // detect when streaming just finished in this client
+    // set counter to skip next few convex syncs (prevents flash from double-update)
+    // we skip 2 cycles because convex update may arrive in a later render
     if (wasStreaming && isNowReady && !conversationChanged) {
       skipSyncCountRef.current = 2;
     }
@@ -250,13 +250,13 @@ export function ChatArea({
     prevStatusRef.current = status;
     prevConversationIdRef.current = conversationId;
 
-    // Load persisted messages when:
-    // 1. First load of this conversation (hasLoadedRef !== conversationId)
-    // 2. AND we have persisted messages
-    // 3. AND we're not streaming THIS conversation
-    // 4. AND (we just switched conversations OR we didn't just finish streaming)
-    //    - Always load immediately when switching conversations
-    //    - Don't interrupt scroll if streaming just finished in same conversation
+    // load persisted messages when:
+    // 1. first load of this conversation (hasLoadedRef !== conversationId)
+    // 2. aND we have persisted messages
+    // 3. aND we're not streaming tHIS conversation
+    // 4. aND (we just switched conversations oR we didn't just finish streaming)
+    //    - always load immediately when switching conversations
+    //    - don't interrupt scroll if streaming just finished in same conversation
     if (
       conversationId &&
       hasLoadedRef.current !== conversationId &&
@@ -266,16 +266,16 @@ export function ChatArea({
       (conversationChanged || !wasStreaming)
     ) {
       hasLoadedRef.current = conversationId;
-      // Use startTransition to prevent blocking UI during heavy message rendering
+      // use startTransition to prevent blocking uI during heavy message rendering
       startTransition(() => {
         setMessages(persistedMessages as unknown as UIMessage[]);
       });
-      // Flag to scroll to bottom after messages are loaded
+      // flag to scroll to bottom after messages are loaded
       shouldScrollToBottomOnLoadRef.current = true;
     }
 
-    // Update hasLoadedRef when conversation changes (even during streaming)
-    // This prevents scroll-to-bottom when streaming ends in a new conversation
+    // update hasLoadedRef when conversation changes (even during streaming)
+    // this prevents scroll-to-bottom when streaming ends in a new conversation
     if (
       conversationId &&
       hasLoadedRef.current !== conversationId &&
@@ -284,7 +284,7 @@ export function ChatArea({
       hasLoadedRef.current = conversationId;
     }
 
-    // Reset when conversation changes to null (new chat)
+    // reset when conversation changes to null (new chat)
     if (!conversationId && hasLoadedRef.current !== null) {
       hasLoadedRef.current = null;
       startTransition(() => {
@@ -293,8 +293,8 @@ export function ChatArea({
     }
   }, [conversationId, persistedMessages, setMessages, status]);
 
-  // Sync Convex updates to local state when NOT streaming (for multi-device sync)
-  // This allows other clients to see streaming updates in real-time
+  // sync convex updates to local state when nOT streaming (for multi-device sync)
+  // this allows other clients to see streaming updates in real-time
   const lastSyncedRef = useRef<{
     length: number;
     lastMessageId: string | null;
@@ -305,19 +305,19 @@ export function ChatArea({
     partsHash: null,
   });
   useEffect(() => {
-    // Only sync when we're ready (not streaming ourselves)
+    // only sync when we're ready (not streaming ourselves)
     if (status !== "ready") return;
-    // Only sync after initial load
+    // only sync after initial load
     if (!hasLoadedRef.current || hasLoadedRef.current !== conversationId)
       return;
-    // Only sync if we have messages from Convex
+    // only sync if we have messages from convex
     if (!persistedMessages || persistedMessages.length === 0) return;
 
-    // Skip sync if we just finished streaming in this client
-    // This prevents double-update flash (local state already updated by useOurinChat)
+    // skip sync if we just finished streaming in this client
+    // this prevents double-update flash (local state already updated by useOurinChat)
     if (skipSyncCountRef.current > 0) {
       skipSyncCountRef.current--;
-      // Still update lastSyncedRef to prevent sync on next render
+      // still update lastSyncedRef to prevent sync on next render
       const lastMessage = persistedMessages[persistedMessages.length - 1];
       lastSyncedRef.current = {
         length: persistedMessages.length,
@@ -327,12 +327,12 @@ export function ChatArea({
       return;
     }
 
-    // Check if Convex has more/different messages than our last sync
+    // check if convex has more/different messages than our last sync
     const persistedLength = persistedMessages.length;
     const lastMessage = persistedMessages[persistedLength - 1];
     const lastSynced = lastSyncedRef.current;
 
-    // Quick check: different message count or different last message ID
+    // quick check: different message count or different last message iD
     if (
       persistedLength !== lastSynced.length ||
       lastMessage?.id !== lastSynced.lastMessageId
@@ -349,7 +349,7 @@ export function ChatArea({
       return;
     }
 
-    // Same message count and ID - only compare parts if potentially changed (streaming updates)
+    // same message count and iD - only compare parts if potentially changed (streaming updates)
     if (lastMessage && lastSynced.lastMessageId === lastMessage.id) {
       const partsHash = JSON.stringify(lastMessage.parts);
       if (partsHash !== lastSynced.partsHash) {
@@ -361,7 +361,7 @@ export function ChatArea({
     }
   }, [conversationId, persistedMessages, setMessages, status]);
 
-  // Scroll to bottom when conversation is first loaded or page is refreshed
+  // scroll to bottom when conversation is first loaded or page is refreshed
   useLayoutEffect(() => {
     if (!shouldScrollToBottomOnLoadRef.current || messages.length === 0) {
       return;
@@ -369,20 +369,20 @@ export function ChatArea({
 
     shouldScrollToBottomOnLoadRef.current = false;
 
-    // Small delay to ensure DOM is ready
+    // small delay to ensure dOM is ready
     setTimeout(() => {
       const container = scrollContainerRef.current;
       if (!container) return;
 
-      // Instantly scroll to bottom (no animation for initial load)
+      // instantly scroll to bottom (no animation for initial load)
       container.scrollTop = container.scrollHeight;
     }, 0);
   }, [messages]);
 
-  // Track the message ID we're scrolling to (to avoid cleanup issues)
+  // track the message iD we're scrolling to (to avoid cleanup issues)
   const scrollToMessageIdRef = useRef<string | null>(null);
 
-  // Scroll to show user message at top of viewport when sending a new message
+  // scroll to show user message at top of viewport when sending a new message
   useLayoutEffect(() => {
     if (!shouldScrollToUserMessageRef.current || messages.length === 0) {
       return;
@@ -390,21 +390,21 @@ export function ChatArea({
 
     const lastMessage = messages[messages.length - 1];
     if (lastMessage.role !== "user") {
-      return; // Don't reset flag here - we might still be waiting to scroll
+      return; // don't reset flag here - we might still be waiting to scroll
     }
 
-    // Mark which message we want to scroll to
+    // mark which message we want to scroll to
     const targetMessageId = lastMessage.id;
 
-    // If we're already trying to scroll to this message, don't set another timeout
+    // if we're already trying to scroll to this message, don't set another timeout
     if (scrollToMessageIdRef.current === targetMessageId) {
       return;
     }
 
     scrollToMessageIdRef.current = targetMessageId;
-    shouldScrollToUserMessageRef.current = false; // Reset flag immediately
+    shouldScrollToUserMessageRef.current = false; // reset flag immediately
 
-    // Use setTimeout without cleanup - we want this to fire even if messages changes
+    // use setTimeout without cleanup - we want this to fire even if messages changes
     setTimeout(() => {
       const container = scrollContainerRef.current;
       if (!container) {
@@ -422,19 +422,19 @@ export function ChatArea({
         ] as HTMLElement);
 
       if (messageToScroll) {
-        // Custom smooth scroll with easing
+        // custom smooth scroll with easing
         const scrollMargin = 30; // matches scrollMarginTop on user messages
         const targetScrollTop = messageToScroll.offsetTop - scrollMargin;
         const startScrollTop = container.scrollTop;
         const distance = targetScrollTop - startScrollTop;
 
-        // Skip animation if already at target
+        // skip animation if already at target
         if (Math.abs(distance) < 1) {
           scrollToMessageIdRef.current = null;
           return;
         }
 
-        // Duration scales with distance (min 200ms, max 600ms)
+        // duration scales with distance (min 200ms, max 600ms)
         const duration = Math.min(600, Math.max(200, Math.abs(distance) * 0.5));
         const startTime = performance.now();
 
@@ -470,10 +470,10 @@ export function ChatArea({
       }>,
       options?: { webSearchEnabled?: boolean; stayInPlace?: boolean }
     ) => {
-      // Flag to scroll to user message after it's added (unless stayInPlace is true)
+      // flag to scroll to user message after it's added (unless stayInPlace is true)
       shouldScrollToUserMessageRef.current = !options?.stayInPlace;
 
-      // Build message parts
+      // build message parts
       const parts: UIMessage["parts"] = [];
 
       if (content.trim()) {
@@ -491,13 +491,13 @@ export function ChatArea({
         });
       }
 
-      // Send message (hook handles conversation creation if needed)
+      // send message (hook handles conversation creation if needed)
       await sendMessage(
         { role: "user", parts },
         { webSearchEnabled: options?.webSearchEnabled }
       );
 
-      // Track analytics
+      // track analytics
       analytics.trackMessageSent({
         conversationId: conversationId ?? undefined,
         model: selectedModel,
@@ -531,10 +531,10 @@ export function ChatArea({
       model?: string,
       reasoningLevelOverride?: string | number
     ) => {
-      // Scroll to show the regenerated user message
+      // scroll to show the regenerated user message
       shouldScrollToUserMessageRef.current = true;
 
-      // Update current configuration to match what's being regenerated
+      // update current configuration to match what's being regenerated
       if (model && model !== selectedModel) {
         onModelChange(model);
       }
@@ -574,10 +574,10 @@ export function ChatArea({
         webSearchEnabled?: boolean;
       }
     ) => {
-      // Scroll to show the edited user message
+      // scroll to show the edited user message
       shouldScrollToUserMessageRef.current = true;
 
-      // Update UI state to match the edit config
+      // update uI state to match the edit config
       if (options?.model && options.model !== selectedModel) {
         onModelChange(options.model);
       }
@@ -630,7 +630,7 @@ export function ChatArea({
   const isLoading = status === "submitted" || status === "streaming";
   const isNewChat = !conversationId && messages.length === 0;
 
-  // Chat input component (reused in both views)
+  // chat input component (reused in both views)
   const chatInput = (
     <ChatInput
       ref={effectiveChatInputRef}
@@ -654,7 +654,7 @@ export function ChatArea({
     />
   );
 
-  // New chat view (empty state)
+  // new chat view (empty state)
   if (isNewChat) {
     return (
       <div
@@ -676,7 +676,7 @@ export function ChatArea({
     );
   }
 
-  // Existing chat view
+  // existing chat view
   return (
     <div
       className="relative flex flex-col h-full"
@@ -685,7 +685,7 @@ export function ChatArea({
     >
       <DropZoneOverlay isVisible={isDragging} />
 
-      {/* Messages area */}
+      {/* messages area */}
       <div
         ref={scrollContainerRef}
         className="flex flex-1 justify-center overflow-y-auto"
@@ -704,7 +704,7 @@ export function ChatArea({
         </div>
       </div>
 
-      {/* Input area */}
+      {/* input area */}
       <div
         className="flex justify-center px-4 pb-4"
         style={{ backgroundColor: "var(--color-background-primary)" }}

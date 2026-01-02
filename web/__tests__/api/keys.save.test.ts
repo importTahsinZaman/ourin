@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Use vi.hoisted to define mocks that can be referenced in vi.mock factories
+// use vi.hoisted to define mocks that can be referenced in vi.mock factories
 const { mockConvexMutation, mockConvexQuery } = vi.hoisted(() => ({
   mockConvexMutation: vi.fn(),
   mockConvexQuery: vi.fn(),
 }));
 
-// Mock dependencies before importing the route
+// mock dependencies before importing the route
 vi.mock("@/lib/verifyChatToken", () => ({
   verifyChatToken: vi.fn(),
   extractChatToken: vi.fn(() => null),
@@ -30,10 +30,10 @@ vi.mock("convex/browser", () => {
 import { verifyChatToken } from "@/lib/verifyChatToken";
 import { encryptApiKey, getKeyHint, validateKeyFormat } from "@/lib/encryption";
 
-// Import after mocking
+// import after mocking
 import { POST } from "@/app/api/keys/save/route";
 
-// Helper to mock subscriber tier (required for BYOK)
+// helper to mock subscriber tier (required for bYOK)
 function mockSubscriberTier() {
   mockConvexQuery.mockResolvedValue({
     tier: "subscriber",
@@ -42,7 +42,7 @@ function mockSubscriberTier() {
   });
 }
 
-// Helper to mock free tier (BYOK not allowed)
+// helper to mock free tier (bYOK not allowed)
 function mockFreeTier() {
   mockConvexQuery.mockResolvedValue({
     tier: "free",

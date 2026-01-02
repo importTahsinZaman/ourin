@@ -4,8 +4,8 @@ import { verifyChatToken } from "../chatAuth";
 const TEST_SECRET = "test-secret-key-for-testing-purposes";
 
 /**
- * Generate a valid chat token for testing.
- * Uses the same algorithm as the production code.
+ * generate a valid chat token for testing.
+ * uses the same algorithm as the production code.
  */
 async function generateTestToken(
   userId: string,
@@ -53,7 +53,7 @@ describe("verifyChatToken (Convex export)", () => {
 
       const token = await generateTestToken("user123", TEST_SECRET, now);
 
-      // Advance time by 59 seconds
+      // advance time by 59 seconds
       vi.setSystemTime(now + 59000);
 
       const result = await verifyChatToken(token, TEST_SECRET);
@@ -77,7 +77,7 @@ describe("verifyChatToken (Convex export)", () => {
 
       const token = await generateTestToken("user123", TEST_SECRET, now);
 
-      // Advance time by 5 minutes and 1 second (300001ms)
+      // advance time by 5 minutes and 1 second (300001ms)
       vi.setSystemTime(now + 300001);
 
       const result = await verifyChatToken(token, TEST_SECRET);
@@ -91,7 +91,7 @@ describe("verifyChatToken (Convex export)", () => {
 
       const token = await generateTestToken("user123", TEST_SECRET, now);
 
-      // Advance time by exactly 300001ms (just past the 5 minute limit)
+      // advance time by exactly 300001ms (just past the 5 minute limit)
       vi.setSystemTime(now + 300001);
 
       const result = await verifyChatToken(token, TEST_SECRET);

@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Use vi.hoisted to define mocks that can be referenced in vi.mock factories
+// use vi.hoisted to define mocks that can be referenced in vi.mock factories
 const { mockConvexQuery, mockStripePricesRetrieve } = vi.hoisted(() => ({
   mockConvexQuery: vi.fn(),
   mockStripePricesRetrieve: vi.fn(),
 }));
 
-// Mock dependencies before importing the route
+// mock dependencies before importing the route
 vi.mock("convex/browser", () => {
   return {
     ConvexHttpClient: class MockConvexHttpClient {
@@ -25,7 +25,7 @@ vi.mock("@/lib/stripe", () => ({
   SUBSCRIPTION_PRICE_ID: "price_test_subscription",
 }));
 
-// Import after mocking
+// import after mocking
 import { GET } from "@/app/api/billing/config/route";
 
 describe("GET /api/billing/config", () => {
@@ -83,7 +83,7 @@ describe("GET /api/billing/config", () => {
         creditPackAmount: 20000,
       });
 
-      // First call is for subscription price, second for credit pack
+      // first call is for subscription price, second for credit pack
       mockStripePricesRetrieve
         .mockResolvedValueOnce({
           id: "price_subscription",
@@ -150,7 +150,7 @@ describe("GET /api/billing/config", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      // Should return defaults, not error
+      // should return defaults, not error
       expect(data).toBeDefined();
     });
 
@@ -160,13 +160,13 @@ describe("GET /api/billing/config", () => {
         creditPackAmount: 20000,
       });
 
-      // Stripe price fetch fails
+      // stripe price fetch fails
       mockStripePricesRetrieve.mockRejectedValue(new Error("Stripe error"));
 
       const response = await GET();
       const data = await response.json();
 
-      // Returns defaults on error
+      // returns defaults on error
       expect(response.status).toBe(200);
       expect(data.subscriptionCredits).toBe(10000);
       expect(data.subscriptionPriceCents).toBe(1000);
@@ -190,7 +190,7 @@ describe("GET /api/billing/config", () => {
 
       const response = await GET();
 
-      // Check response is successful
+      // check response is successful
       expect(response.status).toBe(200);
     });
   });

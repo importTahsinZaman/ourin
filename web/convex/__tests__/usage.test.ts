@@ -1,12 +1,12 @@
 import { describe, it, expect } from "vitest";
 
 /**
- * Usage calculation business logic tests.
- * Tests balance calculations, aggregation, and forked message exclusion
- * without requiring the Convex runtime.
+ * usage calculation business logic tests.
+ * tests balance calculations, aggregation, and forked message exclusion
+ * without requiring the convex runtime.
  */
 
-// Simulate message record
+// simulate message record
 interface Message {
   role: "user" | "assistant";
   inputTokens?: number;
@@ -17,13 +17,13 @@ interface Message {
   usedOwnKey?: boolean;
 }
 
-// Simplified credit calculation for testing (actual uses MODEL_PRICING)
+// simplified credit calculation for testing (actual uses mODEL_pRICING)
 function calculateCredits(
   model: string,
   inputTokens: number,
   outputTokens: number
 ): number {
-  // Simplified pricing for testing - just use a fixed rate
+  // simplified pricing for testing - just use a fixed rate
   const PRICE_PER_1M_INPUT = 1000;
   const PRICE_PER_1M_OUTPUT = 5000;
   const cost =
@@ -32,7 +32,7 @@ function calculateCredits(
   return Math.ceil(cost);
 }
 
-// Business logic: Calculate total credits from messages
+// business logic: calculate total credits from messages
 function calculateTotalCredits(messages: Message[]): number {
   return messages.reduce((total, msg) => {
     if (
@@ -54,7 +54,7 @@ function calculateTotalCredits(messages: Message[]): number {
   }, 0);
 }
 
-// Business logic: Filter messages for usage calculation
+// business logic: filter messages for usage calculation
 function filterBillableMessages(messages: Message[]): Message[] {
   return messages.filter(
     (msg) =>
@@ -65,7 +65,7 @@ function filterBillableMessages(messages: Message[]): Message[] {
   );
 }
 
-// Business logic: Calculate subscription balance
+// business logic: calculate subscription balance
 function calculateSubscriptionBalance(
   subscriptionCredits: number,
   creditsUsed: number
@@ -73,7 +73,7 @@ function calculateSubscriptionBalance(
   return Math.max(0, subscriptionCredits - creditsUsed);
 }
 
-// Business logic: Calculate total balance
+// business logic: calculate total balance
 function calculateTotalBalance(
   subscriptionCredits: number,
   creditsUsed: number,
@@ -83,7 +83,7 @@ function calculateTotalBalance(
   return subBalance + purchasedBalance;
 }
 
-// Business logic: Group usage by model
+// business logic: group usage by model
 function groupByModel(
   messages: Message[]
 ): Record<string, { count: number; tokens: number; credits: number }> {
@@ -116,7 +116,7 @@ function groupByModel(
   return byModel;
 }
 
-// Business logic: Filter messages within period
+// business logic: filter messages within period
 function filterByPeriod(
   messages: Message[],
   periodStart: number,
@@ -167,7 +167,7 @@ describe("usage", () => {
         },
       ];
 
-      // Token tracking works regardless of self-hosting mode
+      // token tracking works regardless of self-hosting mode
       const totalInputTokens = messages.reduce(
         (sum, m) => sum + (m.inputTokens ?? 0),
         0
@@ -180,7 +180,7 @@ describe("usage", () => {
       expect(totalInputTokens).toBe(3000);
       expect(totalOutputTokens).toBe(1500);
 
-      // But credits are 0 in self-hosting mode
+      // but credits are 0 in self-hosting mode
       const credits = isSelfHosting ? 0 : calculateTotalCredits(messages);
       expect(credits).toBe(0);
     });
@@ -198,13 +198,13 @@ describe("usage", () => {
         },
       ];
 
-      // In self-hosting mode, byModel should have consistent structure
+      // in self-hosting mode, byModel should have consistent structure
       const byModel = isSelfHosting
         ? {
             "claude-3-opus": {
               count: 1,
               tokens: 1500,
-              credits: 0, // Credits are 0 in self-hosting
+              credits: 0, // credits are 0 in self-hosting
             },
           }
         : groupByModel(messages);
@@ -216,7 +216,7 @@ describe("usage", () => {
     it("usage summary returns null/0 for billing fields in self-hosting mode", () => {
       const isSelfHosting = true;
 
-      // Simulated self-hosting usage summary response
+      // simulated self-hosting usage summary response
       const selfHostingSummary = {
         totalInputTokens: 5000,
         totalOutputTokens: 2500,
@@ -277,7 +277,7 @@ describe("usage", () => {
       ];
 
       const credits = calculateTotalCredits(messages);
-      // Should be sum of individual calculations
+      // should be sum of individual calculations
       const expected =
         calculateCredits("claude-3-opus", 1000, 500) +
         calculateCredits("claude-3-opus", 2000, 1000);
@@ -318,7 +318,7 @@ describe("usage", () => {
         },
         {
           role: "user",
-          // No inputTokens
+          // no inputTokens
           outputTokens: 500,
           model: "claude-3-opus",
           createdAt: Date.now(),
@@ -707,7 +707,7 @@ describe("usage", () => {
 
     it("handles mixed billable and non-billable messages", () => {
       const messages: Message[] = [
-        // Billable
+        // billable
         {
           role: "user",
           inputTokens: 1000,
@@ -715,7 +715,7 @@ describe("usage", () => {
           model: "claude",
           createdAt: Date.now(),
         },
-        // Not billable - assistant
+        // not billable - assistant
         {
           role: "assistant",
           inputTokens: 500,
@@ -723,7 +723,7 @@ describe("usage", () => {
           model: "claude",
           createdAt: Date.now(),
         },
-        // Not billable - forked
+        // not billable - forked
         {
           role: "user",
           inputTokens: 1000,
@@ -732,7 +732,7 @@ describe("usage", () => {
           createdAt: Date.now(),
           wasForked: true,
         },
-        // Not billable - own key
+        // not billable - own key
         {
           role: "user",
           inputTokens: 1000,
@@ -741,7 +741,7 @@ describe("usage", () => {
           createdAt: Date.now(),
           usedOwnKey: true,
         },
-        // Billable
+        // billable
         {
           role: "user",
           inputTokens: 2000,
@@ -764,20 +764,20 @@ describe("usage", () => {
     it("handles subscription overspend with purchased credits backup", () => {
       const subscriptionCredits = 10000;
       const purchasedBalance = 5000;
-      const creditsUsed = 12000; // Overspent by 2000
+      const creditsUsed = 12000; // overspent by 2000
 
       const subBalance = calculateSubscriptionBalance(
         subscriptionCredits,
         creditsUsed
       );
-      expect(subBalance).toBe(0); // Capped at 0
+      expect(subBalance).toBe(0); // capped at 0
 
       const totalBalance = calculateTotalBalance(
         subscriptionCredits,
         creditsUsed,
         purchasedBalance
       );
-      expect(totalBalance).toBe(5000); // Only purchased credits remain
+      expect(totalBalance).toBe(5000); // only purchased credits remain
     });
   });
 
@@ -801,8 +801,8 @@ describe("usage", () => {
       const messages: Message[] = [
         {
           role: "user",
-          inputTokens: 10000000, // 10M
-          outputTokens: 5000000, // 5M
+          inputTokens: 10000000, // 10m
+          outputTokens: 5000000, // 5m
           model: "claude",
           createdAt: Date.now(),
         },

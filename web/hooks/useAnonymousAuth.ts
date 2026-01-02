@@ -6,11 +6,11 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { IS_SELF_HOSTING_CLIENT } from "@/lib/config";
 
 /**
- * Hook to handle anonymous authentication.
- * Provides a function to ensure the user is authenticated,
+ * hook to handle anonymous authentication.
+ * provides a function to ensure the user is authenticated,
  * signing them in anonymously if needed.
  *
- * In self-hosting mode, automatically authenticates on mount.
+ * in self-hosting mode, automatically authenticates on mount.
  */
 export function useAnonymousAuth() {
   const { isAuthenticated, isLoading } = useConvexAuth();
@@ -18,7 +18,7 @@ export function useAnonymousAuth() {
   const isSigningInRef = useRef(false);
   const hasAutoAuthenticatedRef = useRef(false);
 
-  // Keep refs updated with latest values for use in async callbacks
+  // keep refs updated with latest values for use in async callbacks
   const isAuthenticatedRef = useRef(isAuthenticated);
   const isLoadingRef = useRef(isLoading);
 
@@ -27,7 +27,7 @@ export function useAnonymousAuth() {
     isLoadingRef.current = isLoading;
   }, [isAuthenticated, isLoading]);
 
-  // Auto-authenticate in self-hosting mode
+  // auto-authenticate in self-hosting mode
   useEffect(() => {
     if (
       IS_SELF_HOSTING_CLIENT &&
@@ -49,17 +49,17 @@ export function useAnonymousAuth() {
   }, [isLoading, isAuthenticated, signIn]);
 
   /**
-   * Ensures the user has an authenticated session.
-   * If not authenticated, signs them in anonymously.
-   * Returns a promise that resolves to true when authentication is complete.
+   * ensures the user has an authenticated session.
+   * if not authenticated, signs them in anonymously.
+   * returns a promise that resolves to true when authentication is complete.
    */
   const ensureAuthenticated = useCallback(async (): Promise<boolean> => {
-    // Already authenticated
+    // already authenticated
     if (isAuthenticatedRef.current) {
       return true;
     }
 
-    // Wait for loading to complete
+    // wait for loading to complete
     if (isLoadingRef.current) {
       await new Promise<void>((resolve) => {
         const checkInterval = setInterval(() => {
@@ -69,15 +69,15 @@ export function useAnonymousAuth() {
           }
         }, 50);
       });
-      // Re-check after loading completes
+      // re-check after loading completes
       if (isAuthenticatedRef.current) {
         return true;
       }
     }
 
-    // Prevent concurrent sign-in attempts
+    // prevent concurrent sign-in attempts
     if (isSigningInRef.current) {
-      // Wait for the in-progress sign-in to complete (with timeout)
+      // wait for the in-progress sign-in to complete (with timeout)
       const waitResult = await new Promise<boolean>((resolve) => {
         const maxWaitMs = 10000;
         const startTime = Date.now();
@@ -86,7 +86,7 @@ export function useAnonymousAuth() {
             clearInterval(checkInterval);
             resolve(true);
           } else if (!isSigningInRef.current) {
-            // Sign-in finished but not authenticated (failed)
+            // sign-in finished but not authenticated (failed)
             clearInterval(checkInterval);
             resolve(false);
           } else if (Date.now() - startTime > maxWaitMs) {
@@ -98,12 +98,12 @@ export function useAnonymousAuth() {
       return waitResult;
     }
 
-    // Not authenticated - sign in anonymously
+    // not authenticated - sign in anonymously
     try {
       isSigningInRef.current = true;
       await signIn("anonymous");
 
-      // Wait for auth state to propagate (signIn resolves before state updates)
+      // wait for auth state to propagate (signIn resolves before state updates)
       await new Promise<void>((resolve, reject) => {
         const maxWaitMs = 5000;
         const startTime = Date.now();

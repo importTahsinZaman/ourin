@@ -1,18 +1,18 @@
 /**
- * Keybind configuration types and defaults
+ * keybind configuration types and defaults
  */
 
 export type KeybindAction =
-  | "toggleSidebarLeft" // Used when sidebar is on left
-  | "toggleSidebarRight" // Used when sidebar is on right
+  | "toggleSidebarLeft" // used when sidebar is on left
+  | "toggleSidebarRight" // used when sidebar is on right
   | "newChat"
   | "settings"
   | "appearance"
   | "commandPalette";
 
 export interface KeybindConfig {
-  key: string; // The key (e.g., "[", "n", "k")
-  meta?: boolean; // Cmd (Mac) / Ctrl (Windows)
+  key: string; // the key (e.g., "[", "n", "k")
+  meta?: boolean; // cmd (mac) / ctrl (windows)
   shift?: boolean;
   alt?: boolean;
 }
@@ -37,23 +37,23 @@ export const DEFAULT_KEYBINDS: KeybindsMap = {
   commandPalette: { key: "k", meta: true },
 };
 
-// Reserved system shortcuts that should not be overridden
+// reserved system shortcuts that should not be overridden
 export const RESERVED_SHORTCUTS: KeybindConfig[] = [
-  { key: "c", meta: true }, // Copy
-  { key: "v", meta: true }, // Paste
-  { key: "x", meta: true }, // Cut
-  { key: "a", meta: true }, // Select all
-  { key: "z", meta: true }, // Undo
-  { key: "z", meta: true, shift: true }, // Redo
-  { key: "w", meta: true }, // Close tab
-  { key: "q", meta: true }, // Quit
-  { key: "r", meta: true }, // Refresh
-  { key: "t", meta: true }, // New tab
-  { key: "f", meta: true }, // Find
+  { key: "c", meta: true }, // copy
+  { key: "v", meta: true }, // paste
+  { key: "x", meta: true }, // cut
+  { key: "a", meta: true }, // select all
+  { key: "z", meta: true }, // undo
+  { key: "z", meta: true, shift: true }, // redo
+  { key: "w", meta: true }, // close tab
+  { key: "q", meta: true }, // quit
+  { key: "r", meta: true }, // refresh
+  { key: "t", meta: true }, // new tab
+  { key: "f", meta: true }, // find
 ];
 
 /**
- * Check if a keybind matches a reserved shortcut
+ * check if a keybind matches a reserved shortcut
  */
 export function isReservedShortcut(config: KeybindConfig): boolean {
   return RESERVED_SHORTCUTS.some(
@@ -66,8 +66,8 @@ export function isReservedShortcut(config: KeybindConfig): boolean {
 }
 
 /**
- * Format a keybind config to a display string
- * e.g., { key: "k", meta: true } -> "⌘K" (Mac) or "Ctrl+K" (Windows)
+ * format a keybind config to a display string
+ * e.g., { key: "k", meta: true } -> "⌘k" (mac) or "ctrl+k" (windows)
  */
 export function formatKeybind(
   config: KeybindConfig | undefined,
@@ -87,7 +87,7 @@ export function formatKeybind(
     parts.push(isMac ? "⇧" : "Shift");
   }
 
-  // Format the key
+  // format the key
   let keyDisplay = config.key.toUpperCase();
   if (config.key === "[") keyDisplay = "[";
   if (config.key === "]") keyDisplay = "]";
@@ -103,7 +103,7 @@ export function formatKeybind(
 }
 
 /**
- * Check if a keyboard event matches a keybind config
+ * check if a keyboard event matches a keybind config
  */
 export function matchesKeybind(
   event: KeyboardEvent,
@@ -124,7 +124,7 @@ export function matchesKeybind(
 }
 
 /**
- * Parse a KeyboardEvent into a KeybindConfig
+ * parse a keyboardEvent into a keybindConfig
  */
 export function eventToKeybindConfig(event: KeyboardEvent): KeybindConfig {
   const config: KeybindConfig = {
@@ -145,7 +145,7 @@ export function eventToKeybindConfig(event: KeyboardEvent): KeybindConfig {
 }
 
 /**
- * Check if two keybind configs are equal
+ * check if two keybind configs are equal
  */
 export function keybindsEqual(a: KeybindConfig, b: KeybindConfig): boolean {
   return (
@@ -157,7 +157,7 @@ export function keybindsEqual(a: KeybindConfig, b: KeybindConfig): boolean {
 }
 
 /**
- * Merge user overrides with defaults
+ * merge user overrides with defaults
  */
 export function mergeKeybinds(
   overrides: Partial<KeybindsMap> | null | undefined
@@ -167,7 +167,7 @@ export function mergeKeybinds(
 }
 
 /**
- * Serialize keybinds to JSON string (only non-default values)
+ * serialize keybinds to jSON string (only non-default values)
  */
 export function serializeKeybinds(keybinds: KeybindsMap): string {
   const overrides: Partial<KeybindsMap> = {};
@@ -183,7 +183,7 @@ export function serializeKeybinds(keybinds: KeybindsMap): string {
 }
 
 /**
- * Parse keybinds from JSON string
+ * parse keybinds from jSON string
  */
 export function parseKeybinds(json: string | null | undefined): KeybindsMap {
   if (!json) return { ...DEFAULT_KEYBINDS };
@@ -197,6 +197,6 @@ export function parseKeybinds(json: string | null | undefined): KeybindsMap {
 }
 
 /**
- * LocalStorage key for anonymous user keybinds
+ * localStorage key for anonymous user keybinds
  */
 export const KEYBINDS_STORAGE_KEY = "ourin-keybinds";

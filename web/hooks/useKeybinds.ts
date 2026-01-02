@@ -12,36 +12,36 @@ import {
 } from "@/lib/keybinds";
 
 /**
- * Hook to get the current keybinds configuration.
- * - For authenticated users: fetches from Convex DB
- * - For anonymous users: reads from localStorage
- * - Returns DEFAULT_KEYBINDS while loading
+ * hook to get the current keybinds configuration.
+ * - for authenticated users: fetches from convex dB
+ * - for anonymous users: reads from localStorage
+ * - returns dEFAULT_kEYBINDS while loading
  */
 export function useKeybinds(): KeybindsMap {
   const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
 
-  // DB query for authenticated users
+  // dB query for authenticated users
   const savedKeybinds = useQuery(
     api.settings.getKeybinds,
     isAuthenticated ? {} : "skip"
   );
 
-  // Local state for the resolved keybinds
+  // local state for the resolved keybinds
   const [keybinds, setKeybinds] = useState<KeybindsMap>({
     ...DEFAULT_KEYBINDS,
   });
 
   useEffect(() => {
-    // Still loading auth state
+    // still loading auth state
     if (isAuthLoading) return;
 
     if (isAuthenticated) {
-      // Authenticated: use DB (or defaults while loading)
+      // authenticated: use dB (or defaults while loading)
       if (savedKeybinds !== undefined) {
         setKeybinds(parseKeybinds(savedKeybinds));
       }
     } else {
-      // Anonymous: use localStorage
+      // anonymous: use localStorage
       if (typeof window !== "undefined") {
         const stored = localStorage.getItem(KEYBINDS_STORAGE_KEY);
         setKeybinds(parseKeybinds(stored));
@@ -49,7 +49,7 @@ export function useKeybinds(): KeybindsMap {
     }
   }, [isAuthenticated, isAuthLoading, savedKeybinds]);
 
-  // Also listen for storage changes (for anonymous users in other tabs)
+  // also listen for storage changes (for anonymous users in other tabs)
   useEffect(() => {
     if (isAuthenticated) return;
 

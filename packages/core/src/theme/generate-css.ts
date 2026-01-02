@@ -1,7 +1,7 @@
 import type { OurinTheme } from "../types/theme";
 
 // ============================================================================
-// Color Utility Functions
+// color utility functions
 // ============================================================================
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
@@ -59,11 +59,11 @@ function mix(hex1: string, hex2: string, weight: number = 0.5): string {
 }
 
 // ============================================================================
-// CSS Variable Generation
+// cSS variable generation
 // ============================================================================
 
 /**
- * Generate all CSS variables from 3 base colors
+ * generate all cSS variables from 3 base colors
  */
 function deriveAllColors(
   background: string,
@@ -74,13 +74,13 @@ function deriveAllColors(
   const isLight = type === "light";
   const vars: string[] = [];
 
-  // Background variations
+  // background variations
   const bgSecondary = isLight ? darken(background, 2) : darken(background, 0.5);
   const bgTertiary = isLight ? darken(background, 4) : lighten(background, 5);
   const bgElevated = isLight ? lighten(background, 2) : lighten(background, 4);
-  // Steps accordion uses lighter bg in dark mode for contrast against message area
+  // steps accordion uses lighter bg in dark mode for contrast against message area
   const bgSteps = isLight ? darken(background, 2) : lighten(background, 3);
-  // Hover/active colors incorporate accent for a subtle tint
+  // hover/active colors incorporate accent for a subtle tint
   const bgHover = isLight
     ? darken(mix(background, accent, 0.92), 2)
     : lighten(mix(background, accent, 0.88), 4);
@@ -98,7 +98,7 @@ function deriveAllColors(
   vars.push(`--color-background-active: ${bgActive};`);
   vars.push(`--color-background-steps: ${bgSteps};`);
 
-  // Text variations
+  // text variations
   const textSecondary = isLight ? lighten(text, 25) : darken(text, 20);
   const textMuted = isLight ? lighten(text, 40) : darken(text, 35);
   const textTertiary = isLight ? lighten(text, 50) : darken(text, 45);
@@ -114,7 +114,7 @@ function deriveAllColors(
   vars.push(`--color-text-link: ${textLink};`);
   vars.push(`--color-text-link-hover: ${textLinkHover};`);
 
-  // Accent variations
+  // accent variations
   const accentHover = isLight ? darken(accent, 8) : lighten(accent, 8);
   const accentMuted = withOpacity(accent, isLight ? 0.1 : 0.15);
 
@@ -122,7 +122,7 @@ function deriveAllColors(
   vars.push(`--color-accent-primary-hover: ${accentHover};`);
   vars.push(`--color-accent-primary-muted: ${accentMuted};`);
 
-  // Border colors (derived from text with opacity)
+  // border colors (derived from text with opacity)
   const borderDefault = isLight
     ? withOpacity(text, 0.12)
     : withOpacity(text, 0.15);
@@ -135,7 +135,7 @@ function deriveAllColors(
   vars.push(`--color-border-focus: ${accent};`);
   vars.push(`--color-border-accent: ${accent};`);
 
-  // Message colors
+  // message colors
   const userMsgBg = isLight
     ? mix(background, accent, 0.85)
     : mix(background, accent, 0.9);
@@ -149,7 +149,7 @@ function deriveAllColors(
   );
   vars.push(`--color-message-assistant-border: transparent;`);
 
-  // Button colors
+  // button colors
   vars.push(`--color-button-primary-background: ${accent};`);
   vars.push(`--color-button-primary-background-hover: ${accentHover};`);
   vars.push(`--color-button-primary-text: ${textInverse};`);
@@ -163,14 +163,14 @@ function deriveAllColors(
   );
   vars.push(`--color-button-ghost-text: ${textSecondary};`);
 
-  // Code block
+  // code block
   const codeBg = isLight ? darken(background, 4) : lighten(background, 6);
 
   vars.push(`--color-code-background: ${codeBg};`);
   vars.push(`--color-code-text: ${text};`);
   vars.push(`--color-code-border: ${borderMuted};`);
 
-  // Scrollbar
+  // scrollbar
   const scrollThumb = isLight
     ? withOpacity(text, 0.2)
     : withOpacity(text, 0.25);
@@ -186,7 +186,7 @@ function deriveAllColors(
 }
 
 /**
- * Generate CSS variables string from a theme object
+ * generate cSS variables string from a theme object
  */
 export function generateThemeCSS(theme: OurinTheme): string {
   const { background, text, accent } = theme.colors;
@@ -194,7 +194,7 @@ export function generateThemeCSS(theme: OurinTheme): string {
 }
 
 /**
- * Generate a complete CSS :root block
+ * generate a complete cSS :root block
  */
 export function generateThemeCSSBlock(theme: OurinTheme): string {
   const cssVars = generateThemeCSS(theme);
@@ -202,7 +202,7 @@ export function generateThemeCSSBlock(theme: OurinTheme): string {
 }
 
 /**
- * Generate inline style object for React
+ * generate inline style object for react
  */
 export function generateThemeStyleObject(
   theme: OurinTheme
@@ -220,7 +220,7 @@ export function generateThemeStyleObject(
 }
 
 /**
- * Create a style tag content for SSR theme injection
+ * create a style tag content for sSR theme injection
  */
 export function createThemeStyleTag(theme: OurinTheme): string {
   return `<style id="ourin-theme">${generateThemeCSSBlock(theme)}</style>`;

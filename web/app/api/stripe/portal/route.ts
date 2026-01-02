@@ -10,10 +10,10 @@ import { api } from "@/convex/_generated/api";
 import { IS_SELF_HOSTING } from "@/lib/config";
 
 /**
- * Create a Stripe Customer Portal session for managing subscription.
+ * create a stripe customer portal session for managing subscription.
  */
 export async function POST(req: Request) {
-  // Stripe is disabled in self-hosting mode
+  // stripe is disabled in self-hosting mode
   if (IS_SELF_HOSTING) {
     return NextResponse.json(
       { error: "Billing features are disabled in self-hosting mode" },
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    // Extract token from Authorization header (preferred) or body (fallback)
+    // extract token from authorization header (preferred) or body (fallback)
     const chatToken =
       extractChatToken(req) || (body.chatToken as string | undefined);
 
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
 
     const userId = result.userId;
 
-    // Get the user's Stripe customer ID from Convex
+    // get the user's stripe customer iD from convex
     const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
     const subscription = await convex.query(
       api.subscriptions.getSubscriptionByUserId,
@@ -67,7 +67,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Create Stripe Customer Portal session
+    // create stripe customer portal session
     const session = await stripe.billingPortal.sessions.create({
       customer: subscription.stripeCustomerId,
       return_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/?settings=billing`,

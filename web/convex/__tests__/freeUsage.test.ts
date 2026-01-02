@@ -1,13 +1,13 @@
 import { describe, it, expect } from "vitest";
 
 /**
- * Free usage business logic tests.
- * Tests the calculations and rules without requiring the Convex runtime.
+ * free usage business logic tests.
+ * tests the calculations and rules without requiring the convex runtime.
  */
 
 const FREE_MESSAGE_LIMIT = 10;
 
-// Business logic functions extracted from freeUsage.ts
+// business logic functions extracted from freeUsage.ts
 function calculateRemainingMessages(messageCount: number): number {
   return Math.max(0, FREE_MESSAGE_LIMIT - messageCount);
 }
@@ -43,7 +43,7 @@ function incrementUsageResponse(currentCount: number) {
 
 describe("freeUsage", () => {
   describe("Self-Hosting Mode", () => {
-    // In self-hosting mode, free usage limits are bypassed
+    // in self-hosting mode, free usage limits are bypassed
 
     it("returns unlimited messages in self-hosting mode", () => {
       const isSelfHosting = true;
@@ -62,7 +62,7 @@ describe("freeUsage", () => {
     it("canSendMore always returns true in self-hosting mode", () => {
       const isSelfHosting = true;
 
-      // Even at 1000 messages, self-hosting can still send
+      // even at 1000 messages, self-hosting can still send
       const canSendInSelfHosting = isSelfHosting ? true : canSendMore(1000);
 
       expect(canSendInSelfHosting).toBe(true);
@@ -71,7 +71,7 @@ describe("freeUsage", () => {
     it("incrementFreeUsage is a no-op in self-hosting mode", () => {
       const isSelfHosting = true;
 
-      // In self-hosting mode, increment returns default unlimited response
+      // in self-hosting mode, increment returns default unlimited response
       const result = isSelfHosting
         ? {
             messageCount: 0,
@@ -95,7 +95,7 @@ describe("freeUsage", () => {
           }
         : incrementUsageResponse(9);
 
-      // At 9 messages, incrementing to 10 should return canSendMore=false
+      // at 9 messages, incrementing to 10 should return canSendMore=false
       expect(result.canSendMore).toBe(false);
       expect(result.remainingMessages).toBe(0);
     });
@@ -122,9 +122,9 @@ describe("freeUsage", () => {
     });
 
     it("handles edge case of -1 (should not happen but be safe)", () => {
-      // This tests defensive coding - negative counts shouldn't happen
-      // but if they do, remaining should be capped at FREE_MESSAGE_LIMIT
-      expect(calculateRemainingMessages(-1)).toBe(11); // Math.max(0, 10-(-1)) = 11
+      // this tests defensive coding - negative counts shouldn't happen
+      // but if they do, remaining should be capped at fREE_mESSAGE_lIMIT
+      expect(calculateRemainingMessages(-1)).toBe(11); // math.max(0, 10-(-1)) = 11
     });
   });
 
@@ -249,7 +249,7 @@ describe("freeUsage", () => {
     it("counts up correctly until blocked", () => {
       let count = 0;
 
-      // Send 10 messages
+      // send 10 messages
       for (let i = 0; i < 10; i++) {
         const result = incrementUsageResponse(count);
         count = result.messageCount;
@@ -262,13 +262,13 @@ describe("freeUsage", () => {
         }
       }
 
-      // Verify blocked state
+      // verify blocked state
       expect(canSendMore(count)).toBe(false);
       expect(calculateRemainingMessages(count)).toBe(0);
     });
 
     it("reset restores full limit", () => {
-      // After reset, count goes back to 0
+      // after reset, count goes back to 0
       const resetCount = 0;
 
       expect(canSendMore(resetCount)).toBe(true);
@@ -276,7 +276,7 @@ describe("freeUsage", () => {
     });
 
     it("handles rapid successive messages", () => {
-      // Simulate 5 rapid messages
+      // simulate 5 rapid messages
       let count = 0;
       for (let i = 0; i < 5; i++) {
         const result = incrementUsageResponse(count);

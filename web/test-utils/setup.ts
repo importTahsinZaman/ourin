@@ -1,15 +1,15 @@
 import { vi, beforeEach } from "vitest";
 
-// Mock environment variables for tests
-// Set SELF_HOSTING=false to enable production mode features (billing, Stripe, etc.)
-// This ensures tests cover the full SaaS functionality
+// mock environment variables for tests
+// set sELF_hOSTING=false to enable production mode features (billing, stripe, etc.)
+// this ensures tests cover the full saaS functionality
 process.env.SELF_HOSTING = "false";
 process.env.CHAT_AUTH_SECRET = "test-secret-key-for-testing-purposes";
 process.env.COST_MARKUP = "1.0";
 process.env.SUBSCRIPTION_CREDITS = "10000";
 process.env.CREDIT_PACK_AMOUNT = "20000";
 
-// Mock localStorage for browser-like tests
+// mock localStorage for browser-like tests
 const localStorageMock = (() => {
   let store: Record<string, string> = {};
   return {
@@ -31,7 +31,7 @@ Object.defineProperty(globalThis, "localStorage", {
   writable: true,
 });
 
-// Reset mocks between tests
+// reset mocks between tests
 beforeEach(() => {
   vi.clearAllMocks();
   localStorage.clear();

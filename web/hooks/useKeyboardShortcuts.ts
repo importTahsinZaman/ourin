@@ -28,53 +28,53 @@ export function useKeyboardShortcuts({
     (e: KeyboardEvent) => {
       if (!enabled) return;
 
-      // Don't trigger shortcuts when typing in inputs
+      // don't trigger shortcuts when typing in inputs
       const target = e.target as HTMLElement;
       if (
         target.tagName === "INPUT" ||
         target.tagName === "TEXTAREA" ||
         target.isContentEditable
       ) {
-        // Allow Escape and command palette to work even in inputs
+        // allow escape and command palette to work even in inputs
         if (e.key !== "Escape" && !matchesKeybind(e, keybinds.commandPalette))
           return;
       }
 
-      // Get the correct keybinds based on sidebar position
+      // get the correct keybinds based on sidebar position
       const toggleSidebarKeybind =
         sidebarSide === "left"
           ? keybinds.toggleSidebarLeft
           : keybinds.toggleSidebarRight;
 
-      // Toggle sidebar
+      // toggle sidebar
       if (matchesKeybind(e, toggleSidebarKeybind)) {
         e.preventDefault();
         onToggleSidebar?.();
         return;
       }
 
-      // New chat
+      // new chat
       if (matchesKeybind(e, keybinds.newChat)) {
         e.preventDefault();
         onNewChat?.();
         return;
       }
 
-      // Settings
+      // settings
       if (matchesKeybind(e, keybinds.settings)) {
         e.preventDefault();
         onToggleSettings?.();
         return;
       }
 
-      // Appearance
+      // appearance
       if (matchesKeybind(e, keybinds.appearance)) {
         e.preventDefault();
         onToggleAppearance?.();
         return;
       }
 
-      // Command palette
+      // command palette
       if (matchesKeybind(e, keybinds.commandPalette)) {
         e.preventDefault();
         onCommandPalette?.();

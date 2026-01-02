@@ -18,14 +18,14 @@ interface RegenerateConfigPopoverProps {
   isOpen: boolean;
   onClose: () => void;
   onRegenerate: (model: string, reasoningLevel?: string | number) => void;
-  messageModel?: string; // Model used for the message being regenerated
-  messageReasoningLevel?: string | number; // Reasoning level used for the message
-  messageCoreNames?: string[]; // Core names used for the message
-  fallbackModel: string; // Current model as fallback if message has no model
+  messageModel?: string; // model used for the message being regenerated
+  messageReasoningLevel?: string | number; // reasoning level used for the message
+  messageCoreNames?: string[]; // core names used for the message
+  fallbackModel: string; // current model as fallback if message has no model
   anchorRef: React.RefObject<HTMLElement | null>;
 }
 
-// Get default reasoning level for a model
+// get default reasoning level for a model
 function getDefaultReasoningLevel(modelId: string): string | number {
   const modelInfo = getModelInfo(modelId);
   if (!modelInfo.reasoningParameter) {
@@ -47,18 +47,18 @@ export function RegenerateConfigPopover({
   const popoverRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Get user tier info to filter available models
+  // get user tier info to filter available models
   const { isAuthenticated } = useConvexAuth();
   const tierInfo = useQuery(
     api.billing.getUserTier,
     isAuthenticated ? {} : "skip"
   );
 
-  // Determine which models user can access
+  // determine which models user can access
   const canAccessAllModels =
     tierInfo?.tier === "subscriber" || tierInfo?.tier === "self_hosted";
 
-  // Use message's model or fallback to current
+  // use message's model or fallback to current
   const initialModel = messageModel || fallbackModel;
 
   const [selectedModel, setSelectedModel] = useState(initialModel);
@@ -67,21 +67,21 @@ export function RegenerateConfigPopover({
   >(messageReasoningLevel ?? getDefaultReasoningLevel(initialModel));
   const [search, setSearch] = useState("");
 
-  // Get cores data and function to set active cores
+  // get cores data and function to set active cores
   const { cores, setActiveCoresByIds } = useCores();
 
-  // Local state for which cores are active (initialized from message's coreNames)
+  // local state for which cores are active (initialized from message's coreNames)
   const [localActiveCores, setLocalActiveCores] = useState<Set<string>>(
     new Set()
   );
 
-  // Track previous isOpen to detect when popover opens
+  // track previous isOpen to detect when popover opens
   const wasOpenRef = useRef(false);
 
-  // Reset state when opening (only run when isOpen changes to true)
+  // reset state when opening (only run when isOpen changes to true)
   useEffect(() => {
     if (isOpen && !wasOpenRef.current) {
-      // Popover just opened
+      // popover just opened
       const model = messageModel || fallbackModel;
       setSelectedModel(model);
       setSelectedReasoningLevel(
@@ -89,16 +89,16 @@ export function RegenerateConfigPopover({
       );
       setSearch("");
 
-      // Initialize local active cores from message's coreNames
+      // initialize local active cores from message's coreNames
       if (messageCoreNames && messageCoreNames.length > 0 && cores) {
-        // Match cores by name
+        // match cores by name
         const activeIds = new Set<string>();
         for (const core of cores) {
           if (messageCoreNames.includes(core.name)) {
             activeIds.add(core.id);
           }
         }
-        // If no matches found, fall back to currently active cores
+        // if no matches found, fall back to currently active cores
         if (activeIds.size === 0) {
           for (const core of cores) {
             if (core.isActive) {
@@ -108,7 +108,7 @@ export function RegenerateConfigPopover({
         }
         setLocalActiveCores(activeIds);
       } else if (cores) {
-        // No message cores, use currently active ones
+        // no message cores, use currently active ones
         const activeIds = new Set<string>();
         for (const core of cores) {
           if (core.isActive) {
@@ -118,7 +118,7 @@ export function RegenerateConfigPopover({
         setLocalActiveCores(activeIds);
       }
 
-      // Focus search input
+      // focus search input
       setTimeout(() => searchInputRef.current?.focus(), 0);
     }
     wasOpenRef.current = isOpen;
@@ -131,12 +131,12 @@ export function RegenerateConfigPopover({
     cores,
   ]);
 
-  // Update reasoning level when model changes
+  // update reasoning level when model changes
   useEffect(() => {
     setSelectedReasoningLevel(getDefaultReasoningLevel(selectedModel));
   }, [selectedModel]);
 
-  // Close on outside click
+  // close on outside click
   useEffect(() => {
     if (!isOpen) return;
 
@@ -153,7 +153,7 @@ export function RegenerateConfigPopover({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen, onClose]);
 
-  // Close on Escape
+  // close on escape
   useEffect(() => {
     if (!isOpen) return;
 
@@ -172,20 +172,20 @@ export function RegenerateConfigPopover({
   const modelInfo = getModelInfo(selectedModel);
   const isReasoningModel = !!modelInfo.reasoningParameter;
 
-  // Helper to check if user can access a model
+  // helper to check if user can access a model
   const canAccessModel = (modelId: string, _modelProvider: string) => {
     if (!tierInfo) return modelId === FREE_MODEL_ID;
 
-    // Self-hosted or subscriber can access all models
+    // self-hosted or subscriber can access all models
     if (tierInfo.tier === "self_hosted" || tierInfo.tier === "subscriber") {
       return true;
     }
 
-    // Free tier can only access free model
+    // free tier can only access free model
     return modelId === FREE_MODEL_ID;
   };
 
-  // Filter models by search (show all, but some will be locked)
+  // filter models by search (show all, but some will be locked)
   const filteredModels = MODELS_BY_DATE.filter((m) => {
     const matchesSearch =
       m.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -193,7 +193,7 @@ export function RegenerateConfigPopover({
       m.description.toLowerCase().includes(search.toLowerCase());
     return matchesSearch;
   }).sort((a, b) => {
-    // Put free model first for free tier users
+    // put free model first for free tier users
     if (!canAccessAllModels) {
       if (a.id === FREE_MODEL_ID) return -1;
       if (b.id === FREE_MODEL_ID) return 1;
@@ -201,14 +201,14 @@ export function RegenerateConfigPopover({
     return 0;
   });
 
-  // Filter cores by search
+  // filter cores by search
   const filteredCores = cores?.filter(
     (c) =>
       c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.content.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Get reasoning options for the selected model
+  // get reasoning options for the selected model
   const getReasoningOptions = () => {
     if (!modelInfo.reasoningParameter) return [];
 
@@ -235,12 +235,12 @@ export function RegenerateConfigPopover({
 
   const reasoningOptions = getReasoningOptions();
 
-  // Toggle local core active state
+  // toggle local core active state
   const toggleLocalCore = (coreId: string) => {
     setLocalActiveCores((prev) => {
       const next = new Set(prev);
       if (next.has(coreId)) {
-        // Don't allow deactivating all cores
+        // don't allow deactivating all cores
         if (next.size > 1) {
           next.delete(coreId);
         }
@@ -252,7 +252,7 @@ export function RegenerateConfigPopover({
   };
 
   const handleRegenerate = async () => {
-    // Apply local core state to global before regenerating
+    // apply local core state to global before regenerating
     await setActiveCoresByIds(localActiveCores);
 
     onRegenerate(
@@ -274,7 +274,7 @@ export function RegenerateConfigPopover({
         marginBottom: "8px",
       }}
     >
-      {/* Search */}
+      {/* search */}
       <div
         className="p-2"
         style={{ borderBottom: "1px solid var(--color-border-muted)" }}
@@ -305,9 +305,9 @@ export function RegenerateConfigPopover({
         </div>
       </div>
 
-      {/* Two-column layout */}
+      {/* two-column layout */}
       <div className="flex max-h-[320px]">
-        {/* Models column (left) */}
+        {/* models column (left) */}
         <div
           className="flex-1 p-1.5 overflow-y-auto"
           style={{ borderRight: "1px solid var(--color-border-muted)" }}
@@ -387,9 +387,9 @@ export function RegenerateConfigPopover({
           })}
         </div>
 
-        {/* Cores column (right) */}
+        {/* cores column (right) */}
         <div className="flex flex-col flex-1">
-          {/* Scrollable cores list */}
+          {/* scrollable cores list */}
           <div className="flex-1 space-y-0.5 p-1.5 overflow-y-auto">
             <div
               className="px-2.5 py-1 font-medium text-xs uppercase tracking-wider"
@@ -433,7 +433,7 @@ export function RegenerateConfigPopover({
             })}
           </div>
 
-          {/* Reasoning options (sticky footer, only for reasoning models) */}
+          {/* reasoning options (sticky footer, only for reasoning models) */}
           {isReasoningModel && reasoningOptions.length > 0 && (
             <div
               className="p-1.5 shrink-0"
@@ -479,7 +479,7 @@ export function RegenerateConfigPopover({
         </div>
       </div>
 
-      {/* Footer with regenerate button */}
+      {/* footer with regenerate button */}
       <div
         className="flex justify-end px-3 py-2"
         style={{ borderTop: "1px solid var(--color-border-muted)" }}

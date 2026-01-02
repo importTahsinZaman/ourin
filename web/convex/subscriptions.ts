@@ -4,7 +4,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import type { Id } from "./_generated/dataModel";
 
 /**
- * Validate period timestamps are valid numbers.
+ * validate period timestamps are valid numbers.
  */
 function validatePeriod(start: number, end: number): void {
   if (!Number.isFinite(start) || !Number.isFinite(end)) {
@@ -23,8 +23,8 @@ function validatePeriod(start: number, end: number): void {
 }
 
 /**
- * Create a new subscription record.
- * Called by the Stripe webhook when checkout completes.
+ * create a new subscription record.
+ * called by the stripe webhook when checkout completes.
  */
 export const createSubscription = mutation({
   args: {
@@ -36,12 +36,12 @@ export const createSubscription = mutation({
     currentPeriodEnd: v.number(),
   },
   handler: async (ctx, args) => {
-    // Validate period data before storing
+    // validate period data before storing
     validatePeriod(args.currentPeriodStart, args.currentPeriodEnd);
 
     const now = Date.now();
 
-    // Check if subscription already exists
+    // check if subscription already exists
     const existing = await ctx.db
       .query("subscriptions")
       .withIndex("by_stripe_subscription", (q) =>
@@ -50,7 +50,7 @@ export const createSubscription = mutation({
       .first();
 
     if (existing) {
-      // Update existing subscription
+      // update existing subscription
       await ctx.db.patch(existing._id, {
         status: args.status,
         currentPeriodStart: args.currentPeriodStart,
@@ -60,8 +60,8 @@ export const createSubscription = mutation({
       return existing._id;
     }
 
-    // Create new subscription
-    // Cast string userId to Id<"users"> for database insertion
+    // create new subscription
+    // cast string userId to id<"users"> for database insertion
     return await ctx.db.insert("subscriptions", {
       userId: args.userId as Id<"users">,
       stripeCustomerId: args.stripeCustomerId,
@@ -77,8 +77,8 @@ export const createSubscription = mutation({
 });
 
 /**
- * Update subscription status.
- * Called by the Stripe webhook on subscription updates.
+ * update subscription status.
+ * called by the stripe webhook on subscription updates.
  */
 export const updateSubscription = mutation({
   args: {
@@ -89,7 +89,7 @@ export const updateSubscription = mutation({
     currentPeriodEnd: v.number(),
   },
   handler: async (ctx, args) => {
-    // Validate period data before storing
+    // validate period data before storing
     validatePeriod(args.currentPeriodStart, args.currentPeriodEnd);
 
     const subscription = await ctx.db
@@ -114,7 +114,7 @@ export const updateSubscription = mutation({
 });
 
 /**
- * Get subscription for the current user.
+ * get subscription for the current user.
  */
 export const getSubscription = query({
   args: {},
@@ -130,14 +130,14 @@ export const getSubscription = query({
 });
 
 /**
- * Get subscription by user ID (for API routes).
+ * get subscription by user iD (for aPI routes).
  */
 export const getSubscriptionByUserId = query({
   args: {
     userId: v.string(),
   },
   handler: async (ctx, { userId }) => {
-    // Cast string userId to Id<"users"> for database queries
+    // cast string userId to id<"users"> for database queries
     return await ctx.db
       .query("subscriptions")
       .withIndex("by_user", (q) => q.eq("userId", userId as Id<"users">))
@@ -146,7 +146,7 @@ export const getSubscriptionByUserId = query({
 });
 
 /**
- * Check if user has an active subscription.
+ * check if user has an active subscription.
  */
 export const hasActiveSubscription = query({
   args: {},

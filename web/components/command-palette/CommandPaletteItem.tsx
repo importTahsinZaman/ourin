@@ -16,8 +16,8 @@ interface CommandPaletteItemProps {
 }
 
 /**
- * Renders text with matched characters highlighted
- * Optimized to group consecutive characters into segments to reduce DOM nodes
+ * renders text with matched characters highlighted
+ * optimized to group consecutive characters into segments to reduce dOM nodes
  */
 function HighlightedText({
   text,
@@ -86,7 +86,7 @@ export const CommandPaletteItem = memo(function CommandPaletteItem({
 }: CommandPaletteItemProps) {
   const itemRef = useRef<HTMLButtonElement>(null);
 
-  // Scroll into view when selected
+  // scroll into view when selected
   useEffect(() => {
     if (isSelected && itemRef.current) {
       itemRef.current.scrollIntoView({ block: "nearest" });

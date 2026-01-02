@@ -22,7 +22,7 @@ import {
   KEYBINDS_STORAGE_KEY,
 } from "@/lib/keybinds";
 
-// Group keybinds by category for better organization
+// group keybinds by category for better organization
 const KEYBIND_GROUPS: { label: string; actions: KeybindAction[] }[] = [
   {
     label: "Navigation",
@@ -38,7 +38,7 @@ const KEYBIND_GROUPS: { label: string; actions: KeybindAction[] }[] = [
   },
 ];
 
-// Flat list for iteration
+// flat list for iteration
 const KEYBIND_ACTIONS: KeybindAction[] = KEYBIND_GROUPS.flatMap(
   (group) => group.actions
 );
@@ -46,14 +46,14 @@ const KEYBIND_ACTIONS: KeybindAction[] = KEYBIND_GROUPS.flatMap(
 export function KeybindsTab() {
   const { isAuthenticated } = useConvexAuth();
 
-  // DB queries/mutations for authenticated users
+  // dB queries/mutations for authenticated users
   const savedKeybinds = useQuery(
     api.settings.getKeybinds,
     isAuthenticated ? {} : "skip"
   );
   const updateKeybindsMutation = useMutation(api.settings.updateKeybinds);
 
-  // Local state
+  // local state
   const [keybinds, setKeybinds] = useState<KeybindsMap>({
     ...DEFAULT_KEYBINDS,
   });
@@ -64,11 +64,11 @@ export function KeybindsTab() {
   const [isMac, setIsMac] = useState(true);
   const [sidebarSide, setSidebarSide] = useState<"left" | "right">("left");
 
-  // Detect Mac vs Windows and read sidebar side from cookie
+  // detect mac vs windows and read sidebar side from cookie
   useEffect(() => {
     setIsMac(navigator.platform.toUpperCase().indexOf("MAC") >= 0);
 
-    // Read sidebar side from cookie
+    // read sidebar side from cookie
     const cookies = document.cookie.split(";");
     for (const cookie of cookies) {
       const [name, value] = cookie.trim().split("=");
@@ -79,7 +79,7 @@ export function KeybindsTab() {
     }
   }, []);
 
-  // Check if a keybind action is currently active based on sidebar position
+  // check if a keybind action is currently active based on sidebar position
   const isActiveAction = (action: KeybindAction): boolean => {
     if (sidebarSide === "left") {
       return action === "toggleSidebarLeft";
@@ -88,21 +88,21 @@ export function KeybindsTab() {
     }
   };
 
-  // Load keybinds from DB or localStorage
+  // load keybinds from dB or localStorage
   useEffect(() => {
     if (isAuthenticated) {
-      // Authenticated: use DB
+      // authenticated: use dB
       if (savedKeybinds !== undefined) {
         setKeybinds(parseKeybinds(savedKeybinds));
       }
     } else {
-      // Anonymous: use localStorage
+      // anonymous: use localStorage
       const stored = localStorage.getItem(KEYBINDS_STORAGE_KEY);
       setKeybinds(parseKeybinds(stored));
     }
   }, [isAuthenticated, savedKeybinds]);
 
-  // Save keybinds
+  // save keybinds
   const saveKeybinds = useCallback(
     async (newKeybinds: KeybindsMap) => {
       setIsSaving(true);
@@ -124,7 +124,7 @@ export function KeybindsTab() {
     [isAuthenticated, updateKeybindsMutation]
   );
 
-  // Check for conflicts
+  // check for conflicts
   const findConflict = useCallback(
     (action: KeybindAction, config: KeybindConfig): KeybindAction | null => {
       for (const [otherAction, otherConfig] of Object.entries(keybinds)) {
@@ -137,7 +137,7 @@ export function KeybindsTab() {
     [keybinds]
   );
 
-  // Handle key capture
+  // handle key capture
   useEffect(() => {
     if (!editingAction) return;
 
@@ -145,20 +145,20 @@ export function KeybindsTab() {
       e.preventDefault();
       e.stopPropagation();
 
-      // Escape cancels editing
+      // escape cancels editing
       if (e.key === "Escape") {
         setEditingAction(null);
         return;
       }
 
-      // Ignore modifier-only presses
+      // ignore modifier-only presses
       if (["Meta", "Control", "Shift", "Alt"].includes(e.key)) {
         return;
       }
 
       const config = eventToKeybindConfig(e);
 
-      // Check for reserved shortcuts
+      // check for reserved shortcuts
       if (isReservedShortcut(config)) {
         toast.error("Reserved shortcut", {
           description: "This shortcut is reserved by the system.",
@@ -166,7 +166,7 @@ export function KeybindsTab() {
         return;
       }
 
-      // Check for conflicts
+      // check for conflicts
       const conflict = findConflict(editingAction, config);
       if (conflict) {
         toast.error("Conflict detected", {
@@ -175,7 +175,7 @@ export function KeybindsTab() {
         return;
       }
 
-      // Save the new keybind
+      // save the new keybind
       const newKeybinds = { ...keybinds, [editingAction]: config };
       saveKeybinds(newKeybinds);
       setEditingAction(null);
@@ -186,30 +186,30 @@ export function KeybindsTab() {
     return () => window.removeEventListener("keydown", handleKeyDown, true);
   }, [editingAction, keybinds, findConflict, saveKeybinds]);
 
-  // Reset single keybind
+  // reset single keybind
   const handleReset = async (action: KeybindAction) => {
     const newKeybinds = { ...keybinds, [action]: DEFAULT_KEYBINDS[action] };
     await saveKeybinds(newKeybinds);
     toast.success("Keybind reset to default");
   };
 
-  // Reset all keybinds
+  // reset all keybinds
   const handleResetAll = async () => {
     await saveKeybinds({ ...DEFAULT_KEYBINDS });
     toast.success("All keybinds reset to defaults");
   };
 
-  // Check if a keybind differs from default
+  // check if a keybind differs from default
   const isModified = (action: KeybindAction) => {
     return !keybindsEqual(keybinds[action], DEFAULT_KEYBINDS[action]);
   };
 
-  // Check if any keybinds are modified
+  // check if any keybinds are modified
   const hasModifications = KEYBIND_ACTIONS.some(isModified);
 
   return (
     <div className="space-y-6">
-      {/* Keybinds list - grouped */}
+      {/* keybinds list - grouped */}
       {KEYBIND_GROUPS.map((group, index) => (
         <div key={group.label}>
           {index > 0 && <SettingsDivider />}
@@ -226,7 +226,7 @@ export function KeybindsTab() {
                         : "var(--color-background-tertiary)",
                   }}
                 >
-                  {/* Label */}
+                  {/* label */}
                   <span className="flex items-center gap-2">
                     <span
                       className="font-medium text-sm"
@@ -247,7 +247,7 @@ export function KeybindsTab() {
                     )}
                   </span>
 
-                  {/* Keybind display / edit */}
+                  {/* keybind display / edit */}
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setEditingAction(action)}
@@ -272,7 +272,7 @@ export function KeybindsTab() {
                       )}
                     </button>
 
-                    {/* Reset button (only show if modified) */}
+                    {/* reset button (only show if modified) */}
                     {isModified(action) && (
                       <button
                         onClick={() => handleReset(action)}
@@ -294,7 +294,7 @@ export function KeybindsTab() {
 
       <SettingsDivider />
 
-      {/* Reset all button */}
+      {/* reset all button */}
       <div className="flex justify-end pt-2">
         <button
           onClick={handleResetAll}

@@ -1,38 +1,38 @@
 /**
- * Application configuration.
+ * application configuration.
  *
- * SELF_HOSTING mode (default: true):
- * - All users have unrestricted access to all models
- * - No billing/subscription system
- * - Stripe integration disabled
- * - Token usage still tracked for analytics
- * - Anonymous-only authentication (no sign-in UI)
+ * sELF_hOSTING mode (default: true):
+ * - all users have unrestricted access to all models
+ * - no billing/subscription system
+ * - stripe integration disabled
+ * - token usage still tracked for analytics
+ * - anonymous-only authentication (no sign-in uI)
  *
- * When SELF_HOSTING=false (SaaS/production mode):
- * - Full billing/subscription system active
- * - Tiered access (anonymous, free, subscriber)
- * - Credit calculations and limits
- * - Stripe integration enabled
- * - Full authentication (email/password, OAuth)
- * - BYOK (Bring Your Own Key) available for subscribers
+ * when sELF_hOSTING=false (saaS/production mode):
+ * - full billing/subscription system active
+ * - tiered access (anonymous, free, subscriber)
+ * - credit calculations and limits
+ * - stripe integration enabled
+ * - full authentication (email/password, oAuth)
+ * - bYOK (bring your own key) available for subscribers
  */
 
 /**
- * Whether the app is running in self-hosting mode (server-side).
- * Defaults to true for easier self-hosting setup.
+ * whether the app is running in self-hosting mode (server-side).
+ * defaults to true for easier self-hosting setup.
  */
 export const IS_SELF_HOSTING = process.env.SELF_HOSTING !== "false";
 
 /**
- * Whether the app is running in self-hosting mode (client-side).
- * Uses NEXT_PUBLIC_ prefix for client-side access.
- * Falls back to server-side value for SSR.
+ * whether the app is running in self-hosting mode (client-side).
+ * uses nEXT_pUBLIC_ prefix for client-side access.
+ * falls back to server-side value for sSR.
  */
 export const IS_SELF_HOSTING_CLIENT =
   process.env.NEXT_PUBLIC_SELF_HOSTING !== "false";
 
 /**
- * Whether the app is running in production/SaaS mode.
- * Inverse of IS_SELF_HOSTING for convenience.
+ * whether the app is running in production/saaS mode.
+ * inverse of iS_sELF_hOSTING for convenience.
  */
 export const IS_PRODUCTION = !IS_SELF_HOSTING;

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 
-// Set up environment for pricing calculations
-// Note: SELF_HOSTING=false is set in test-utils/setup.ts
+// set up environment for pricing calculations
+// note: sELF_hOSTING=false is set in test-utils/setup.ts
 process.env.COST_MARKUP = "1.0";
 process.env.SUBSCRIPTION_CREDITS = "10000";
 process.env.CREDIT_PACK_AMOUNT = "20000";
@@ -9,8 +9,8 @@ process.env.CREDIT_PACK_AMOUNT = "20000";
 import { calculateCredits, getSubscriptionCredits } from "../pricing";
 
 /**
- * These tests verify the billing logic without requiring a full Convex runtime.
- * They test the business rules and calculations that the billing queries rely on.
+ * these tests verify the billing logic without requiring a full convex runtime.
+ * they test the business rules and calculations that the billing queries rely on.
  */
 
 describe("Billing Logic", () => {
@@ -38,21 +38,21 @@ describe("Billing Logic", () => {
     });
 
     it("credits calculation logic returns 0 in self-hosting mode", () => {
-      // In self-hosting mode, calculateCredits returns 0
+      // in self-hosting mode, calculateCredits returns 0
       const isSelfHosting = true;
 
-      // Simulate what calculateCredits does in self-hosting mode
-      const creditsInSelfHosting = isSelfHosting ? 0 : 1050; // Would be 1050 for these tokens
+      // simulate what calculateCredits does in self-hosting mode
+      const creditsInSelfHosting = isSelfHosting ? 0 : 1050; // would be 1050 for these tokens
 
       expect(creditsInSelfHosting).toBe(0);
     });
 
     it("credits calculation logic would return >0 in production mode", () => {
-      // Test the business logic: production mode should calculate credits
+      // test the business logic: production mode should calculate credits
       const isSelfHosting = false;
 
-      // Simulate what calculateCredits returns in production mode
-      // For claude-sonnet-4 with 100000 input + 50000 output
+      // simulate what calculateCredits returns in production mode
+      // for claude-sonnet-4 with 100000 input + 50000 output
       const expectedCredits = 1050; // (100000*3000 + 50000*15000) / 1_000_000 = 1050
       const credits = isSelfHosting ? 0 : expectedCredits;
 
@@ -102,8 +102,8 @@ describe("Billing Logic", () => {
       });
 
       it("determines canSendMessage correctly", () => {
-        expect(7 < FREE_MESSAGE_LIMIT).toBe(true); // Can send
-        expect(10 < FREE_MESSAGE_LIMIT).toBe(false); // Cannot send
+        expect(7 < FREE_MESSAGE_LIMIT).toBe(true); // can send
+        expect(10 < FREE_MESSAGE_LIMIT).toBe(false); // cannot send
       });
     });
 
@@ -111,7 +111,7 @@ describe("Billing Logic", () => {
       it("calculates subscription balance from message usage", () => {
         const subscriptionCredits = getSubscriptionCredits();
 
-        // Simulate message usage: Claude Sonnet (3000 input, 15000 output per 1M)
+        // simulate message usage: claude sonnet (3000 input, 15000 output per 1m)
         // 100000 input + 50000 output = 1050 credits
         const messageCredits = calculateCredits(
           "anthropic:claude-sonnet-4",
@@ -126,7 +126,7 @@ describe("Billing Logic", () => {
       it("caps negative balance at 0 in display", () => {
         const subscriptionCredits = getSubscriptionCredits();
 
-        // Heavy usage: Claude Opus 4.5
+        // heavy usage: claude opus 4.5
         // 500000 input + 200000 output = 7500 credits per message
         const message1Credits = calculateCredits(
           "anthropic:claude-opus-4-5-20251101",
@@ -141,7 +141,7 @@ describe("Billing Logic", () => {
         );
 
         const totalUsed = message1Credits + message2Credits;
-        expect(totalUsed).toBeGreaterThan(subscriptionCredits); // Over limit
+        expect(totalUsed).toBeGreaterThan(subscriptionCredits); // over limit
 
         const rawBalance = subscriptionCredits - totalUsed;
         const displayBalance = Math.max(0, rawBalance);
@@ -149,11 +149,11 @@ describe("Billing Logic", () => {
       });
 
       it("excludes forked messages from balance calculation", () => {
-        // Forked messages should have wasForked: true and be excluded
-        // This is a business rule: only count non-forked messages
+        // forked messages should have wasForked: true and be excluded
+        // this is a business rule: only count non-forked messages
         const messages = [
           { credits: 1000, wasForked: false },
-          { credits: 5000, wasForked: true }, // Should be excluded
+          { credits: 5000, wasForked: true }, // should be excluded
           { credits: 500, wasForked: false },
         ];
 
@@ -161,13 +161,13 @@ describe("Billing Logic", () => {
           .filter((m) => !m.wasForked)
           .reduce((sum, m) => sum + m.credits, 0);
 
-        expect(totalUsed).toBe(1500); // Only non-forked messages
+        expect(totalUsed).toBe(1500); // only non-forked messages
       });
 
       it("excludes own-key messages from balance calculation", () => {
         const messages = [
           { credits: 1000, usedOwnKey: false },
-          { credits: 5000, usedOwnKey: true }, // Should be excluded
+          { credits: 5000, usedOwnKey: true }, // should be excluded
           { credits: 500, usedOwnKey: false },
         ];
 
@@ -190,12 +190,12 @@ describe("Billing Logic", () => {
       });
 
       it("uses only purchased when subscription is negative", () => {
-        const subscriptionBalance = -5000; // Overspent
+        const subscriptionBalance = -5000; // overspent
         const purchasedBalance = 15000;
 
         const totalBalance =
           Math.max(0, subscriptionBalance) + purchasedBalance;
-        expect(totalBalance).toBe(15000); // Only purchased credits
+        expect(totalBalance).toBe(15000); // only purchased credits
       });
 
       it("returns 0 when both are depleted", () => {
@@ -258,13 +258,13 @@ describe("Billing Logic", () => {
     });
 
     it("calculates credits for very heavy usage", () => {
-      // 1M tokens each way on expensive model
+      // 1m tokens each way on expensive model
       const credits = calculateCredits(
         "anthropic:claude-opus-4-5-20251101",
         1000000,
         1000000
       );
-      // (1M * 5000 + 1M * 25000) / 1_000_000 = 30000 credits
+      // (1m * 5000 + 1m * 25000) / 1_000_000 = 30000 credits
       expect(credits).toBe(30000);
     });
   });
@@ -289,8 +289,8 @@ describe("Billing Logic", () => {
       }
 
       expect(deductions).toEqual([
-        { id: "1", amount: 5000 }, // Fully depleted
-        { id: "2", amount: 2000 }, // Partially used
+        { id: "1", amount: 5000 }, // fully depleted
+        { id: "2", amount: 2000 }, // partially used
       ]);
     });
 
@@ -335,7 +335,7 @@ describe("Billing Logic", () => {
     });
 
     it("deducts minimum of message cost and overage", () => {
-      // If message costs 1000 but overage is only 500, deduct 500
+      // if message costs 1000 but overage is only 500, deduct 500
       const messageCost = 1000;
       const subscriptionBalance = -500;
 

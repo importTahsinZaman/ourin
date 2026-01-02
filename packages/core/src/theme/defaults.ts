@@ -596,7 +596,7 @@ export const sapphire: OurinTheme = {
   },
 };
 
-// Rust - Warm brown-orange dark theme
+// rust - warm brown-orange dark theme
 export const rust: OurinTheme = {
   id: "rust",
   name: "Rust",
@@ -608,7 +608,7 @@ export const rust: OurinTheme = {
   },
 };
 
-// Plasma - Electric blue-purple dark theme
+// plasma - electric blue-purple dark theme
 export const plasma: OurinTheme = {
   id: "plasma",
   name: "Plasma",
@@ -620,9 +620,9 @@ export const plasma: OurinTheme = {
   },
 };
 
-// All built-in themes
+// all built-in themes
 export const builtInThemes: OurinTheme[] = [
-  // Light themes
+  // light themes
   ourinLight,
   sage,
   cloud,
@@ -652,7 +652,7 @@ export const builtInThemes: OurinTheme[] = [
   periwinkle,
   marble,
   apricot,
-  // Dark themes
+  // dark themes
   ourinDark,
 
   moss,
@@ -683,10 +683,10 @@ export const builtInThemes: OurinTheme[] = [
   plasma,
 ];
 
-// Get theme by ID
+// get theme by iD
 export function getThemeById(id: string): OurinTheme | undefined {
   return builtInThemes.find((theme) => theme.id === id);
 }
 
-// Default theme
+// default theme
 export const defaultTheme = ourinLight;

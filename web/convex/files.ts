@@ -9,7 +9,7 @@ import {
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { internal } from "./_generated/api";
 
-// Generate an upload URL for file uploads (works for all users)
+// generate an upload uRL for file uploads (works for all users)
 export const generateUploadUrl = mutation({
   args: {},
   handler: async (ctx) => {
@@ -17,8 +17,8 @@ export const generateUploadUrl = mutation({
   },
 });
 
-// Save file reference after upload
-// All users (including anonymous) now have real user IDs and can save to files table
+// save file reference after upload
+// all users (including anonymous) now have real user iDs and can save to files table
 export const saveFileReference = mutation({
   args: {
     storageId: v.id("_storage"),
@@ -41,12 +41,12 @@ export const saveFileReference = mutation({
     const userId = await getAuthUserId(ctx);
     const url = await ctx.storage.getUrl(args.storageId);
 
-    // With anonymous auth, userId should always exist
+    // with anonymous auth, userId should always exist
     if (!userId) {
       throw new Error("Not authenticated");
     }
 
-    // Save file reference for the user
+    // save file reference for the user
     const fileId = await ctx.db.insert("files", {
       userId,
       storageId: args.storageId,
@@ -64,7 +64,7 @@ export const saveFileReference = mutation({
   },
 });
 
-// Find existing file by content hash (for deduplication)
+// find existing file by content hash (for deduplication)
 export const findByContentHash = query({
   args: { contentHash: v.string() },
   handler: async (ctx, { contentHash }) => {
@@ -85,7 +85,7 @@ export const findByContentHash = query({
   },
 });
 
-// Get a signed URL for a file (requires authentication and ownership)
+// get a signed uRL for a file (requires authentication and ownership)
 export const getUrl = query({
   args: { storageId: v.id("_storage") },
   handler: async (ctx, { storageId }) => {
@@ -103,7 +103,7 @@ export const getUrl = query({
   },
 });
 
-// Get file metadata
+// get file metadata
 export const getFile = query({
   args: { storageId: v.id("_storage") },
   handler: async (ctx, { storageId }) => {
@@ -122,9 +122,9 @@ export const getFile = query({
   },
 });
 
-// Delete a file
-// For authenticated users: verifies ownership before deleting
-// For anonymous users: allows deletion (for clearing drafts)
+// delete a file
+// for authenticated users: verifies ownership before deleting
+// for anonymous users: allows deletion (for clearing drafts)
 export const deleteFile = mutation({
   args: { storageId: v.id("_storage") },
   handler: async (ctx, { storageId }) => {
@@ -135,7 +135,7 @@ export const deleteFile = mutation({
       .withIndex("by_storage_id", (q) => q.eq("storageId", storageId))
       .first();
 
-    // If file exists in DB, verify ownership (authenticated users only)
+    // if file exists in dB, verify ownership (authenticated users only)
     if (file) {
       if (!userId || file.userId !== userId) {
         throw new Error("File not found");
@@ -143,12 +143,12 @@ export const deleteFile = mutation({
       await ctx.db.delete(file._id);
     }
 
-    // Delete from storage (works for both authenticated and anonymous)
+    // delete from storage (works for both authenticated and anonymous)
     await ctx.storage.delete(storageId);
   },
 });
 
-// Get all files for a conversation
+// get all files for a conversation
 export const getByConversation = query({
   args: { conversationId: v.id("conversations") },
   handler: async (ctx, { conversationId }) => {
@@ -175,7 +175,7 @@ export const getByConversation = query({
   },
 });
 
-// Internal mutation to update a file's content hash
+// internal mutation to update a file's content hash
 export const updateContentHash = internalMutation({
   args: {
     fileId: v.id("files"),
@@ -187,11 +187,11 @@ export const updateContentHash = internalMutation({
 });
 
 /**
- * One-time migration: Compute content hashes for existing files.
- * Run via: npx convex run files:computeHashesForExistingFiles
+ * one-time migration: compute content hashes for existing files.
+ * run via: npx convex run files:computeHashesForExistingFiles
  *
- * This action fetches files without hashes, downloads them, computes SHA-256,
- * and updates the database. Processes in batches to avoid timeouts.
+ * this action fetches files without hashes, downloads them, computes sHA-256,
+ * and updates the database. processes in batches to avoid timeouts.
  */
 export const computeHashesForExistingFiles = internalAction({
   args: {
@@ -201,7 +201,7 @@ export const computeHashesForExistingFiles = internalAction({
     ctx,
     { batchSize = 10 }
   ): Promise<{ processed: number; errors: number; remaining: number }> => {
-    // Get files without content hash
+    // get files without content hash
     const files = await ctx.runQuery(internal.files.getFilesWithoutHash, {
       limit: batchSize,
     });
@@ -222,7 +222,7 @@ export const computeHashesForExistingFiles = internalAction({
           continue;
         }
 
-        // Fetch file content
+        // fetch file content
         const response = await fetch(file.url);
         if (!response.ok) {
           console.warn(`Failed to fetch file ${file._id}: ${response.status}`);
@@ -230,7 +230,7 @@ export const computeHashesForExistingFiles = internalAction({
           continue;
         }
 
-        // Compute SHA-256 hash
+        // compute sHA-256 hash
         const buffer = await response.arrayBuffer();
         const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -238,7 +238,7 @@ export const computeHashesForExistingFiles = internalAction({
           .map((b) => b.toString(16).padStart(2, "0"))
           .join("");
 
-        // Update the file
+        // update the file
         await ctx.runMutation(internal.files.updateContentHash, {
           fileId: file._id,
           contentHash,
@@ -251,7 +251,7 @@ export const computeHashesForExistingFiles = internalAction({
       }
     }
 
-    // Check if there are more files to process
+    // check if there are more files to process
     const remaining: number = await ctx.runQuery(
       internal.files.countFilesWithoutHash,
       {}
@@ -261,7 +261,7 @@ export const computeHashesForExistingFiles = internalAction({
       `Processed ${processed} files, ${errors} errors, ${remaining} remaining`
     );
 
-    // Schedule next batch if there are more files
+    // schedule next batch if there are more files
     if (remaining > 0) {
       await ctx.scheduler.runAfter(
         1000,
@@ -276,7 +276,7 @@ export const computeHashesForExistingFiles = internalAction({
   },
 });
 
-// Query to get files without content hash
+// query to get files without content hash
 export const getFilesWithoutHash = internalQuery({
   args: { limit: v.number() },
   handler: async (ctx, { limit }) => {
@@ -296,7 +296,7 @@ export const getFilesWithoutHash = internalQuery({
   },
 });
 
-// Query to count files without content hash
+// query to count files without content hash
 export const countFilesWithoutHash = internalQuery({
   args: {},
   handler: async (ctx) => {

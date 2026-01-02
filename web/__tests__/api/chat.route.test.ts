@@ -1,13 +1,13 @@
 import { describe, it, expect, vi } from "vitest";
 
-// Set up environment
+// set up environment
 process.env.CHAT_AUTH_SECRET = "test-secret";
 process.env.NEXT_PUBLIC_CONVEX_URL = "https://test.convex.cloud";
 
 /**
- * Tests for the chat API route logic.
- * These tests verify authorization, message conversion, and error handling
- * without making actual AI provider calls.
+ * tests for the chat aPI route logic.
+ * these tests verify authorization, message conversion, and error handling
+ * without making actual aI provider calls.
  */
 
 describe("Chat API Route Logic", () => {
@@ -129,10 +129,10 @@ describe("Chat API Route Logic", () => {
     it("self-hosted tier has no model restrictions", () => {
       const tier = { tier: "self_hosted", canSendMessage: true };
 
-      // Should allow any model
+      // should allow any model
       expect(checkSelfHostedAccess(tier).allowed).toBe(true);
 
-      // Premium models should work
+      // premium models should work
       const premiumModel = "anthropic:claude-opus-4-5-20251101";
       expect(checkModelAccessWithSelfHosting(tier, premiumModel).allowed).toBe(
         true
@@ -235,7 +235,7 @@ describe("Chat API Route Logic", () => {
 
   describe("Token Counting Logic", () => {
     it("counts tokens in simple text", () => {
-      // Approximate: ~4 chars per token
+      // approximate: ~4 chars per token
       const text = "Hello, how are you doing today?";
       const estimate = Math.ceil(text.length / 4);
       expect(estimate).toBeGreaterThan(0);
@@ -344,7 +344,7 @@ describe("Chat API Route Logic", () => {
       const isSupported = isImage || isPdf;
 
       expect(isSupported).toBe(false);
-      // Should convert to: { type: "text", text: "[Attached file: file.zip]" }
+      // should convert to: { type: "text", text: "[attached file: file.zip]" }
     });
   });
 
@@ -523,7 +523,7 @@ describe("Chat API Route Logic", () => {
       const hasProviderKey = tier.providers.includes(modelProvider);
 
       expect(hasProviderKey).toBe(true);
-      // When hasProviderKey is true and key is retrieved, usedOwnKey=true
+      // when hasProviderKey is true and key is retrieved, usedOwnKey=true
     });
 
     it("sets usedOwnKey=false when using platform key", () => {
@@ -532,12 +532,12 @@ describe("Chat API Route Logic", () => {
       const hasProviderKey = tier.providers.includes(modelProvider);
 
       expect(hasProviderKey).toBe(false);
-      // When no provider key, usedOwnKey=false (or undefined)
+      // when no provider key, usedOwnKey=false (or undefined)
     });
   });
 });
 
-// Helper functions to test the route logic
+// helper functions to test the route logic
 
 function mockAuthResponse(
   token: string | null,
@@ -710,12 +710,12 @@ function checkModelAccessWithSelfHosting(
 ): { allowed: boolean; code?: string } {
   const FREE_MODEL_ID = "google:gemini-2.5-flash-lite";
 
-  // Self-hosted tier has full access to all models
+  // self-hosted tier has full access to all models
   if (tier.tier === "self_hosted") {
     return { allowed: true };
   }
 
-  // Fall back to existing logic for other tiers
+  // fall back to existing logic for other tiers
   if (tier.tier === "free") {
     if (requestedModel !== FREE_MODEL_ID) {
       return { allowed: false, code: "MODEL_RESTRICTED" };
@@ -737,11 +737,11 @@ function canUseWebSearchCheck(
     return false;
   }
 
-  // In self-hosting mode, web search is allowed for any tier
+  // in self-hosting mode, web search is allowed for any tier
   if (isSelfHosting) {
     return true;
   }
 
-  // In production mode, only subscribers can use web search
+  // in production mode, only subscribers can use web search
   return tier?.tier === "subscriber";
 }

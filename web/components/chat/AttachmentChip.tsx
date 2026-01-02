@@ -33,7 +33,7 @@ export function AttachmentChip({
 
   const Icon = isPdf ? FileText : File;
 
-  // Truncate filename for non-images
+  // truncate filename for non-images
   const displayName =
     fileName.length > 15
       ? fileName.slice(0, 8) + "..." + fileName.slice(-4)
@@ -42,7 +42,7 @@ export function AttachmentChip({
   const handleClick = () => {
     if (hasError || isProcessing || !preview) return;
 
-    // For drawings, open the editor instead of the modal
+    // for drawings, open the editor instead of the modal
     if (isDrawing && onEdit) {
       onEdit();
       return;
@@ -51,12 +51,12 @@ export function AttachmentChip({
     if (isImage) {
       setShowModal(true);
     } else {
-      // Open in new tab for PDFs and other files
+      // open in new tab for pDFs and other files
       window.open(preview, "_blank");
     }
   };
 
-  // Image attachment - clean thumbnail only
+  // image attachment - clean thumbnail only
   if (isImage && preview) {
     return (
       <>
@@ -74,7 +74,7 @@ export function AttachmentChip({
             className="w-16 h-16 object-cover"
           />
 
-          {/* Overlay with X on hover */}
+          {/* overlay with x on hover */}
           {!isProcessing && (
             <button
               onClick={(e) => {
@@ -92,7 +92,7 @@ export function AttachmentChip({
             </button>
           )}
 
-          {/* Processing spinner overlay */}
+          {/* processing spinner overlay */}
           {isProcessing && (
             <div className="absolute inset-0 flex justify-center items-center bg-black/40">
               <Loader2 className="w-5 h-5 text-white animate-spin" />
@@ -100,7 +100,7 @@ export function AttachmentChip({
           )}
         </div>
 
-        {/* Image modal */}
+        {/* image modal */}
         {showModal && (
           <div
             className="z-[100] fixed flex flex-col justify-center items-center"
@@ -114,7 +114,7 @@ export function AttachmentChip({
             }}
             onClick={() => setShowModal(false)}
           >
-            {/* Image container with close button */}
+            {/* image container with close button */}
             <div className="relative" onClick={(e) => e.stopPropagation()}>
               <button
                 onClick={() => setShowModal(false)}
@@ -136,7 +136,7 @@ export function AttachmentChip({
                   }}
                 />
               </div>
-              {/* Filename - below image */}
+              {/* filename - below image */}
               <p className="mt-3 text-white/70 text-sm text-center">
                 {fileName}
               </p>
@@ -147,7 +147,7 @@ export function AttachmentChip({
     );
   }
 
-  // Non-image attachment - compact chip with icon
+  // non-image attachment - compact chip with icon
   return (
     <div
       className={cn(

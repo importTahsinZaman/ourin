@@ -13,8 +13,8 @@ interface ColorInputProps {
 }
 
 /**
- * A color input with both a color picker and a text input for hex values.
- * Includes debouncing for text input changes and hex validation.
+ * a color input with both a color picker and a text input for hex values.
+ * includes debouncing for text input changes and hex validation.
  */
 export const ColorInput = memo(function ColorInput({
   label,
@@ -24,16 +24,16 @@ export const ColorInput = memo(function ColorInput({
   onPickerClose,
   debounceMs = 300,
 }: ColorInputProps) {
-  // Local state for the text input to allow typing without immediate validation
+  // local state for the text input to allow typing without immediate validation
   const [localValue, setLocalValue] = useState(value);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Sync local value when prop changes (e.g., from color picker)
+  // sync local value when prop changes (e.g., from color picker)
   useEffect(() => {
     setLocalValue(value);
   }, [value]);
 
-  // Cleanup debounce on unmount
+  // cleanup debounce on unmount
   useEffect(() => {
     return () => {
       if (debounceRef.current) {
@@ -46,16 +46,16 @@ export const ColorInput = memo(function ColorInput({
     (newValue: string) => {
       setLocalValue(newValue);
 
-      // Clear existing debounce
+      // clear existing debounce
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
       }
 
-      // Debounce the validation and update
+      // debounce the validation and update
       debounceRef.current = setTimeout(() => {
-        // Only update if valid hex
+        // only update if valid hex
         if (isValidHexColor(newValue)) {
-          // Ensure it has # prefix
+          // ensure it has # prefix
           const normalized = newValue.startsWith("#")
             ? newValue
             : `#${newValue}`;
@@ -68,7 +68,7 @@ export const ColorInput = memo(function ColorInput({
 
   const handleColorPickerChange = useCallback(
     (newValue: string) => {
-      // Color picker always returns valid hex, update immediately
+      // color picker always returns valid hex, update immediately
       setLocalValue(newValue);
       onChange(newValue);
     },

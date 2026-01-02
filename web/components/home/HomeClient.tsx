@@ -65,12 +65,12 @@ export function HomeClient({
   initialWebSearchEnabled = false,
   initialUserTier,
 }: HomeClientProps) {
-  // Auth state for model restriction
+  // auth state for model restriction
   const { isAuthenticated } = useConvexAuth();
   const analytics = useAnalytics();
   const wasAuthenticatedRef = useRef<boolean | null>(null);
 
-  // Sidebar state - initialize from server-provided props (no flash)
+  // sidebar state - initialize from server-provided props (no flash)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     initialSidebarCollapsed
   );
@@ -79,46 +79,46 @@ export function HomeClient({
     initialSidebarSide
   );
 
-  // Panel states - initialize from server-provided prop (no flash)
+  // panel states - initialize from server-provided prop (no flash)
   const [showThemeEditor, setShowThemeEditor] = useState(
     initialThemeEditorOpen
   );
   const [showSettings, setShowSettings] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
 
-  // Ref to ChatInput for programmatic file insertion
+  // ref to chatInput for programmatic file insertion
   const chatInputRef = useRef<ChatInputHandle>(null);
 
-  // Ref to MessageList for programmatic file insertion when in edit mode
+  // ref to messageList for programmatic file insertion when in edit mode
   const messageListRef = useRef<MessageListHandle>(null);
 
-  // Mutation for deleting orphaned files when clearing new chat
+  // mutation for deleting orphaned files when clearing new chat
   const deleteFile = useMutation(api.files.deleteFile);
 
-  // Model state - initialize from server-provided prop (no flash)
+  // model state - initialize from server-provided prop (no flash)
   const [selectedModel, setSelectedModel] = useState(initialSelectedModel);
 
-  // Reasoning level state - initialize from server-provided prop (no flash)
+  // reasoning level state - initialize from server-provided prop (no flash)
   const [reasoningLevel, setReasoningLevel] = useState<string | number>(
     initialReasoningLevel ?? "medium"
   );
 
-  // Web search state - initialize from server-provided prop (no flash)
+  // web search state - initialize from server-provided prop (no flash)
   const [webSearchEnabled, setWebSearchEnabled] = useState(
     initialWebSearchEnabled
   );
 
-  // Reset model to free tier when user logs out with a premium model selected
+  // reset model to free tier when user logs out with a premium model selected
   useEffect(() => {
-    // Skip on first render (auth state may be loading)
+    // skip on first render (auth state may be loading)
     if (wasAuthenticatedRef.current === null) {
       wasAuthenticatedRef.current = isAuthenticated;
       return;
     }
 
-    // Detect logout: was authenticated, now not authenticated
+    // detect logout: was authenticated, now not authenticated
     if (wasAuthenticatedRef.current && !isAuthenticated) {
-      // If user had a non-free model selected, reset to free model
+      // if user had a non-free model selected, reset to free model
       if (selectedModel !== FREE_MODEL_ID) {
         setSelectedModel(FREE_MODEL_ID);
       }
@@ -127,13 +127,13 @@ export function HomeClient({
     wasAuthenticatedRef.current = isAuthenticated;
   }, [isAuthenticated, selectedModel]);
 
-  // Floating sidebar state (lifted up to prevent reset during navigation)
+  // floating sidebar state (lifted up to prevent reset during navigation)
   const [showFloatingSidebar, setShowFloatingSidebar] = useState(false);
 
-  // Key to force ChatInput reset when clicking "New Chat" while already on new chat
+  // key to force chatInput reset when clicking "new chat" while already on new chat
   const [newChatResetKey, setNewChatResetKey] = useState(0);
 
-  // Persist UI state to cookies (read server-side to prevent flash)
+  // persist uI state to cookies (read server-side to prevent flash)
   useEffect(() => {
     setCookie(SIDEBAR_COLLAPSED_COOKIE, sidebarCollapsed);
   }, [sidebarCollapsed]);
@@ -162,12 +162,12 @@ export function HomeClient({
     setCookie(WEB_SEARCH_ENABLED_COOKIE, webSearchEnabled);
   }, [webSearchEnabled]);
 
-  // Current conversation (from URL or null = new chat)
+  // current conversation (from uRL or null = new chat)
   const [currentConversationId, setCurrentConversationId] = useState<
     string | null
   >(initialConversationId || null);
 
-  // Fetch current conversation for title
+  // fetch current conversation for title
   const currentConversation = useQuery(
     api.conversations.get,
     currentConversationId
@@ -175,7 +175,7 @@ export function HomeClient({
       : "skip"
   );
 
-  // Dynamic document title based on conversation
+  // dynamic document title based on conversation
   useEffect(() => {
     if (currentConversationId && currentConversation) {
       const title = currentConversation.title || "New conversation";
@@ -185,22 +185,22 @@ export function HomeClient({
     }
   }, [currentConversationId, currentConversation]);
 
-  // Handle conversation selection - update URL without full navigation
-  // Uses startTransition to keep UI responsive during heavy re-renders
+  // handle conversation selection - update uRL without full navigation
+  // uses startTransition to keep uI responsive during heavy re-renders
   const handleConversationSelect = useCallback((id: string | null) => {
-    // Update URL immediately for instant feedback
+    // update uRL immediately for instant feedback
     if (id) {
       window.history.pushState(null, "", `/c/${id}`);
     } else {
       window.history.pushState(null, "", "/");
     }
-    // Defer state update to keep click handler fast
+    // defer state update to keep click handler fast
     startTransition(() => {
       setCurrentConversationId(id);
     });
   }, []);
 
-  // Sync state with URL when user navigates with browser back/forward buttons
+  // sync state with uRL when user navigates with browser back/forward buttons
   useEffect(() => {
     const handlePopState = () => {
       const path = window.location.pathname;
@@ -214,41 +214,41 @@ export function HomeClient({
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
-  // Handle new conversation creation - update URL without full navigation
+  // handle new conversation creation - update uRL without full navigation
   const handleConversationCreate = useCallback(
     (id: string) => {
       setCurrentConversationId(id);
       analytics.trackConversationCreated(id, selectedModel);
-      // Use replaceState to update URL without triggering re-render
+      // use replaceState to update uRL without triggering re-render
       window.history.replaceState(null, "", `/c/${id}`);
     },
     [analytics, selectedModel]
   );
 
-  // Handle new chat - update URL without full navigation
+  // handle new chat - update uRL without full navigation
   const handleNewChat = useCallback(() => {
     setCurrentConversationId(null);
     setNewChatResetKey((k) => k + 1);
     window.history.pushState(null, "", "/");
   }, []);
 
-  // Handle fork - update URL without full navigation
+  // handle fork - update uRL without full navigation
   const handleFork = useCallback((newConversationId: string) => {
     setCurrentConversationId(newConversationId);
     window.history.pushState(null, "", `/c/${newConversationId}`);
     toast.success("Forked!");
   }, []);
 
-  // Handle new chat with pre-filled message (from command palette)
-  // Sets the draft and triggers auto-send
+  // handle new chat with pre-filled message (from command palette)
+  // sets the draft and triggers auto-send
   const handleNewChatWithMessage = useCallback(
     (message: string) => {
-      // Clear any existing attachments
+      // clear any existing attachments
       const storageIdsToDelete = clearNewChatAttachmentDraft();
       for (const storageId of storageIdsToDelete) {
         deleteFile({ storageId: storageId as Id<"_storage"> }).catch(() => {});
       }
-      // Set the draft with the message and flag for auto-send
+      // set the draft with the message and flag for auto-send
       setNewChatDraft(message, true);
       setCurrentConversationId(null);
       setNewChatResetKey((k) => k + 1);
@@ -257,7 +257,7 @@ export function HomeClient({
     [deleteFile]
   );
 
-  // Memoized toggle callbacks - reused across keyboard shortcuts and JSX
+  // memoized toggle callbacks - reused across keyboard shortcuts and jSX
   const toggleSidebar = useCallback(
     () => setSidebarCollapsed((prev) => !prev),
     []
@@ -291,7 +291,7 @@ export function HomeClient({
     setShowSettings(true);
   }, []);
 
-  // Model change with analytics
+  // model change with analytics
   const handleModelChange = useCallback(
     (newModel: string) => {
       if (newModel !== selectedModel) {
@@ -306,10 +306,10 @@ export function HomeClient({
     [selectedModel, analytics]
   );
 
-  // Get user's keybind configuration
+  // get user's keybind configuration
   const keybinds = useKeybinds();
 
-  // Keyboard shortcuts
+  // keyboard shortcuts
   useKeyboardShortcuts({
     onToggleSidebar: toggleSidebar,
     onNewChat: handleNewChat,
@@ -389,10 +389,10 @@ export function HomeClient({
           </>
         )}
 
-        {/* Settings modal */}
+        {/* settings modal */}
         <SettingsModal isOpen={showSettings} onClose={closeSettings} />
 
-        {/* Command palette */}
+        {/* command palette */}
         <CommandPalette
           isOpen={showCommandPalette}
           onClose={closeCommandPalette}

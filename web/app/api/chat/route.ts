@@ -17,33 +17,33 @@ import { encodingForModel, getEncoding } from "js-tiktoken";
 import { updateActiveTrace } from "@langfuse/tracing";
 
 // ============================================================================
-// Constants
+// constants
 // ============================================================================
 
-/** Timeout for fetching files (images, PDFs) in milliseconds */
+/** timeout for fetching files (images, pDFs) in milliseconds */
 const FILE_FETCH_TIMEOUT_MS = 30000;
 
-/** Estimated tokens added per message for structure overhead */
+/** estimated tokens added per message for structure overhead */
 const TOKENS_PER_MESSAGE_OVERHEAD = 4;
 
-/** Estimated tokens for web search tool definitions */
+/** estimated tokens for web search tool definitions */
 const TOOL_DEFINITION_TOKENS = 1500;
 
-/** Estimated tokens per image (conservative estimate for vision models) */
+/** estimated tokens per image (conservative estimate for vision models) */
 const TOKENS_PER_IMAGE = 4000;
 
-/** Interval for tracking token usage during streaming (ms) */
+/** interval for tracking token usage during streaming (ms) */
 const TOKEN_TRACKING_INTERVAL_MS = 1000;
 
-/** Time to wait for onFinish after abort before tracking partial tokens (ms) */
+/** time to wait for onFinish after abort before tracking partial tokens (ms) */
 const ABORT_SETTLE_MS = 100;
 
 // ============================================================================
-// Token Encoding
+// token encoding
 // ============================================================================
 
-// Get tiktoken encoder - cl100k_base works well for most modern models
-// (GPT-4, GPT-3.5-turbo, and is a reasonable approximation for Claude/Gemini)
+// get tiktoken encoder - cl100k_base works well for most modern models
+// (gPT-4, gPT-3.5-turbo, and is a reasonable approximation for claude/gemini)
 let tiktokenEncoder: ReturnType<typeof getEncoding> | null = null;
 function getTokenEncoder() {
   if (!tiktokenEncoder) {
@@ -52,21 +52,21 @@ function getTokenEncoder() {
   return tiktokenEncoder;
 }
 
-// Count tokens using tiktoken
+// count tokens using tiktoken
 function countTokens(text: string): number {
   try {
     const encoder = getTokenEncoder();
     return encoder.encode(text).length;
   } catch {
-    // Fallback to rough estimate if tiktoken fails
+    // fallback to rough estimate if tiktoken fails
     return Math.ceil(text.length / 4);
   }
 }
 
-// Initialize Convex client
+// initialize convex client
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
-// Default provider registry (uses env vars)
+// default provider registry (uses env vars)
 const defaultProviders: Record<
   string,
   (apiModelId: string) => ReturnType<typeof anthropic>
@@ -78,7 +78,7 @@ const defaultProviders: Record<
     google(apiModelId) as unknown as ReturnType<typeof anthropic>,
 };
 
-// Create provider with custom API key
+// create provider with custom aPI key
 function createProviderWithKey(
   provider: string,
   apiKey: string,
@@ -109,12 +109,12 @@ function getModel(modelId: string) {
   return providerFn(modelInfo.apiModelId);
 }
 
-// Check if a MIME type is an image
+// check if a mIME type is an image
 function isImageMimeType(mimeType: string): boolean {
   return mimeType.startsWith("image/");
 }
 
-// Check if a MIME type is a supported document (PDF)
+// check if a mIME type is a supported document (pDF)
 function isPdfMimeType(mimeType: string): boolean {
   return mimeType === "application/pdf";
 }
@@ -124,7 +124,7 @@ type ContentPart =
   | { type: "image"; image: string; mimeType?: string }
   | { type: "file"; data: string; mediaType: string; filename?: string };
 
-/** Provider-specific options for reasoning models */
+/** provider-specific options for reasoning models */
 type ProviderOptions =
   | { anthropic: { thinking: { type: "enabled"; budgetTokens: number } } }
   | { openai: { reasoningEffort: string } }
@@ -135,7 +135,7 @@ type ProviderOptions =
     }
   | undefined;
 
-/** Token usage from AI SDK (handles different property names across versions) */
+/** token usage from aI sDK (handles different property names across versions) */
 interface TokenUsage {
   inputTokens?: number;
   outputTokens?: number;
@@ -143,7 +143,7 @@ interface TokenUsage {
   completionTokens?: number;
 }
 
-/** Web search source from AI SDK providers */
+/** web search source from aI sDK providers */
 interface WebSearchSource {
   title?: string;
   url?: string;
@@ -151,7 +151,7 @@ interface WebSearchSource {
   snippet?: string;
 }
 
-// Fetch file and convert to base64 (for PDFs and other non-image files)
+// fetch file and convert to base64 (for pDFs and other non-image files)
 async function fetchFileAsBase64(url: string): Promise<string> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), FILE_FETCH_TIMEOUT_MS);
@@ -165,12 +165,12 @@ async function fetchFileAsBase64(url: string): Promise<string> {
   }
 }
 
-// Build web search tools based on provider
+// build web search tools based on provider
 
 function buildWebSearchTools(
   provider: string
 ): Record<string, any> | undefined {
-  // Note: Web search tools require newer SDK versions that may not have TypeScript types yet
+  // note: web search tools require newer sDK versions that may not have typeScript types yet
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const openaiAny = openai as any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -200,7 +200,7 @@ function buildWebSearchTools(
   }
 }
 
-// Build provider options for reasoning models
+// build provider options for reasoning models
 function buildProviderOptions(
   provider: string,
   reasoningLevel: string | number | undefined,
@@ -215,7 +215,7 @@ function buildProviderOptions(
   }
 
   if (provider === "anthropic" && reasoningKind === "budget") {
-    // Anthropic extended thinking
+    // anthropic extended thinking
     return {
       anthropic: {
         thinking: {
@@ -226,14 +226,14 @@ function buildProviderOptions(
       },
     };
   } else if (provider === "openai" && reasoningKind === "effort") {
-    // OpenAI reasoning effort
+    // openAI reasoning effort
     return {
       openai: {
         reasoningEffort: reasoningLevel as string,
       },
     };
   } else if (provider === "google" && reasoningKind === "effort") {
-    // Google Gemini thinking config
+    // google gemini thinking config
     return {
       google: {
         thinkingConfig: {
@@ -247,7 +247,7 @@ function buildProviderOptions(
   return undefined;
 }
 
-// Process a single file part into a ContentPart
+// process a single file part into a contentPart
 async function processFilePart(
   part: { mediaType: string; url: string; fileName?: string },
   provider: string
@@ -290,7 +290,7 @@ async function processFilePart(
   }
 }
 
-// Convert our message format to CoreMessage format with proper multimodal support
+// convert our message format to coreMessage format with proper multimodal support
 async function convertMessages(
   messages: Array<{
     id: string;
@@ -308,7 +308,7 @@ async function convertMessages(
   const converted: CoreMessage[] = [];
 
   for (const msg of messages) {
-    // For assistant messages, just extract text
+    // for assistant messages, just extract text
     if (msg.role === "assistant") {
       const text = msg.parts
         .filter((p) => p.type === "text")
@@ -318,13 +318,13 @@ async function convertMessages(
       continue;
     }
 
-    // Skip system messages in conversation (handled separately)
+    // skip system messages in conversation (handled separately)
     if (msg.role === "system") {
       continue;
     }
 
-    // For user messages, build multimodal content
-    // Collect text parts immediately, file parts need async processing
+    // for user messages, build multimodal content
+    // collect text parts immediately, file parts need async processing
     const textParts: ContentPart[] = [];
     const filePartPromises: Array<{
       index: number;
@@ -335,7 +335,7 @@ async function convertMessages(
       if (part.type === "text" && part.text) {
         textParts.push({ type: "text", text: part.text });
       } else if (part.type === "file" && part.url && part.mediaType) {
-        // Process files in parallel
+        // process files in parallel
         filePartPromises.push({
           index,
           promise: processFilePart(
@@ -350,7 +350,7 @@ async function convertMessages(
       }
     });
 
-    // Wait for all file parts to be processed in parallel
+    // wait for all file parts to be processed in parallel
     const resolvedFileParts = await Promise.all(
       filePartPromises.map(async ({ index, promise }) => ({
         index,
@@ -358,7 +358,7 @@ async function convertMessages(
       }))
     );
 
-    // Combine text and file parts, maintaining original order
+    // combine text and file parts, maintaining original order
     const contentParts: ContentPart[] = [];
     let textPartIdx = 0;
     let filePartIdx = 0;
@@ -376,7 +376,7 @@ async function convertMessages(
       contentParts.push({ type: "text", text: "" });
     }
 
-    // Use type assertion for content due to AI SDK v5 type changes
+    // use type assertion for content due to aI sDK v5 type changes
     converted.push({ role: "user", content: contentParts as any });
   }
 
@@ -395,7 +395,7 @@ export async function POST(req: Request) {
       webSearchEnabled,
     } = body;
 
-    // Extract token from Authorization header (preferred) or body (fallback)
+    // extract token from authorization header (preferred) or body (fallback)
     const chatToken =
       extractChatToken(req) || (body.chatToken as string | undefined);
 
@@ -428,21 +428,21 @@ export async function POST(req: Request) {
     const requestedModel = model || FREE_MODEL_ID;
     const modelInfo = getModelInfo(requestedModel);
 
-    // Get user tier - all users (including anonymous) have real IDs now
+    // get user tier - all users (including anonymous) have real iDs now
     let useCustomKey = false;
     let customApiKey: string | null = null;
     let tier: { tier: string; canSendMessage: boolean; providers?: string[] };
 
-    // In self-hosting mode, skip billing checks - all models allowed
+    // in self-hosting mode, skip billing checks - all models allowed
     if (IS_SELF_HOSTING) {
       tier = { tier: "self_hosted", canSendMessage: true };
     } else {
-      // Production mode: full tier checking
+      // production mode: full tier checking
       tier = await convex.query(api.billing.getUserTierById, { userId });
 
-      // Check model access based on tier
+      // check model access based on tier
       if (tier.tier === "free") {
-        // Free users can only use the free model
+        // free users can only use the free model
         if (requestedModel !== FREE_MODEL_ID) {
           return new Response(
             JSON.stringify({
@@ -455,7 +455,7 @@ export async function POST(req: Request) {
           );
         }
 
-        // Check message limit
+        // check message limit
         if (!tier.canSendMessage) {
           return new Response(
             JSON.stringify({
@@ -468,10 +468,10 @@ export async function POST(req: Request) {
           );
         }
       } else if (tier.tier === "subscriber") {
-        // Subscribers can use all models
-        // Check if user has their own API key for this provider (BYOK - subscriber benefit)
+        // subscribers can use all models
+        // check if user has their own aPI key for this provider (bYOK - subscriber benefit)
         if (tier.providers?.includes(modelInfo.provider)) {
-          // Get the user's API key for this provider
+          // get the user's aPI key for this provider
           const encryptedKey = await convex.query(api.apiKeys.getEncryptedKey, {
             provider: modelInfo.provider,
           });
@@ -494,7 +494,7 @@ export async function POST(req: Request) {
           }
         }
 
-        // If not using own key, check credits
+        // if not using own key, check credits
         if (!useCustomKey && !tier.canSendMessage) {
           return new Response(
             JSON.stringify({
@@ -509,16 +509,16 @@ export async function POST(req: Request) {
       }
     }
 
-    // Web search: in self-hosting mode allow if model supports it, in production require subscriber tier
+    // web search: in self-hosting mode allow if model supports it, in production require subscriber tier
     const canUseWebSearch = IS_SELF_HOSTING
       ? modelInfo.supportsWebSearch
       : tier.tier === "subscriber" && modelInfo.supportsWebSearch;
     const shouldUseWebSearch = webSearchEnabled === true && canUseWebSearch;
 
-    // Convert messages to CoreMessage format (images auto-resized to fit provider limits)
+    // convert messages to coreMessage format (images auto-resized to fit provider limits)
     const coreMessages = await convertMessages(messages, modelInfo.provider);
 
-    // Log for debugging
+    // log for debugging
     const imageCount = coreMessages.reduce((count, msg) => {
       if (msg.role === "user" && Array.isArray(msg.content)) {
         return (
@@ -538,7 +538,7 @@ export async function POST(req: Request) {
       imageCount,
     });
 
-    // Update Langfuse trace with session and user info
+    // update langfuse trace with session and user info
     if (conversationId) {
       updateActiveTrace({
         sessionId: conversationId,
@@ -547,7 +547,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // Get the appropriate model instance
+    // get the appropriate model instance
     let modelInstance;
     if (useCustomKey && customApiKey) {
       modelInstance = createProviderWithKey(
@@ -559,7 +559,7 @@ export async function POST(req: Request) {
       modelInstance = getModel(requestedModel);
     }
 
-    // Build web search tools and provider options
+    // build web search tools and provider options
     const tools = shouldUseWebSearch
       ? buildWebSearchTools(modelInfo.provider)
       : undefined;
@@ -577,20 +577,20 @@ export async function POST(req: Request) {
 
     console.log("Provider options:", providerOptions);
 
-    // Build headers for interleaved thinking (Anthropic only)
-    // This allows reasoning tokens to appear between tool calls
+    // build headers for interleaved thinking (anthropic only)
+    // this allows reasoning tokens to appear between tool calls
     const headers: Record<string, string> | undefined =
       modelInfo.provider === "anthropic" && useReasoning
         ? { "anthropic-beta": "interleaved-thinking-2025-05-14" }
         : undefined;
 
-    // Track whether onFinish was called (for abort/interval handling)
+    // track whether onFinish was called (for abort/interval handling)
     let onFinishCalled = false;
     let accumulatedText = "";
-    let cachedInputTokens: number | null = null; // Lazy calculation
-    let lastTrackedOutputTokens = 0; // Avoid redundant updates
+    let cachedInputTokens: number | null = null; // lazy calculation
+    let lastTrackedOutputTokens = 0; // avoid redundant updates
 
-    // Calculate input tokens lazily (only when first needed)
+    // calculate input tokens lazily (only when first needed)
     const getInputTokens = () => {
       if (cachedInputTokens !== null) return cachedInputTokens;
 
@@ -611,36 +611,36 @@ export async function POST(req: Request) {
             }
           }
         }
-        // Add overhead for message structure
+        // add overhead for message structure
         totalTokens += TOKENS_PER_MESSAGE_OVERHEAD;
       }
 
-      // Add overhead for tool definitions when web search is enabled
+      // add overhead for tool definitions when web search is enabled
       if (shouldUseWebSearch) {
         totalTokens += TOOL_DEFINITION_TOKENS;
       }
 
-      // Add overhead for images
+      // add overhead for images
       totalTokens += imageCount * TOKENS_PER_IMAGE;
 
       cachedInputTokens = totalTokens;
       return totalTokens;
     };
 
-    // Set up 1000ms interval for token tracking (non-blocking, first run at 1000ms)
+    // set up 1000ms interval for token tracking (non-blocking, first run at 1000ms)
     let tokenTrackingInterval: ReturnType<typeof setInterval> | null = null;
     if (conversationId) {
       tokenTrackingInterval = setInterval(async () => {
         if (onFinishCalled || accumulatedText.length === 0) return;
 
         const outputTokens = countTokens(accumulatedText);
-        // Skip if no change since last update
+        // skip if no change since last update
         if (outputTokens === lastTrackedOutputTokens) return;
         lastTrackedOutputTokens = outputTokens;
 
         const inputTokens = getInputTokens();
 
-        // Double-check before mutation to minimize race with onFinish
+        // double-check before mutation to minimize race with onFinish
         if (onFinishCalled) return;
 
         console.log(`Token checkpoint: ${inputTokens} in, ${outputTokens} out`);
@@ -661,7 +661,7 @@ export async function POST(req: Request) {
       }, TOKEN_TRACKING_INTERVAL_MS);
     }
 
-    // Cleanup function for interval
+    // cleanup function for interval
     const clearTokenInterval = () => {
       if (tokenTrackingInterval) {
         clearInterval(tokenTrackingInterval);
@@ -669,11 +669,11 @@ export async function POST(req: Request) {
       }
     };
 
-    // Handle abort - track final partial tokens when client disconnects
+    // handle abort - track final partial tokens when client disconnects
     const handleAbort = async () => {
       clearTokenInterval();
 
-      // Wait a bit to see if onFinish gets called
+      // wait a bit to see if onFinish gets called
       await new Promise((resolve) => setTimeout(resolve, ABORT_SETTLE_MS));
 
       if (!onFinishCalled && accumulatedText.length > 0 && conversationId) {
@@ -702,8 +702,8 @@ export async function POST(req: Request) {
 
     req.signal.addEventListener("abort", handleAbort);
 
-    // Stream the response with usage tracking
-    // Pass request signal so LLM generation is cancelled if client disconnects
+    // stream the response with usage tracking
+    // pass request signal so lLM generation is cancelled if client disconnects
     const result = streamText({
       model: modelInstance,
       system: systemPrompt || "You are a helpful assistant.",
@@ -723,7 +723,7 @@ export async function POST(req: Request) {
         },
       },
       onChunk: ({ chunk }) => {
-        // Track accumulated text for abort estimation
+        // track accumulated text for abort estimation
         if (chunk.type === "text-delta") {
           accumulatedText += chunk.text;
         }
@@ -733,15 +733,15 @@ export async function POST(req: Request) {
       },
       onFinish: async ({ usage, text, finishReason, sources }) => {
         onFinishCalled = true;
-        clearTokenInterval(); // Stop checkpoint updates, we have exact tokens now
+        clearTokenInterval(); // stop checkpoint updates, we have exact tokens now
         console.log("Stream finished:", {
           finishReason,
           textLength: text?.length || 0,
           usage,
         });
-        // Track token usage for all users (needed for billing calculations)
+        // track token usage for all users (needed for billing calculations)
         if (usage && conversationId) {
-          // Cast to TokenUsage because property names vary across SDK versions
+          // cast to tokenUsage because property names vary across sDK versions
           const usageTyped = usage as TokenUsage;
           const inputTokens =
             usageTyped.inputTokens ?? usageTyped.promptTokens ?? 0;
@@ -749,9 +749,9 @@ export async function POST(req: Request) {
             usageTyped.outputTokens ?? usageTyped.completionTokens ?? 0;
 
           try {
-            // Update tokens and automatically deduct purchased credits if needed
-            // This is atomic - Convex handles subscription balance check and FIFO deduction
-            // Pass usedOwnKey to skip credit deduction when user's own API key was used
+            // update tokens and automatically deduct purchased credits if needed
+            // this is atomic - convex handles subscription balance check and fIFO deduction
+            // pass usedOwnKey to skip credit deduction when user's own aPI key was used
             const result = await convex.mutation(api.messages.updateTokens, {
               conversationId,
               userId,
@@ -771,12 +771,12 @@ export async function POST(req: Request) {
               }`
             );
           } catch (err) {
-            // Log error but don't fail the request (usage tracking is best-effort)
+            // log error but don't fail the request (usage tracking is best-effort)
             console.error("Failed to track usage:", err);
           }
         }
 
-        // Increment free tier message count (production mode only)
+        // increment free tier message count (production mode only)
         if (!IS_SELF_HOSTING && tier.tier === "free") {
           try {
             await convex.mutation(api.freeUsage.incrementFreeUsageInternal, {
@@ -788,7 +788,7 @@ export async function POST(req: Request) {
           }
         }
 
-        // Save web search sources to the assistant message
+        // save web search sources to the assistant message
         if (
           shouldUseWebSearch &&
           sources &&
@@ -796,10 +796,10 @@ export async function POST(req: Request) {
           conversationId
         ) {
           try {
-            // Cast sources to WebSearchSource because structure varies across providers
+            // cast sources to webSearchSource because structure varies across providers
             const sourcesTyped = sources as WebSearchSource[];
             const mappedSources = sourcesTyped
-              .filter((s) => s.url || s.uri) // Filter out sources without URLs
+              .filter((s) => s.url || s.uri) // filter out sources without uRLs
               .map((s) => ({
                 title: s.title || s.url || s.uri || "Source",
                 url: s.url || s.uri || "",
@@ -831,7 +831,7 @@ export async function POST(req: Request) {
       error instanceof Error ? error.stack : String(error)
     );
 
-    // Sanitize error message - don't expose internal details to clients
+    // sanitize error message - don't expose internal details to clients
     const isKnownError =
       error instanceof Error &&
       (error.message.includes("rate limit") ||

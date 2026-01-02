@@ -39,7 +39,7 @@ export function useOurinChat({
   getActiveCoreNames,
   getActivePrompt,
 }: UseOurinChatOptions) {
-  // Get anonymous auth helper - this manages auto sign-in
+  // get anonymous auth helper - this manages auto sign-in
   const { ensureAuthenticated, isAuthenticated } = useAnonymousAuth();
 
   const [messages, setMessages] = useState<UIMessage[]>(initialMessages);
@@ -48,54 +48,54 @@ export function useOurinChat({
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
 
-  // Track which conversation is currently streaming (for multi-conversation support)
+  // track which conversation is currently streaming (for multi-conversation support)
   const [streamingConversationId, setStreamingConversationId] = useState<
     string | null
   >(null);
 
-  // Keep refs for current values to avoid stale closures
+  // keep refs for current values to avoid stale closures
   const messagesRef = useRef<UIMessage[]>(messages);
   messagesRef.current = messages;
 
   const conversationIdRef = useRef<string | null>(conversationId);
   conversationIdRef.current = conversationId;
 
-  // Track previous conversationId to detect navigation
+  // track previous conversationId to detect navigation
   const prevConversationIdRef = useRef<string | null>(conversationId);
 
-  // Snapshot of messages when streaming starts - used to restore state when navigating back
+  // snapshot of messages when streaming starts - used to restore state when navigating back
   // to a conversation that's still streaming
   const streamingMessagesSnapshotRef = useRef<{
     conversationId: string;
     messages: UIMessage[];
   } | null>(null);
 
-  // Track partial response for saving on stop
+  // track partial response for saving on stop
   const partialResponseRef = useRef<string>("");
 
-  // Track if we've generated a title for this conversation
+  // track if we've generated a title for this conversation
   const hasGeneratedTitleRef = useRef<Set<string>>(new Set());
 
-  // Effect to restore messages when navigating back to a streaming conversation
-  // This handles the case where user previews other conversations while one is streaming,
+  // effect to restore messages when navigating back to a streaming conversation
+  // this handles the case where user previews other conversations while one is streaming,
   // then returns to the streaming conversation
   useEffect(() => {
     const prevConvId = prevConversationIdRef.current;
     prevConversationIdRef.current = conversationId;
 
-    // Check if we're navigating back TO a streaming conversation
+    // check if we're navigating back tO a streaming conversation
     if (
       conversationId &&
       conversationId !== prevConvId &&
       conversationId === streamingConversationId &&
       streamingMessagesSnapshotRef.current?.conversationId === conversationId
     ) {
-      // Restore the snapshot messages for the streaming conversation
+      // restore the snapshot messages for the streaming conversation
       setMessages(streamingMessagesSnapshotRef.current.messages);
     }
   }, [conversationId, streamingConversationId]);
 
-  // Convex mutations
+  // convex mutations
   const appendMessage = useMutation(api.messages.append);
   const truncateFrom = useMutation(api.messages.truncateFrom);
   const createConversation = useMutation(api.conversations.create);
@@ -110,16 +110,16 @@ export function useOurinChat({
   );
 
   /**
-   * Generate and save a title for a conversation based on the first user message
+   * generate and save a title for a conversation based on the first user message
    */
   const generateTitle = useCallback(
     async (convId: string, userMessageText: string) => {
-      // Skip if we've already generated a title for this conversation
+      // skip if we've already generated a title for this conversation
       if (hasGeneratedTitleRef.current.has(convId)) return;
       hasGeneratedTitleRef.current.add(convId);
 
       try {
-        // Get auth token for API call
+        // get auth token for aPI call
         const tokenResult = await generateChatToken();
         if (!tokenResult) return;
 
@@ -144,16 +144,16 @@ export function useOurinChat({
           });
         }
       } catch {
-        // Silently fail
+        // silently fail
       }
     },
     [updateTitle, generateChatToken]
   );
 
   /**
-   * Internal helper to stream a response from the AI
-   * Does NOT add a user message - just streams assistant response for given messages
-   * Persists streaming progress to DB every 250ms for crash recovery
+   * internal helper to stream a response from the aI
+   * does nOT add a user message - just streams assistant response for given messages
+   * persists streaming progress to dB every 250ms for crash recovery
    */
   const streamResponse = useCallback(
     async (
@@ -174,16 +174,16 @@ export function useOurinChat({
       totalThinkingDuration: number;
       assistantMessageId: string;
     }> => {
-      // Use override values if provided
+      // use override values if provided
       const streamModel = modelOverride ?? model;
       const streamReasoningLevel = reasoningLevelOverride ?? reasoningLevel;
       partialResponseRef.current = "";
 
-      // Generate assistant message ID once at the start - used for both UI and DB
+      // generate assistant message iD once at the start - used for both uI and dB
       const assistantMessageId = crypto.randomUUID();
 
-      // Create assistant message placeholder BEFORE changing status
-      // This ensures "Thinking..." transitions smoothly without a blank gap
+      // create assistant message placeholder bEFORE changing status
+      // this ensures "thinking..." transitions smoothly without a blank gap
       const assistantMessage: UIMessage = {
         id: assistantMessageId,
         role: "assistant",
@@ -201,21 +201,21 @@ export function useOurinChat({
       };
 
       const messagesWithAssistant = [...messagesToSend, assistantMessage];
-      // Only update UI if still viewing this conversation
+      // only update uI if still viewing this conversation
       if (conversationIdRef.current === convId) {
         setMessages(messagesWithAssistant);
         setStatus("streaming");
         setStreamingConversationId(convId);
       }
 
-      // Save snapshot for restoration when user navigates back during streaming
+      // save snapshot for restoration when user navigates back during streaming
       streamingMessagesSnapshotRef.current = {
         conversationId: convId,
         messages: messagesWithAssistant,
       };
 
-      // Persist empty assistant message to DB immediately for crash recovery
-      // With anonymous auth, all users have real IDs and can persist
+      // persist empty assistant message to dB immediately for crash recovery
+      // with anonymous auth, all users have real iDs and can persist
       const shouldPersist = streamingOptions?.persistToDb !== false;
       if (shouldPersist) {
         createStreamingMessage({
@@ -228,7 +228,7 @@ export function useOurinChat({
         });
       }
 
-      // Track parts OUTSIDE try block so they're accessible in catch for abort handling
+      // track parts oUTSIDE try block so they're accessible in catch for abort handling
       let totalThinkingDuration = 0;
       const orderedParts: MessagePart[] = [];
       const toolInvocations = new Map<string, ToolInvocationPart>();
@@ -237,7 +237,7 @@ export function useOurinChat({
       let currentReasoningStartTime: number | null = null;
       let currentTextPartIndex: number | null = null;
 
-      // Helper to finalize current reasoning block
+      // helper to finalize current reasoning block
       const finalizeCurrentReasoning = () => {
         if (currentReasoningText && currentReasoningId) {
           const blockDuration = currentReasoningStartTime
@@ -263,22 +263,22 @@ export function useOurinChat({
         currentReasoningStartTime = null;
       };
 
-      // Helper to finalize current text part
+      // helper to finalize current text part
       const finalizeCurrentText = () => {
         currentTextPartIndex = null;
       };
 
-      // Set up 250ms interval for persisting streaming progress
+      // set up 250ms interval for persisting streaming progress
       let streamingInterval: ReturnType<typeof setInterval> | null = null;
-      let lastPersistedParts: string = ""; // Track last persisted state to avoid redundant updates
+      let lastPersistedParts: string = ""; // track last persisted state to avoid redundant updates
 
       const persistCurrentParts = () => {
         if (!shouldPersist) return;
 
-        // Create a snapshot of current parts for persistence
+        // create a snapshot of current parts for persistence
         const partsSnapshot = [...orderedParts];
 
-        // Add in-progress reasoning if any
+        // add in-progress reasoning if any
         if (currentReasoningText && currentReasoningId) {
           const existingIdx = partsSnapshot.findIndex(
             (p) =>
@@ -293,7 +293,7 @@ export function useOurinChat({
           }
         }
 
-        // Only persist if parts have changed
+        // only persist if parts have changed
         const partsKey = JSON.stringify(partsSnapshot);
         if (partsKey === lastPersistedParts) return;
         lastPersistedParts = partsKey;
@@ -308,18 +308,18 @@ export function useOurinChat({
       };
 
       try {
-        // Get auth token for API call
+        // get auth token for aPI call
         const tokenResult = await generateChatToken();
         if (!tokenResult) {
           throw new Error("Failed to get chat token - not authenticated");
         }
 
-        // Start 250ms persistence interval
+        // start 250ms persistence interval
         if (shouldPersist) {
           streamingInterval = setInterval(persistCurrentParts, 250);
         }
 
-        // Call AI API - get fresh system prompt each time to reflect core changes
+        // call aI aPI - get fresh system prompt each time to reflect core changes
         const response = await fetch("/api/chat", {
           method: "POST",
           headers: {
@@ -338,13 +338,13 @@ export function useOurinChat({
         });
 
         if (!response.ok) {
-          // Try to parse error response for specific error codes
+          // try to parse error response for specific error codes
           try {
             const errorData = await response.json();
             const errorCode = errorData.code;
             const errorDetails = errorData.details || errorData.error;
 
-            // Toasts for specific error codes
+            // toasts for specific error codes
             switch (errorCode) {
               case "MODEL_RESTRICTED":
                 toast.error("Model not available", {
@@ -378,7 +378,7 @@ export function useOurinChat({
             }
             throw new Error(errorDetails || `API error: ${response.status}`);
           } catch (parseErr) {
-            // If we couldn't parse the error, throw generic error
+            // if we couldn't parse the error, throw generic error
             if (
               parseErr instanceof Error &&
               parseErr.message !== `API error: ${response.status}`
@@ -393,7 +393,7 @@ export function useOurinChat({
           throw new Error("No response body");
         }
 
-        // Read UI message stream format
+        // read uI message stream format
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let fullText = "";
@@ -405,9 +405,9 @@ export function useOurinChat({
 
           buffer += decoder.decode(value, { stream: true });
 
-          // Process complete lines from buffer (SSE format: "type:json\n")
+          // process complete lines from buffer (sSE format: "type:json\n")
           const lines = buffer.split("\n");
-          buffer = lines.pop() || ""; // Keep incomplete line in buffer
+          buffer = lines.pop() || ""; // keep incomplete line in buffer
 
           for (const line of lines) {
             if (!line.trim()) continue;
@@ -419,26 +419,26 @@ export function useOurinChat({
             const data = line.slice(colonIndex + 1);
 
             try {
-              // UI Message Stream format (from toUIMessageStreamResponse)
+              // uI message stream format (from toUIMessageStreamResponse)
               if (type === "data") {
                 const parsed = JSON.parse(data);
 
                 if (parsed.type === "text-delta" && parsed.delta) {
-                  // Text started - finalize any pending reasoning
+                  // text started - finalize any pending reasoning
                   finalizeCurrentReasoning();
                   fullText += parsed.delta;
                   partialResponseRef.current = fullText;
 
-                  // Track text in orderedParts for chronological rendering
+                  // track text in orderedParts for chronological rendering
                   if (currentTextPartIndex === null) {
-                    // Start a new text part
+                    // start a new text part
                     currentTextPartIndex = orderedParts.length;
                     orderedParts.push({
                       type: "text" as const,
                       text: parsed.delta,
                     } as MessagePart);
                   } else {
-                    // Append to existing text part
+                    // append to existing text part
                     const textPart = orderedParts[currentTextPartIndex] as {
                       type: "text";
                       text: string;
@@ -446,32 +446,32 @@ export function useOurinChat({
                     textPart.text += parsed.delta;
                   }
                 } else if (parsed.type === "reasoning-start") {
-                  // New reasoning block started - finalize any previous text and reasoning
+                  // new reasoning block started - finalize any previous text and reasoning
                   finalizeCurrentText();
                   finalizeCurrentReasoning();
-                  // Use the stream's ID directly (e.g., '0', '3', '6')
+                  // use the stream's iD directly (e.g., '0', '3', '6')
                   currentReasoningId = `reasoning-${parsed.id}`;
                   currentReasoningText = "";
                   currentReasoningStartTime = Date.now();
                 } else if (parsed.type === "reasoning-delta" && parsed.delta) {
-                  // Use the stream's ID - if it changed, this is a new block
+                  // use the stream's iD - if it changed, this is a new block
                   const streamId = `reasoning-${parsed.id}`;
                   if (currentReasoningId && currentReasoningId !== streamId) {
-                    // Different ID means new reasoning block
+                    // different iD means new reasoning block
                     finalizeCurrentReasoning();
                     currentReasoningId = streamId;
                     currentReasoningText = "";
                     currentReasoningStartTime = Date.now();
                   }
 
-                  // Start a new reasoning block if we don't have one
+                  // start a new reasoning block if we don't have one
                   if (!currentReasoningId) {
                     currentReasoningId = streamId;
                     currentReasoningStartTime = Date.now();
                   }
                   currentReasoningText += parsed.delta;
 
-                  // Update the reasoning part in orderedParts if it exists, or it will be added when finalized
+                  // update the reasoning part in orderedParts if it exists, or it will be added when finalized
                   const existingIndex = orderedParts.findIndex(
                     (p) =>
                       p.type === "reasoning" &&
@@ -485,13 +485,13 @@ export function useOurinChat({
                   parsed.type === "reasoning-end" ||
                   parsed.type === "reasoning-finish"
                 ) {
-                  // Reasoning block ended - finalize it
+                  // reasoning block ended - finalize it
                   finalizeCurrentReasoning();
                 } else if (
                   parsed.type === "tool-input-start" &&
                   parsed.toolCallId
                 ) {
-                  // Tool call started - finalize any pending text and reasoning first
+                  // tool call started - finalize any pending text and reasoning first
                   finalizeCurrentText();
                   finalizeCurrentReasoning();
 
@@ -508,13 +508,13 @@ export function useOurinChat({
                   parsed.type === "tool-input-available" &&
                   parsed.toolCallId
                 ) {
-                  // Update existing tool invocation with input, or create new one
+                  // update existing tool invocation with input, or create new one
                   const existing = toolInvocations.get(parsed.toolCallId);
                   if (existing) {
-                    // Update args with the input (this contains the query for web search)
+                    // update args with the input (this contains the query for web search)
                     existing.args = parsed.input || {};
                   } else {
-                    // Tool wasn't started yet, finalize text and reasoning and add it
+                    // tool wasn't started yet, finalize text and reasoning and add it
                     finalizeCurrentText();
                     finalizeCurrentReasoning();
                     const toolPart: ToolInvocationPart = {
@@ -537,7 +537,7 @@ export function useOurinChat({
                     tool.result = parsed.output;
                   }
                 } else if (parsed.type === "tool-call" && parsed.toolCallId) {
-                  // Alternative tool call format - finalize text and reasoning first
+                  // alternative tool call format - finalize text and reasoning first
                   finalizeCurrentText();
                   finalizeCurrentReasoning();
 
@@ -556,7 +556,7 @@ export function useOurinChat({
                     orderedParts.push(toolPart);
                   }
                 } else if (parsed.type === "tool-result" && parsed.toolCallId) {
-                  // Alternative tool result format
+                  // alternative tool result format
                   const tool = toolInvocations.get(parsed.toolCallId);
                   if (tool) {
                     tool.state = "result";
@@ -565,14 +565,14 @@ export function useOurinChat({
                 }
               }
             } catch {
-              // Skip malformed lines
+              // skip malformed lines
             }
           }
 
-          // Build parts array preserving interleaved order (text is already in orderedParts)
+          // build parts array preserving interleaved order (text is already in orderedParts)
           const parts: MessagePart[] = [...orderedParts];
 
-          // Add current in-progress reasoning if any (it will be finalized and added to orderedParts at end)
+          // add current in-progress reasoning if any (it will be finalized and added to orderedParts at end)
           if (currentReasoningText && currentReasoningId) {
             const existingIndex = parts.findIndex(
               (p) =>
@@ -590,7 +590,7 @@ export function useOurinChat({
             }
           }
 
-          // Update assistant message with accumulated parts (only if still viewing this conversation)
+          // update assistant message with accumulated parts (only if still viewing this conversation)
           if (conversationIdRef.current === convId) {
             setMessages((prev) => {
               const updated = prev.map((msg, i) => {
@@ -606,7 +606,7 @@ export function useOurinChat({
             });
           }
 
-          // Always update snapshot regardless of current view (for restoration when navigating back)
+          // always update snapshot regardless of current view (for restoration when navigating back)
           if (streamingMessagesSnapshotRef.current?.conversationId === convId) {
             streamingMessagesSnapshotRef.current.messages =
               streamingMessagesSnapshotRef.current.messages.map((msg, i) => {
@@ -622,16 +622,16 @@ export function useOurinChat({
           }
         }
 
-        // Finalize any remaining reasoning at the end
+        // finalize any remaining reasoning at the end
         finalizeCurrentReasoning();
 
-        // Clear interval and do final persistence with complete parts and metadata
+        // clear interval and do final persistence with complete parts and metadata
         if (streamingInterval) {
           clearInterval(streamingInterval);
           streamingInterval = null;
         }
 
-        // Final update with complete parts and thinking duration metadata
+        // final update with complete parts and thinking duration metadata
         if (shouldPersist) {
           const finalMetadata = {
             ...(streamingOptions?.coreNames && {
@@ -656,9 +656,9 @@ export function useOurinChat({
           });
         }
 
-        // Clear streaming state (always update - this is global bookkeeping)
+        // clear streaming state (always update - this is global bookkeeping)
         setStreamingConversationId(null);
-        // Clear snapshot - streaming is done
+        // clear snapshot - streaming is done
         streamingMessagesSnapshotRef.current = null;
 
         return {
@@ -669,23 +669,23 @@ export function useOurinChat({
           assistantMessageId,
         };
       } catch (err) {
-        // Clear interval on error/abort
+        // clear interval on error/abort
         if (streamingInterval) {
           clearInterval(streamingInterval);
           streamingInterval = null;
         }
 
         if ((err as Error).name === "AbortError") {
-          // Finalize any pending content and return actual parts
+          // finalize any pending content and return actual parts
           finalizeCurrentReasoning();
           finalizeCurrentText();
 
-          // Clear streaming state (always update - this is global bookkeeping)
+          // clear streaming state (always update - this is global bookkeeping)
           setStreamingConversationId(null);
-          // Clear snapshot - streaming is done
+          // clear snapshot - streaming is done
           streamingMessagesSnapshotRef.current = null;
 
-          // Persist aborted state with partial content
+          // persist aborted state with partial content
           if (shouldPersist) {
             const abortedMetadata = {
               ...(streamingOptions?.coreNames && {
@@ -721,13 +721,13 @@ export function useOurinChat({
           };
         }
 
-        // For non-abort errors, still persist partial content to avoid orphaned DB records
+        // for non-abort errors, still persist partial content to avoid orphaned dB records
         finalizeCurrentReasoning();
         finalizeCurrentText();
 
-        // Clear streaming state (always update - this is global bookkeeping)
+        // clear streaming state (always update - this is global bookkeeping)
         setStreamingConversationId(null);
-        // Clear snapshot - streaming is done
+        // clear snapshot - streaming is done
         streamingMessagesSnapshotRef.current = null;
 
         if (shouldPersist && orderedParts.length > 0) {
@@ -768,14 +768,14 @@ export function useOurinChat({
   );
 
   /**
-   * Send a new user message and get AI response
+   * send a new user message and get aI response
    */
   const sendMessage = useCallback(
     async (
       input: SendMessageInput | string,
       options?: { webSearchEnabled?: boolean }
     ) => {
-      // Ensure user is authenticated (signs in anonymously if needed)
+      // ensure user is authenticated (signs in anonymously if needed)
       const authSuccess = await ensureAuthenticated();
       if (!authSuccess) {
         toast.error("Authentication failed", {
@@ -785,10 +785,10 @@ export function useOurinChat({
         return;
       }
 
-      // Get current core names for metadata
+      // get current core names for metadata
       const coreNames = getActiveCoreNames?.() ?? [];
 
-      // Parse input into user message with model and metadata
+      // parse input into user message with model and metadata
       const userMessage: UIMessage =
         typeof input === "string"
           ? {
@@ -816,18 +816,18 @@ export function useOurinChat({
               },
             };
 
-      // Create conversation if needed (all users now have real IDs)
+      // create conversation if needed (all users now have real iDs)
       let convId = conversationIdRef.current;
       if (!convId) {
         convId = await createConversation({ model });
         onConversationCreate?.(convId);
       }
 
-      // Get current messages and add user message to local state
+      // get current messages and add user message to local state
       const currentMessages = messagesRef.current;
       const updatedMessages = [...currentMessages, userMessage];
 
-      // Track this conversation as streaming and update UI (only if still viewing it)
+      // track this conversation as streaming and update uI (only if still viewing it)
       if (conversationIdRef.current === convId) {
         setMessages(updatedMessages);
         setStatus("submitted");
@@ -835,7 +835,7 @@ export function useOurinChat({
       }
       setError(null);
 
-      // Save user message immediately (all users have real IDs now)
+      // save user message immediately (all users have real iDs now)
       await appendMessage({
         conversationId: convId as Id<"conversations">,
         message: {
@@ -851,7 +851,7 @@ export function useOurinChat({
         },
       });
 
-      // Generate title for new conversations right after first message is sent
+      // generate title for new conversations right after first message is sent
       if (currentMessages.length === 0) {
         const userText = userMessage.parts
           .filter((p) => p.type === "text")
@@ -862,13 +862,13 @@ export function useOurinChat({
         }
       }
 
-      // Create abort controller
+      // create abort controller
       const controller = new AbortController();
       setAbortController(controller);
 
       try {
-        // Stream the response with 250ms persistence interval
-        // Assistant message is created and updated in DB by streamResponse
+        // stream the response with 250ms persistence interval
+        // assistant message is created and updated in dB by streamResponse
         const {
           aborted,
           orderedParts,
@@ -884,8 +884,8 @@ export function useOurinChat({
           { coreNames, persistToDb: true }
         );
 
-        // Update the existing assistant message in place with final metadata
-        // This avoids replacing the message object, which would cause a flash/remount
+        // update the existing assistant message in place with final metadata
+        // this avoids replacing the message object, which would cause a flash/remount
         if (conversationIdRef.current === convId) {
           setMessages((prev) => {
             return prev.map((msg) => {
@@ -907,16 +907,16 @@ export function useOurinChat({
             });
           });
         }
-        // Always update completion state (global bookkeeping)
+        // always update completion state (global bookkeeping)
         setStatus("ready");
         setStreamingConversationId(null);
       } catch (err) {
-        // On error, revert to state before the assistant placeholder was added
-        // Keep the user message so they can see what they tried to send (only if still viewing)
+        // on error, revert to state before the assistant placeholder was added
+        // keep the user message so they can see what they tried to send (only if still viewing)
         if (conversationIdRef.current === convId) {
           setMessages(updatedMessages);
         }
-        // Always update error state (global bookkeeping)
+        // always update error state (global bookkeeping)
         setError(err as Error);
         setStatus("error");
         setStreamingConversationId(null);
@@ -938,20 +938,20 @@ export function useOurinChat({
   );
 
   /**
-   * Stop the current generation and save partial response
+   * stop the current generation and save partial response
    */
   const stop = useCallback(async () => {
     if (abortController) {
       abortController.abort();
-      // The streamResponse will return with aborted: true
+      // the streamResponse will return with aborted: true
       // and sendMessage/regenerate will save the partial content
     }
   }, [abortController]);
 
   /**
-   * Regenerate the assistant response
-   * Creates a new user message copy (for token tracking) and new assistant response
-   * Optionally accepts model and reasoningLevel overrides for the regeneration
+   * regenerate the assistant response
+   * creates a new user message copy (for token tracking) and new assistant response
+   * optionally accepts model and reasoningLevel overrides for the regeneration
    */
   const regenerate = useCallback(
     async (options?: {
@@ -964,14 +964,14 @@ export function useOurinChat({
 
       if (!convId) return;
 
-      // Use override model/reasoningLevel if provided, otherwise use current values
+      // use override model/reasoningLevel if provided, otherwise use current values
       const regenModel = options?.model ?? model;
       const regenReasoningLevel = options?.reasoningLevel ?? reasoningLevel;
 
-      // Get current core names for metadata
+      // get current core names for metadata
       const coreNames = getActiveCoreNames?.() ?? [];
 
-      // Find the message to regenerate from
+      // find the message to regenerate from
       let targetIndex = currentMessages.length - 1;
 
       if (options?.messageId) {
@@ -981,7 +981,7 @@ export function useOurinChat({
         if (targetIndex === -1) return;
       }
 
-      // Find the assistant message at or before targetIndex
+      // find the assistant message at or before targetIndex
       while (
         targetIndex >= 0 &&
         currentMessages[targetIndex].role !== "assistant"
@@ -991,7 +991,7 @@ export function useOurinChat({
 
       if (targetIndex < 0) return;
 
-      // Find the user message that prompted this assistant response
+      // find the user message that prompted this assistant response
       let userMessageIndex = targetIndex - 1;
       while (
         userMessageIndex >= 0 &&
@@ -1004,10 +1004,10 @@ export function useOurinChat({
 
       const userMessageToRegen = currentMessages[userMessageIndex];
 
-      // Keep messages before the user message (we'll create new copies of user + assistant)
+      // keep messages before the user message (we'll create new copies of user + assistant)
       const messagesBeforeUser = currentMessages.slice(0, userMessageIndex);
 
-      // Create a new copy of the user message (for token tracking)
+      // create a new copy of the user message (for token tracking)
       const newUserMessage: UIMessage = {
         id: crypto.randomUUID(),
         role: "user",
@@ -1024,7 +1024,7 @@ export function useOurinChat({
 
       const messagesWithNewUser = [...messagesBeforeUser, newUserMessage];
 
-      // Track this conversation as streaming and update UI (only if still viewing it)
+      // track this conversation as streaming and update uI (only if still viewing it)
       if (conversationIdRef.current === convId) {
         setMessages(messagesWithNewUser);
         setStatus("submitted");
@@ -1032,13 +1032,13 @@ export function useOurinChat({
       }
       setError(null);
 
-      // Soft-delete the old user message and assistant message (and any after)
+      // soft-delete the old user message and assistant message (and any after)
       await truncateFrom({
         conversationId: convId as Id<"conversations">,
         fromMessageId: userMessageToRegen.id,
       });
 
-      // Save the new user message immediately (for token tracking)
+      // save the new user message immediately (for token tracking)
       await appendMessage({
         conversationId: convId as Id<"conversations">,
         message: {
@@ -1054,12 +1054,12 @@ export function useOurinChat({
         },
       });
 
-      // Create abort controller
+      // create abort controller
       const controller = new AbortController();
       setAbortController(controller);
 
       try {
-        // Stream a new response with 250ms persistence interval
+        // stream a new response with 250ms persistence interval
         const { orderedParts, totalThinkingDuration, assistantMessageId } =
           await streamResponse(
             messagesWithNewUser,
@@ -1071,8 +1071,8 @@ export function useOurinChat({
             { coreNames, persistToDb: true }
           );
 
-        // Update the existing assistant message in place with final metadata
-        // This avoids replacing the message object, which would cause a flash/remount
+        // update the existing assistant message in place with final metadata
+        // this avoids replacing the message object, which would cause a flash/remount
         if (conversationIdRef.current === convId) {
           setMessages((prev) => {
             return prev.map((msg) => {
@@ -1096,7 +1096,7 @@ export function useOurinChat({
             });
           });
         }
-        // Always update completion state (global bookkeeping)
+        // always update completion state (global bookkeeping)
         setStatus("ready");
         setStreamingConversationId(null);
       } catch (err) {
@@ -1104,7 +1104,7 @@ export function useOurinChat({
           if (conversationIdRef.current === convId) {
             setError(err as Error);
           }
-          // Always update error state (global bookkeeping)
+          // always update error state (global bookkeeping)
           setStatus("error");
           setStreamingConversationId(null);
         }
@@ -1123,8 +1123,8 @@ export function useOurinChat({
   );
 
   /**
-   * Edit a user message and resend
-   * Optionally accepts config overrides (model, reasoningLevel, webSearchEnabled)
+   * edit a user message and resend
+   * optionally accepts config overrides (model, reasoningLevel, webSearchEnabled)
    */
   const editAndResend = useCallback(
     async (
@@ -1142,7 +1142,7 @@ export function useOurinChat({
 
       if (!convId) return;
 
-      // Get current core names for metadata
+      // get current core names for metadata
       const coreNames = getActiveCoreNames?.() ?? [];
 
       const messageIndex = currentMessages.findIndex((m) => m.id === messageId);
@@ -1151,10 +1151,10 @@ export function useOurinChat({
       const message = currentMessages[messageIndex];
       if (message.role !== "user") return;
 
-      // Keep messages before the edited one
+      // keep messages before the edited one
       const messagesBefore = currentMessages.slice(0, messageIndex);
 
-      // Use override config if provided, otherwise fall back to original message settings
+      // use override config if provided, otherwise fall back to original message settings
       const editModel = options?.model ?? message.model ?? model;
       const editReasoningLevel =
         options?.reasoningLevel ??
@@ -1165,19 +1165,19 @@ export function useOurinChat({
         message.metadata?.webSearchEnabled ??
         false;
 
-      // Use provided attachments, or fall back to original file parts
+      // use provided attachments, or fall back to original file parts
       const fileParts =
         attachments ??
         (message.parts.filter((p) => p.type === "file") as FilePart[]);
 
-      // Build parts array: text first (if any), then attachments
+      // build parts array: text first (if any), then attachments
       const parts: MessagePart[] = [];
       if (newContent.trim()) {
         parts.push({ type: "text", text: newContent });
       }
       parts.push(...fileParts);
 
-      // Create edited user message with config (overrides or original)
+      // create edited user message with config (overrides or original)
       const editedMessage: UIMessage = {
         id: crypto.randomUUID(),
         role: "user",
@@ -1195,7 +1195,7 @@ export function useOurinChat({
 
       const messagesWithEdited = [...messagesBefore, editedMessage];
 
-      // Track this conversation as streaming and update UI (only if still viewing it)
+      // track this conversation as streaming and update uI (only if still viewing it)
       if (conversationIdRef.current === convId) {
         setMessages(messagesWithEdited);
         setStatus("submitted");
@@ -1203,13 +1203,13 @@ export function useOurinChat({
       }
       setError(null);
 
-      // Delete the original user message and everything after it from DB
+      // delete the original user message and everything after it from dB
       await truncateFrom({
         conversationId: convId as Id<"conversations">,
         fromMessageId: messageId,
       });
 
-      // Save new user message immediately
+      // save new user message immediately
       await appendMessage({
         conversationId: convId as Id<"conversations">,
         message: {
@@ -1225,12 +1225,12 @@ export function useOurinChat({
         },
       });
 
-      // Create abort controller
+      // create abort controller
       const controller = new AbortController();
       setAbortController(controller);
 
       try {
-        // Stream response for edited message with 250ms persistence interval
+        // stream response for edited message with 250ms persistence interval
         const { orderedParts, totalThinkingDuration, assistantMessageId } =
           await streamResponse(
             messagesWithEdited,
@@ -1242,8 +1242,8 @@ export function useOurinChat({
             { coreNames, persistToDb: true }
           );
 
-        // Update the existing assistant message in place with final metadata
-        // This avoids replacing the message object, which would cause a flash/remount
+        // update the existing assistant message in place with final metadata
+        // this avoids replacing the message object, which would cause a flash/remount
         if (conversationIdRef.current === convId) {
           setMessages((prev) => {
             return prev.map((msg) => {
@@ -1267,7 +1267,7 @@ export function useOurinChat({
             });
           });
         }
-        // Always update completion state (global bookkeeping)
+        // always update completion state (global bookkeeping)
         setStatus("ready");
         setStreamingConversationId(null);
       } catch (err) {
@@ -1275,7 +1275,7 @@ export function useOurinChat({
           if (conversationIdRef.current === convId) {
             setError(err as Error);
           }
-          // Always update error state (global bookkeeping)
+          // always update error state (global bookkeeping)
           setStatus("error");
           setStreamingConversationId(null);
         }
@@ -1294,9 +1294,9 @@ export function useOurinChat({
   );
 
   /**
-   * Fork a conversation at a specific message
-   * Creates a new conversation with messages up to that point
-   * Server queries messages directly from DB (more secure and gets complete data including tokens)
+   * fork a conversation at a specific message
+   * creates a new conversation with messages up to that point
+   * server queries messages directly from dB (more secure and gets complete data including tokens)
    */
   const forkConversation = useCallback(
     async (messageId: string): Promise<string | null> => {
@@ -1305,7 +1305,7 @@ export function useOurinChat({
       if (!convId) return null;
 
       try {
-        // Create forked conversation - server will query messages directly from DB
+        // create forked conversation - server will query messages directly from dB
         const newConvId = await forkConversationMutation({
           sourceConversationId: convId as Id<"conversations">,
           forkedAtMessageId: messageId,
@@ -1320,13 +1320,13 @@ export function useOurinChat({
     [forkConversationMutation]
   );
 
-  // Clear error
+  // clear error
   const clearError = useCallback(() => {
     setError(null);
   }, []);
 
-  // Compute effective status for the current conversation
-  // If streaming is happening for a different conversation, this conversation is "ready"
+  // compute effective status for the current conversation
+  // if streaming is happening for a different conversation, this conversation is "ready"
   const effectiveStatus: ChatStatus =
     streamingConversationId &&
     streamingConversationId !== conversationId &&

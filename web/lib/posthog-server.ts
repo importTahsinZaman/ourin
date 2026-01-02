@@ -21,8 +21,8 @@ function getClient(): PostHog | null {
 }
 
 /**
- * Track an event from server-side code (API routes, webhooks).
- * No-op if PostHog is not configured.
+ * track an event from server-side code (aPI routes, webhooks).
+ * no-op if postHog is not configured.
  */
 export async function trackServerEvent(
   distinctId: string,
@@ -37,8 +37,8 @@ export async function trackServerEvent(
 }
 
 /**
- * Identify a user from server-side code.
- * No-op if PostHog is not configured.
+ * identify a user from server-side code.
+ * no-op if postHog is not configured.
  */
 export async function identifyServerUser(
   distinctId: string,

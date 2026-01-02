@@ -26,7 +26,7 @@ export function ReasoningDropdown({
 
   const modelInfo = getModelInfo(selectedModel);
 
-  // Close on outside click
+  // close on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -41,7 +41,7 @@ export function ReasoningDropdown({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Check if should open above
+  // check if should open above
   useEffect(() => {
     if (isOpen && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
@@ -50,7 +50,7 @@ export function ReasoningDropdown({
     }
   }, [isOpen]);
 
-  // Don't render if model doesn't support reasoning
+  // don't render if model doesn't support reasoning
   if (!modelInfo.reasoningParameter) {
     return null;
   }
@@ -59,7 +59,7 @@ export function ReasoningDropdown({
   const allowOff = canDisableReasoning(selectedModel);
   const isOff = reasoningLevel === "off";
 
-  // Get display options based on kind
+  // get display options based on kind
   const options: Array<{ key: string; label: string; value: string | number }> =
     kind === "effort" && allowedValues
       ? allowedValues.map((v) => ({
@@ -73,7 +73,7 @@ export function ReasoningDropdown({
           value: p.value,
         })) ?? []);
 
-  // Find current selection label
+  // find current selection label
   const currentOption = options.find((o) => o.value === reasoningLevel);
   const currentLabel = isOff ? "Off" : (currentOption?.label ?? "Medium");
 
@@ -84,7 +84,7 @@ export function ReasoningDropdown({
 
   return (
     <div ref={containerRef} className="relative">
-      {/* Trigger button */}
+      {/* trigger button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
@@ -102,7 +102,7 @@ export function ReasoningDropdown({
         <Brain className="w-4 h-4" />
       </button>
 
-      {/* Dropdown menu */}
+      {/* dropdown menu */}
       {isOpen && (
         <div
           className={cn(
@@ -114,7 +114,7 @@ export function ReasoningDropdown({
             border: "1px solid var(--color-border-default)",
           }}
         >
-          {/* Header */}
+          {/* header */}
           <div
             className="px-3 py-2"
             style={{ borderBottom: "1px solid var(--color-border-muted)" }}
@@ -127,9 +127,9 @@ export function ReasoningDropdown({
             </span>
           </div>
 
-          {/* Options */}
+          {/* options */}
           <div className="p-1">
-            {/* Off option - only for models that allow disabling */}
+            {/* off option - only for models that allow disabling */}
             {allowOff && (
               <button
                 onClick={() => handleSelect("off")}

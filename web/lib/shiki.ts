@@ -4,7 +4,7 @@ import {
   type BundledLanguage,
 } from "shiki";
 
-// Common languages to preload for better performance
+// common languages to preload for better performance
 const PRELOADED_LANGS: BundledLanguage[] = [
   "javascript",
   "typescript",
@@ -24,7 +24,7 @@ const PRELOADED_LANGS: BundledLanguage[] = [
   "java",
   "c",
   "cpp",
-  // Additional common languages
+  // additional common languages
   "ruby",
   "php",
   "swift",
@@ -41,7 +41,7 @@ const PRELOADED_LANGS: BundledLanguage[] = [
   "xml",
 ];
 
-// Language aliases for common variations
+// language aliases for common variations
 const LANG_ALIASES: Record<string, string> = {
   js: "javascript",
   ts: "typescript",
@@ -56,13 +56,13 @@ const LANG_ALIASES: Record<string, string> = {
   rb: "ruby",
 };
 
-// Normalize language name using aliases
+// normalize language name using aliases
 function normalizeLanguage(lang?: string): string {
   const normalized = lang?.toLowerCase().trim() || "plaintext";
   return LANG_ALIASES[normalized] || normalized;
 }
 
-// Check if a language is available for synchronous highlighting
+// check if a language is available for synchronous highlighting
 export function isLanguageLoaded(lang?: string): boolean {
   if (!highlighterInstance) return false;
   const normalizedLang = normalizeLanguage(lang);
@@ -75,14 +75,14 @@ export function isLanguageLoaded(lang?: string): boolean {
 let highlighterPromise: Promise<Highlighter> | null = null;
 let highlighterInstance: Highlighter | null = null;
 
-// Initialize highlighter eagerly on module load
+// initialize highlighter eagerly on module load
 if (typeof window !== "undefined") {
   getHighlighter().then((h) => {
     highlighterInstance = h;
   });
 }
 
-// Synchronous highlight - returns HTML immediately if highlighter is ready, null otherwise
+// synchronous highlight - returns hTML immediately if highlighter is ready, null otherwise
 export function highlightCodeSync(
   code: string,
   lang?: string,
@@ -92,7 +92,7 @@ export function highlightCodeSync(
 
   let normalizedLang = normalizeLanguage(lang);
 
-  // Check if language is loaded - if not, fall back to plaintext
+  // check if language is loaded - if not, fall back to plaintext
   // (async path will load the language properly)
   const loadedLangs = highlighterInstance.getLoadedLanguages();
   if (!loadedLangs.includes(normalizedLang as BundledLanguage)) {
@@ -133,13 +133,13 @@ export async function highlightCode(
 
   const highlighter = await getHighlighter();
 
-  // Check if language is loaded, try to load if not
+  // check if language is loaded, try to load if not
   const loadedLangs = highlighter.getLoadedLanguages();
   if (!loadedLangs.includes(normalizedLang as BundledLanguage)) {
     try {
       await highlighter.loadLanguage(normalizedLang as BundledLanguage);
     } catch {
-      // Language not supported, fallback to plaintext
+      // language not supported, fallback to plaintext
       normalizedLang = "plaintext";
     }
   }

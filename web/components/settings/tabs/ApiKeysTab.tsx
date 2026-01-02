@@ -54,13 +54,13 @@ interface LocalKeyState {
 }
 
 export function ApiKeysTab() {
-  // Fetch existing API keys and tier info from backend
+  // fetch existing aPI keys and tier info from backend
   const existingKeys = useQuery(api.apiKeys.getApiKeys);
   const tierInfo = useQuery(api.billing.getUserTier);
   const deleteApiKeyMutation = useMutation(api.apiKeys.deleteApiKey);
   const generateChatToken = useMutation(api.chatAuth.generateChatToken);
 
-  // Local state for input values and UI state
+  // local state for input values and uI state
   const [localState, setLocalState] = useState<Record<string, LocalKeyState>>({
     openai: { value: "", isEditing: false, showValue: false, isSaving: false },
     anthropic: {
@@ -74,12 +74,12 @@ export function ApiKeysTab() {
 
   const isSubscriber = tierInfo?.tier === "subscriber";
 
-  // Check if a provider has a configured key
+  // check if a provider has a configured key
   const isKeyConfigured = (providerId: string) => {
     return existingKeys?.some((k) => k.provider === providerId) ?? false;
   };
 
-  // Get the key hint for a provider
+  // get the key hint for a provider
   const getConfiguredKeyHint = (providerId: string) => {
     return existingKeys?.find((k) => k.provider === providerId)?.keyHint ?? "";
   };
@@ -95,7 +95,7 @@ export function ApiKeysTab() {
     const state = localState[providerId];
     if (!state.value.trim()) return;
 
-    // Validate key format
+    // validate key format
     if (!validateKeyFormat(providerId, state.value)) {
       toast.error("Invalid API key format", {
         description: `The key doesn't match the expected format for ${providerId}.`,
@@ -109,13 +109,13 @@ export function ApiKeysTab() {
     }));
 
     try {
-      // Get auth token for API route
+      // get auth token for aPI route
       const tokenResult = await generateChatToken();
       if (!tokenResult?.token) {
         throw new Error("Failed to get auth token");
       }
 
-      // Send to API route for server-side encryption
+      // send to aPI route for server-side encryption
       const response = await fetch("/api/keys/save", {
         method: "POST",
         headers: {
@@ -130,7 +130,7 @@ export function ApiKeysTab() {
 
       if (!response.ok) {
         const data = await response.json();
-        // Handle subscription required error specifically
+        // handle subscription required error specifically
         if (data.code === "SUBSCRIPTION_REQUIRED") {
           toast.error("Subscription required", {
             description:
@@ -152,7 +152,7 @@ export function ApiKeysTab() {
         } key has been saved securely.`,
       });
 
-      // Reset local state
+      // reset local state
       setLocalState((prev) => ({
         ...prev,
         [providerId]: {
@@ -207,7 +207,7 @@ export function ApiKeysTab() {
     }));
   };
 
-  // Loading state
+  // loading state
   if (existingKeys === undefined || tierInfo === undefined) {
     return (
       <div className="flex justify-center items-center py-8">
@@ -219,7 +219,7 @@ export function ApiKeysTab() {
     );
   }
 
-  // Non-subscriber: show upgrade prompt
+  // non-subscriber: show upgrade prompt
   if (!isSubscriber) {
     return (
       <div className="space-y-6">
@@ -283,7 +283,7 @@ export function ApiKeysTab() {
     );
   }
 
-  // Subscriber: show full API key management UI
+  // subscriber: show full aPI key management uI
   return (
     <div className="space-y-6">
       <SettingsSection
@@ -307,7 +307,7 @@ export function ApiKeysTab() {
               >
                 <div className="flex justify-between items-center mb-3">
                   <div className="flex items-center gap-3">
-                    {/* Provider icon */}
+                    {/* provider icon */}
                     <div
                       className="w-6 h-6"
                       style={{
@@ -348,7 +348,7 @@ export function ApiKeysTab() {
                   )}
                 </div>
 
-                {/* Input field */}
+                {/* input field */}
                 {(state.isEditing || !configured) && (
                   <div className="flex items-center gap-2">
                     <div className="relative flex-1">

@@ -1,4 +1,4 @@
-// Shared default cores definition used by both server (Convex) and client (localStorage)
+// shared default cores definition used by both server (convex) and client (localStorage)
 
 export interface DefaultCoreData {
   name: string;

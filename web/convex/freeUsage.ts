@@ -7,14 +7,14 @@ import type { Id } from "./_generated/dataModel";
 const FREE_MESSAGE_LIMIT = 10;
 
 /**
- * Get the current free tier usage for the authenticated user.
- * In self-hosting mode, returns unlimited usage.
+ * get the current free tier usage for the authenticated user.
+ * in self-hosting mode, returns unlimited usage.
  */
 export const getFreeUsage = query({
   args: {},
   handler: async (ctx) => {
-    // In self-hosting mode, return unlimited usage
-    // Note: null remainingMessages means unlimited (Infinity is not JSON-serializable)
+    // in self-hosting mode, return unlimited usage
+    // note: null remainingMessages means unlimited (infinity is not jSON-serializable)
     if (isSelfHosting()) {
       return {
         messageCount: 0,
@@ -49,14 +49,14 @@ export const getFreeUsage = query({
 });
 
 /**
- * Increment the free tier message count.
- * Returns the new count and whether the user can still send messages.
- * In self-hosting mode, this is a no-op.
+ * increment the free tier message count.
+ * returns the new count and whether the user can still send messages.
+ * in self-hosting mode, this is a no-op.
  */
 export const incrementFreeUsage = mutation({
   args: {},
   handler: async (ctx) => {
-    // In self-hosting mode, no-op
+    // in self-hosting mode, no-op
     if (isSelfHosting()) {
       return {
         messageCount: 0,
@@ -102,13 +102,13 @@ export const incrementFreeUsage = mutation({
 });
 
 /**
- * Check if the user can send a free message.
- * In self-hosting mode, always returns true.
+ * check if the user can send a free message.
+ * in self-hosting mode, always returns true.
  */
 export const canSendFreeMessage = query({
   args: {},
   handler: async (ctx) => {
-    // In self-hosting mode, always allow
+    // in self-hosting mode, always allow
     if (isSelfHosting()) {
       return true;
     }
@@ -126,7 +126,7 @@ export const canSendFreeMessage = query({
 });
 
 /**
- * Reset free usage (for testing or admin purposes).
+ * reset free usage (for testing or admin purposes).
  */
 export const resetFreeUsage = mutation({
   args: {},
@@ -149,10 +149,10 @@ export const resetFreeUsage = mutation({
 });
 
 /**
- * Increment free usage (server-only - called from API routes with userId).
- * This is used by the chat API route after verifying the user via chat token.
- * Requires serverSecret to prevent client-side abuse.
- * In self-hosting mode, this is a no-op.
+ * increment free usage (server-only - called from aPI routes with userId).
+ * this is used by the chat aPI route after verifying the user via chat token.
+ * requires serverSecret to prevent client-side abuse.
+ * in self-hosting mode, this is a no-op.
  */
 export const incrementFreeUsageInternal = mutation({
   args: {
@@ -160,18 +160,18 @@ export const incrementFreeUsageInternal = mutation({
     serverSecret: v.string(),
   },
   handler: async (ctx, args) => {
-    // In self-hosting mode, skip free usage tracking entirely
+    // in self-hosting mode, skip free usage tracking entirely
     if (isSelfHosting()) {
       return { messageCount: 0 };
     }
 
-    // Verify server secret to prevent client-side calls
+    // verify server secret to prevent client-side calls
     const expectedSecret = process.env.CHAT_AUTH_SECRET;
     if (!expectedSecret || args.serverSecret !== expectedSecret) {
       throw new Error("Unauthorized");
     }
 
-    // Cast string userId to Id<"users"> for database queries
+    // cast string userId to id<"users"> for database queries
     const userIdTyped = args.userId as Id<"users">;
 
     const usage = await ctx.db

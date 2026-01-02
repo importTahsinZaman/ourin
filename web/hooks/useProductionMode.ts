@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 
 /**
- * Billing config returned from /api/billing/config
+ * billing config returned from /api/billing/config
  */
 interface BillingConfig {
   isSelfHosting: boolean;
@@ -13,19 +13,19 @@ interface BillingConfig {
 }
 
 /**
- * Hook to check if the app is running in production (SaaS) mode vs self-hosting mode.
+ * hook to check if the app is running in production (saaS) mode vs self-hosting mode.
  *
- * In self-hosting mode (SELF_HOSTING=true or not set):
- * - All users have unrestricted access to all models
- * - No billing/subscription system
- * - Stripe integration disabled
+ * in self-hosting mode (sELF_hOSTING=true or not set):
+ * - all users have unrestricted access to all models
+ * - no billing/subscription system
+ * - stripe integration disabled
  *
- * In production mode (SELF_HOSTING=false):
- * - Full billing/subscription system active
- * - Tiered access (anonymous, free, subscriber)
- * - Credit calculations and limits
- * - Stripe integration enabled
- * - BYOK (Bring Your Own Key) available for subscribers
+ * in production mode (sELF_hOSTING=false):
+ * - full billing/subscription system active
+ * - tiered access (anonymous, free, subscriber)
+ * - credit calculations and limits
+ * - stripe integration enabled
+ * - bYOK (bring your own key) available for subscribers
  */
 export function useProductionMode() {
   const [isSelfHosting, setIsSelfHosting] = useState<boolean | null>(null);
@@ -45,9 +45,9 @@ export function useProductionMode() {
         setIsLoading(false);
       })
       .catch((err) => {
-        // Ignore abort errors (component unmounted)
+        // ignore abort errors (component unmounted)
         if (err.name === "AbortError") return;
-        // On other errors, assume self-hosting mode (safer default)
+        // on other errors, assume self-hosting mode (safer default)
         setIsSelfHosting(true);
         setIsLoading(false);
       });
@@ -57,24 +57,24 @@ export function useProductionMode() {
 
   return {
     /**
-     * Whether the app is running in self-hosting mode.
+     * whether the app is running in self-hosting mode.
      * null while loading.
      */
     isSelfHosting,
 
     /**
-     * Whether the app is running in production/SaaS mode.
-     * Inverse of isSelfHosting. null while loading.
+     * whether the app is running in production/saaS mode.
+     * inverse of isSelfHosting. null while loading.
      */
     isProduction: isSelfHosting === null ? null : !isSelfHosting,
 
     /**
-     * Full billing configuration (only available in production mode).
+     * full billing configuration (only available in production mode).
      */
     billingConfig,
 
     /**
-     * Whether the config is still loading.
+     * whether the config is still loading.
      */
     isLoading,
   };

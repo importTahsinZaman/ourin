@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { usePostHog } from "posthog-js/react";
 import { isPostHogEnabled } from "@/components/providers/PostHogProvider";
 
-// Event property types
+// event property types
 interface MessageEventProps {
   conversationId?: string;
   model: string;
@@ -31,8 +31,8 @@ interface SubscriptionEventProps {
 type AuthMethod = "email" | "github" | "google" | "anonymous";
 
 /**
- * Hook for tracking analytics events.
- * All methods are no-ops if PostHog is not configured.
+ * hook for tracking analytics events.
+ * all methods are no-ops if postHog is not configured.
  */
 export function useAnalytics() {
   const posthog = usePostHog();
@@ -45,7 +45,7 @@ export function useAnalytics() {
     [posthog]
   );
 
-  // Chat events
+  // chat events
   const trackMessageSent = useCallback(
     (props: MessageEventProps) => capture("message_sent", { ...props }),
     [capture]
@@ -82,7 +82,7 @@ export function useAnalytics() {
     [capture]
   );
 
-  // Model & feature events
+  // model & feature events
   const trackModelChanged = useCallback(
     (previousModel: string, newModel: string, provider: string) =>
       capture("model_changed", { previousModel, newModel, provider }),
@@ -101,14 +101,14 @@ export function useAnalytics() {
     [capture]
   );
 
-  // Subscription events
+  // subscription events
   const trackSubscriptionEvent = useCallback(
     (props: SubscriptionEventProps) =>
       capture("subscription_event", { ...props }),
     [capture]
   );
 
-  // Auth events
+  // auth events
   const trackSignUp = useCallback(
     (method: AuthMethod) => capture("user_signed_up", { method }),
     [capture]
@@ -124,7 +124,7 @@ export function useAnalytics() {
     [capture]
   );
 
-  // Generic UI interaction
+  // generic uI interaction
   const trackUIInteraction = useCallback(
     (
       element: string,
@@ -136,24 +136,24 @@ export function useAnalytics() {
 
   return {
     capture,
-    // Chat
+    // chat
     trackMessageSent,
     trackMessageRegenerated,
     trackMessageEdited,
     trackConversationCreated,
     trackConversationForked,
     trackStreamStopped,
-    // Features
+    // features
     trackModelChanged,
     trackThemeChanged,
     trackFileUploaded,
-    // Subscription
+    // subscription
     trackSubscriptionEvent,
-    // Auth
+    // auth
     trackSignUp,
     trackSignIn,
     trackAccountUpgraded,
-    // UI
+    // uI
     trackUIInteraction,
   };
 }

@@ -41,7 +41,7 @@ export function ConversationList({
   const [editTitle, setEditTitle] = useState("");
   const editInputRef = useRef<HTMLInputElement>(null);
 
-  // Hover preview state
+  // hover preview state
   const [committedConversationId, setCommittedConversationId] = useState<
     string | null
   >(currentConversationId);
@@ -53,32 +53,32 @@ export function ConversationList({
   const hoveredConvIdRef = useRef<string | null>(null);
   const wasPreviewingRef = useRef(false);
 
-  // Detect platform for modifier key text
+  // detect platform for modifier key text
   const modifierKey = useMemo(() => {
     if (typeof navigator === "undefined") return "Ctrl";
     return navigator.platform.toLowerCase().includes("mac") ? "⌘" : "Ctrl";
   }, []);
 
-  // Reset tooltip keys when preview ends to clear stale hover state
+  // reset tooltip keys when preview ends to clear stale hover state
   useEffect(() => {
     const isPreviewing = isHovering || isExitingHover || isModifierHeld;
 
     if (wasPreviewingRef.current && !isPreviewing) {
-      // Just exited preview, reset all tooltips
+      // just exited preview, reset all tooltips
       setTooltipResetKey((k) => k + 1);
     }
 
     wasPreviewingRef.current = isPreviewing;
   }, [isHovering, isExitingHover, isModifierHeld]);
 
-  // Sync committed ID when current changes from external navigation (e.g., URL change)
+  // sync committed iD when current changes from external navigation (e.g., uRL change)
   useEffect(() => {
     if (!isHovering && !isExitingHover) {
       setCommittedConversationId(currentConversationId);
     }
   }, [currentConversationId, isHovering, isExitingHover]);
 
-  // Complete the hover exit once URL has updated to match committed
+  // complete the hover exit once uRL has updated to match committed
   useEffect(() => {
     if (isExitingHover && currentConversationId === committedConversationId) {
       setIsHovering(false);
@@ -86,13 +86,13 @@ export function ConversationList({
     }
   }, [isExitingHover, currentConversationId, committedConversationId]);
 
-  // Close menu when clicking outside (but not on menu buttons)
+  // close menu when clicking outside (but not on menu buttons)
   useEffect(() => {
     if (!menuOpenId) return;
 
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      // Don't close if clicking on a menu button or inside a dropdown menu
+      // don't close if clicking on a menu button or inside a dropdown menu
       if (
         target.closest("[data-menu-button]") ||
         target.closest("[data-dropdown-menu]")
@@ -102,7 +102,7 @@ export function ConversationList({
       setMenuOpenId(null);
     };
 
-    // Use setTimeout to avoid the click that opened the menu from immediately closing it
+    // use setTimeout to avoid the click that opened the menu from immediately closing it
     const timeoutId = setTimeout(() => {
       document.addEventListener("click", handleClickOutside);
     }, 0);
@@ -113,7 +113,7 @@ export function ConversationList({
     };
   }, [menuOpenId]);
 
-  // Focus input when editing starts
+  // focus input when editing starts
   useEffect(() => {
     if (editingId && editInputRef.current) {
       editInputRef.current.focus();
@@ -121,12 +121,12 @@ export function ConversationList({
     }
   }, [editingId]);
 
-  // Track modifier key (CMD on Mac, Ctrl on Windows) for preview mode
+  // track modifier key (cMD on mac, ctrl on windows) for preview mode
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey) {
         setIsModifierHeld(true);
-        // If already hovering over a conversation, start preview
+        // if already hovering over a conversation, start preview
         if (hoveredConvIdRef.current && !menuOpenId && !editingId) {
           setIsHovering(true);
           onSelect(hoveredConvIdRef.current);
@@ -135,10 +135,10 @@ export function ConversationList({
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      // Check if both meta and ctrl are released
+      // check if both meta and ctrl are released
       if (!e.metaKey && !e.ctrlKey) {
         setIsModifierHeld(false);
-        // Restore committed conversation when modifier is released
+        // restore committed conversation when modifier is released
         if (isHovering && !isExitingHover) {
           setIsExitingHover(true);
           onSelect(committedConversationId);
@@ -146,7 +146,7 @@ export function ConversationList({
       }
     };
 
-    // Also handle window blur (e.g., user switches apps while holding key)
+    // also handle window blur (e.g., user switches apps while holding key)
     const handleBlur = () => {
       setIsModifierHeld(false);
       if (isHovering && !isExitingHover) {
@@ -173,7 +173,7 @@ export function ConversationList({
     onSelect,
   ]);
 
-  // Cleanup hover timeouts on unmount
+  // cleanup hover timeouts on unmount
   useEffect(() => {
     return () => {
       if (hoverLeaveTimeoutRef.current) {
@@ -182,29 +182,29 @@ export function ConversationList({
     };
   }, []);
 
-  // Handle hover enter - preview conversation (only when modifier key is held)
+  // handle hover enter - preview conversation (only when modifier key is held)
   const handleHoverEnter = (convId: string) => {
-    // Track hovered conversation for when modifier key is pressed
+    // track hovered conversation for when modifier key is pressed
     hoveredConvIdRef.current = convId;
 
-    // Don't preview if menu is open or editing
+    // don't preview if menu is open or editing
     if (menuOpenId || editingId) return;
 
-    // Cancel any pending leave - we're entering a new conversation
+    // cancel any pending leave - we're entering a new conversation
     if (hoverLeaveTimeoutRef.current) {
       clearTimeout(hoverLeaveTimeoutRef.current);
       hoverLeaveTimeoutRef.current = null;
     }
 
-    // Cancel exiting state if re-entering
+    // cancel exiting state if re-entering
     if (isExitingHover) {
       setIsExitingHover(false);
     }
 
-    // Only preview if modifier key (CMD/Ctrl) is held
+    // only preview if modifier key (cMD/ctrl) is held
     if (!isModifierHeld) return;
 
-    // Preview immediately (no delay)
+    // preview immediately (no delay)
     if (isHovering) {
       onSelect(convId);
     } else {
@@ -213,30 +213,30 @@ export function ConversationList({
     }
   };
 
-  // Handle hover leave - restore committed conversation after delay
+  // handle hover leave - restore committed conversation after delay
   const handleHoverLeave = () => {
-    // Clear hovered ref
+    // clear hovered ref
     hoveredConvIdRef.current = null;
 
-    // Clear any existing leave timeout
+    // clear any existing leave timeout
     if (hoverLeaveTimeoutRef.current) {
       clearTimeout(hoverLeaveTimeoutRef.current);
     }
 
     if (isHovering && !isExitingHover) {
-      // Delay restoration to allow moving to another conversation
+      // delay restoration to allow moving to another conversation
       hoverLeaveTimeoutRef.current = setTimeout(() => {
-        // Start exiting - keep isHovering true until URL updates
-        // This prevents flicker where committed loses selected styling
+        // start exiting - keep isHovering true until uRL updates
+        // this prevents flicker where committed loses selected styling
         setIsExitingHover(true);
         onSelect(committedConversationId);
       }, 75);
     }
   };
 
-  // Handle click - commit to this conversation
+  // handle click - commit to this conversation
   const handleCommitSelect = (convId: string) => {
-    // Clear pending leave timeout
+    // clear pending leave timeout
     if (hoverLeaveTimeoutRef.current) {
       clearTimeout(hoverLeaveTimeoutRef.current);
       hoverLeaveTimeoutRef.current = null;
@@ -274,7 +274,7 @@ export function ConversationList({
     );
   }
 
-  // Group order for date-based grouping
+  // group order for date-based grouping
   const groupOrder = ["Today", "Yesterday", "Last 7 days", "Last 30 days"];
 
   const handleStartEdit = (conv: Conversation) => {
@@ -313,35 +313,35 @@ export function ConversationList({
     setMenuOpenId(null);
   };
 
-  // Separate favorites from regular conversations
+  // separate favorites from regular conversations
   const favorites = conversations.filter((c) => c.isFavorite);
   const regularConversations = conversations.filter((c) => !c.isFavorite);
 
-  // Group only non-favorite conversations by date
+  // group only non-favorite conversations by date
   const grouped = groupBy(regularConversations, (c) =>
     formatRelativeDate(c.updatedAt)
   );
 
-  // Get ordered group keys for regular conversations
+  // get ordered group keys for regular conversations
   const orderedGroupsFiltered = [
     ...groupOrder.filter((g) => grouped[g]),
     ...Object.keys(grouped).filter((g) => !groupOrder.includes(g)),
   ];
 
-  // Render a conversation item
+  // render a conversation item
   const renderConversationItem = (conv: Conversation) => {
     const isActive = currentConversationId === conv._id;
     const isCommitted = committedConversationId === conv._id;
     const isEditing = editingId === conv._id;
     const isMenuOpen = menuOpenId === conv._id;
 
-    // When in browse/hover mode (or exiting): show selected styling only for committed conversation
-    // When not hovering: show selected styling for URL-active conversation
-    // Previewed conversations get hover styling from CSS (not selected styling)
+    // when in browse/hover mode (or exiting): show selected styling only for committed conversation
+    // when not hovering: show selected styling for uRL-active conversation
+    // previewed conversations get hover styling from cSS (not selected styling)
     const showSelectedStyle =
       isHovering || isExitingHover ? isCommitted : isActive;
 
-    // Disable tooltips during editing, preview mode, exiting preview, modifier held,
+    // disable tooltips during editing, preview mode, exiting preview, modifier held,
     // or when hovering over the currently selected conversation (no need to preview what you're viewing)
     const tooltipsDisabled =
       isEditing ||
@@ -399,7 +399,7 @@ export function ConversationList({
                   {conv.title || "New conversation"}
                 </span>
 
-                {/* More button with fade */}
+                {/* more button with fade */}
                 <div className="group/btn right-0 absolute inset-y-0 flex items-center pr-1">
                   <div
                     className={cn(
@@ -443,7 +443,7 @@ export function ConversationList({
                       />
                     </button>
 
-                    {/* Dropdown menu */}
+                    {/* dropdown menu */}
                     {isMenuOpen && (
                       <div
                         data-dropdown-menu
@@ -517,7 +517,7 @@ export function ConversationList({
   return (
     <TooltipProvider delayDuration={500} skipDelayDuration={0}>
       <div className="space-y-4" onMouseLeave={handleHoverLeave}>
-        {/* Favorites section */}
+        {/* favorites section */}
         {favorites.length > 0 && (
           <div>
             <div
@@ -532,10 +532,10 @@ export function ConversationList({
           </div>
         )}
 
-        {/* Regular conversations grouped by date */}
+        {/* regular conversations grouped by date */}
         {orderedGroupsFiltered.map((group) => (
           <div key={group}>
-            {/* Group header */}
+            {/* group header */}
             <div
               className="px-2 py-1.5 font-semibold text-[10px] uppercase tracking-widest"
               style={{ color: "var(--color-text-muted)" }}
@@ -543,7 +543,7 @@ export function ConversationList({
               {group}
             </div>
 
-            {/* Conversations in group */}
+            {/* conversations in group */}
             <div className="space-y-0.5">
               {grouped[group].map(renderConversationItem)}
             </div>

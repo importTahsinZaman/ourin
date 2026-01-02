@@ -11,7 +11,7 @@ const FREE_MESSAGE_LIMIT = 10;
 export type UserTier = "anonymous" | "free" | "subscriber" | "self_hosted";
 
 /**
- * Self-hosted tier info - grants unrestricted access to all models.
+ * self-hosted tier info - grants unrestricted access to all models.
  */
 const SELF_HOSTED_TIER: TierInfo = {
   tier: "self_hosted",
@@ -23,10 +23,10 @@ export interface TierInfo {
   tier: UserTier;
   canSendMessage: boolean;
   modelsAllowed: string[] | "all";
-  // Free tier specific
+  // free tier specific
   messageCount?: number;
   remainingMessages?: number;
-  // Subscriber specific - providers list for BYOK (subscriber-only feature)
+  // subscriber specific - providers list for bYOK (subscriber-only feature)
   providers?: string[];
   subscription?: {
     status: string;
@@ -34,24 +34,24 @@ export interface TierInfo {
     cancelAtPeriodEnd: boolean;
   };
   credits?: {
-    subscriptionBalance: number; // Balance from monthly subscription (can be 0)
-    purchasedBalance: number; // Balance from purchased credit packs
-    totalBalance: number; // Total available credits
+    subscriptionBalance: number; // balance from monthly subscription (can be 0)
+    purchasedBalance: number; // balance from purchased credit packs
+    totalBalance: number; // total available credits
     periodEnd: number;
   };
 }
 
 /**
- * Helper to calculate balance from messages for a subscriber.
- * Tokens are stored on USER messages (saved before streaming).
- * Excludes messages where user used their own API key.
+ * helper to calculate balance from messages for a subscriber.
+ * tokens are stored on uSER messages (saved before streaming).
+ * excludes messages where user used their own aPI key.
  */
 async function calculateSubscriberBalance(
   ctx: QueryCtx,
   userId: Id<"users">,
   periodStart: number
 ): Promise<number> {
-  // Get user messages with token data in current period (exclude forked and own-key usage)
+  // get user messages with token data in current period (exclude forked and own-key usage)
   const messages = await ctx.db
     .query("messages")
     .withIndex("by_user_created", (q) => q.eq("userId", userId))
@@ -61,7 +61,7 @@ async function calculateSubscriberBalance(
         q.eq(q.field("role"), "user"),
         q.neq(q.field("inputTokens"), undefined),
         q.neq(q.field("wasForked"), true),
-        q.neq(q.field("usedOwnKey"), true) // Exclude messages where own API key was used
+        q.neq(q.field("usedOwnKey"), true) // exclude messages where own aPI key was used
       )
     )
     .collect();
@@ -79,20 +79,20 @@ async function calculateSubscriberBalance(
 }
 
 /**
- * Core logic to compute tier info for an authenticated user.
- * Shared between getUserTier and getUserTierById.
+ * core logic to compute tier info for an authenticated user.
+ * shared between getUserTier and getUserTierById.
  */
 async function computeTierInfo(
   ctx: QueryCtx,
   userId: Id<"users">
 ): Promise<TierInfo> {
-  // Check for active subscription first (highest priority)
+  // check for active subscription first (highest priority)
   const subscription = await ctx.db
     .query("subscriptions")
     .withIndex("by_user", (q) => q.eq("userId", userId))
     .first();
 
-  // Check for API keys
+  // check for aPI keys
   const apiKeys = await ctx.db
     .query("apiKeys")
     .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -100,14 +100,14 @@ async function computeTierInfo(
   const providers = apiKeys.map((k) => k.provider);
 
   if (subscription?.status === "active") {
-    // Calculate subscription balance from messages in current period
+    // calculate subscription balance from messages in current period
     const subscriptionBalance = await calculateSubscriberBalance(
       ctx,
       userId,
       subscription.currentPeriodStart
     );
 
-    // Get purchased credits balance
+    // get purchased credits balance
     const activePurchases = await ctx.db
       .query("creditPurchases")
       .withIndex("by_user_status", (q) =>
@@ -120,14 +120,14 @@ async function computeTierInfo(
       0
     );
 
-    // Total balance = subscription (capped at 0) + purchased
+    // total balance = subscription (capped at 0) + purchased
     const totalBalance = Math.max(0, subscriptionBalance) + purchasedBalance;
 
     return {
       tier: "subscriber",
-      canSendMessage: totalBalance > 0 || providers.length > 0, // Can send if has credits OR own keys
+      canSendMessage: totalBalance > 0 || providers.length > 0, // can send if has credits oR own keys
       modelsAllowed: "all",
-      providers, // Include providers so chat route can check for own keys
+      providers, // include providers so chat route can check for own keys
       subscription: {
         status: subscription.status,
         currentPeriodEnd: subscription.currentPeriodEnd,
@@ -142,11 +142,11 @@ async function computeTierInfo(
     };
   }
 
-  // Note: API keys without subscription no longer grant a separate tier.
-  // BYOK is now a subscriber-only feature. Users with stored API keys
+  // note: aPI keys without subscription no longer grant a separate tier.
+  // bYOK is now a subscriber-only feature. users with stored aPI keys
   // but no subscription fall through to the free tier below.
 
-  // Free signed-in user
+  // free signed-in user
   const freeUsage = await ctx.db
     .query("freeUsage")
     .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -165,24 +165,24 @@ async function computeTierInfo(
 }
 
 /**
- * Get the current user's tier and access information.
- * This is the main function used to determine what a user can do.
+ * get the current user's tier and access information.
+ * this is the main function used to determine what a user can do.
  */
 export const getUserTier = query({
   args: {},
   handler: async (ctx): Promise<TierInfo> => {
-    // Self-hosting mode: grant unrestricted access
+    // self-hosting mode: grant unrestricted access
     if (isSelfHosting()) {
       return SELF_HOSTED_TIER;
     }
 
     const userId = await getAuthUserId(ctx);
 
-    // Anonymous user
+    // anonymous user
     if (!userId) {
       return {
         tier: "anonymous",
-        canSendMessage: true, // Checked client-side via localStorage
+        canSendMessage: true, // checked client-side via localStorage
         modelsAllowed: [FREE_MODEL_ID],
       };
     }
@@ -192,20 +192,20 @@ export const getUserTier = query({
 });
 
 /**
- * Get tier info by user ID (for server-side use in API routes).
- * Uses an internal system context approach.
+ * get tier info by user iD (for server-side use in aPI routes).
+ * uses an internal system context approach.
  */
 export const getUserTierById = query({
   args: {
     userId: v.string(),
   },
   handler: async (ctx, { userId }): Promise<TierInfo> => {
-    // Self-hosting mode: grant unrestricted access
+    // self-hosting mode: grant unrestricted access
     if (isSelfHosting()) {
       return SELF_HOSTED_TIER;
     }
 
-    // Anonymous user
+    // anonymous user
     if (userId === "anonymous") {
       return {
         tier: "anonymous",
@@ -219,8 +219,8 @@ export const getUserTierById = query({
 });
 
 /**
- * Check if a user can use a specific model based on their tier.
- * Note: BYOK is now a subscriber-only feature, so API keys alone
+ * check if a user can use a specific model based on their tier.
+ * note: bYOK is now a subscriber-only feature, so aPI keys alone
  * don't grant access to additional models.
  */
 export const canUseModel = query({
@@ -229,30 +229,30 @@ export const canUseModel = query({
     modelProvider: v.string(),
   },
   handler: async (ctx, { modelId, modelProvider }) => {
-    // Self-hosting mode: allow all models
+    // self-hosting mode: allow all models
     if (isSelfHosting()) {
       return true;
     }
 
     const userId = await getAuthUserId(ctx);
 
-    // Anonymous users can only use free model
+    // anonymous users can only use free model
     if (!userId) {
       return modelId === FREE_MODEL_ID;
     }
 
-    // Check subscription - subscribers can use all models
+    // check subscription - subscribers can use all models
     const subscription = await ctx.db
       .query("subscriptions")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
 
     if (subscription?.status === "active") {
-      return true; // Subscribers can use all models (including via their own API keys)
+      return true; // subscribers can use all models (including via their own aPI keys)
     }
 
-    // Non-subscribers (free tier) can only use free model
-    // Note: API keys without subscription no longer grant model access
+    // non-subscribers (free tier) can only use free model
+    // note: aPI keys without subscription no longer grant model access
     return modelId === FREE_MODEL_ID;
   },
 });

@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import { DEFAULT_CORES } from "../defaultCores";
 
 /**
- * Tests for the Core/Personality system logic.
- * These tests verify core management, system prompt generation,
+ * tests for the core/personality system logic.
+ * these tests verify core management, system prompt generation,
  * and the business rules around cores.
  */
 
@@ -157,7 +157,7 @@ describe("Core System Logic", () => {
         const newCore = {
           name: "New Core",
           content: "Some content",
-          isActive: false, // Default for new cores
+          isActive: false, // default for new cores
           order: 0,
         };
 
@@ -219,7 +219,7 @@ describe("Core System Logic", () => {
         const coreToDeactivate = cores.find((c) => c.id === "1");
         const activeCores = cores.filter((c) => c.isActive);
 
-        // Check if this would leave no active cores
+        // check if this would leave no active cores
         const canDeactivate =
           !coreToDeactivate?.isActive || activeCores.length > 1;
 
@@ -289,7 +289,7 @@ describe("Core System Logic", () => {
         const otherCores = cores.filter((c) => c.id !== "1");
         const otherActiveCores = otherCores.filter((c) => c.isActive);
 
-        // If deleting the last active core, activate another
+        // if deleting the last active core, activate another
         if (coreToDelete?.isActive && otherActiveCores.length === 0) {
           const coreToActivate = otherCores[0];
           expect(coreToActivate).toBeDefined();
@@ -311,7 +311,7 @@ describe("Core System Logic", () => {
       expect(shouldSync).toBe(true);
 
       if (shouldSync) {
-        // Simulate sync
+        // simulate sync
         const syncedCores = localCores.map((c) => ({
           ...c,
           userId: "user123",
@@ -362,9 +362,9 @@ describe("Core System Logic", () => {
     });
 
     it("allows empty content", () => {
-      // Content can be empty (user might want a placeholder)
+      // content can be empty (user might want a placeholder)
       const emptyContent = "";
-      const isValid = emptyContent !== undefined; // No validation on content
+      const isValid = emptyContent !== undefined; // no validation on content
       expect(isValid).toBe(true);
     });
 

@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useFileDrop } from "@/hooks/useFileDrop";
 
-// Helper to create mock DragEvent
+// helper to create mock dragEvent
 function createDragEvent(
   type: string,
   options: { files?: File[]; hasFiles?: boolean } = {}
@@ -23,7 +23,7 @@ function createDragEvent(
   } as unknown as React.DragEvent;
 }
 
-// Helper to create a mock File
+// helper to create a mock file
 function createMockFile(name: string, type: string, size: number = 1024): File {
   const blob = new Blob(["x".repeat(size)], { type });
   return new File([blob], name, { type });
@@ -137,7 +137,7 @@ describe("useFileDrop", () => {
     it("should handle nested element events correctly", () => {
       const { result } = renderHook(() => useFileDrop({ onDrop }));
 
-      // Simulate entering parent, then child (nested enter)
+      // simulate entering parent, then child (nested enter)
       act(() => {
         result.current.dropHandlers.onDragEnter(createDragEvent("dragenter"));
       });
@@ -148,13 +148,13 @@ describe("useFileDrop", () => {
       });
       expect(result.current.isDragging).toBe(true);
 
-      // Simulate leaving child (should still be dragging over parent)
+      // simulate leaving child (should still be dragging over parent)
       act(() => {
         result.current.dropHandlers.onDragLeave(createDragEvent("dragleave"));
       });
       expect(result.current.isDragging).toBe(true);
 
-      // Simulate leaving parent (should now be false)
+      // simulate leaving parent (should now be false)
       act(() => {
         result.current.dropHandlers.onDragLeave(createDragEvent("dragleave"));
       });
@@ -168,7 +168,7 @@ describe("useFileDrop", () => {
       const file = createMockFile("test.png", "image/png");
       const event = createDragEvent("drop", { files: [file] });
 
-      // First drag enter to set state
+      // first drag enter to set state
       act(() => {
         result.current.dropHandlers.onDragEnter(createDragEvent("dragenter"));
       });
@@ -211,14 +211,14 @@ describe("useFileDrop", () => {
       const { result } = renderHook(() => useFileDrop({ onDrop }));
       const file = createMockFile("test.png", "image/png");
 
-      // Simulate drag sequence
+      // simulate drag sequence
       act(() => {
         result.current.dropHandlers.onDragEnter(createDragEvent("dragenter"));
         result.current.dropHandlers.onDragEnter(createDragEvent("dragenter"));
       });
       expect(result.current.isDragging).toBe(true);
 
-      // Drop should reset even with nested counter > 1
+      // drop should reset even with nested counter > 1
       act(() => {
         result.current.dropHandlers.onDrop(
           createDragEvent("drop", { files: [file] })
@@ -243,7 +243,7 @@ describe("useFileDrop", () => {
         result.current.dropHandlers.onDrop(event);
       });
 
-      // All files passed - consumer is responsible for validation
+      // all files passed - consumer is responsible for validation
       expect(onDrop).toHaveBeenCalledWith([pngFile, pdfFile, exeFile]);
     });
   });

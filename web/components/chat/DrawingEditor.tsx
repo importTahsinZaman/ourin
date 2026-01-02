@@ -12,13 +12,13 @@ const BASE_COLORS = [
   { name: "Purple", value: "#7c3aed" },
 ];
 
-// Helper to determine if a color is light or dark
+// helper to determine if a color is light or dark
 function isLightColor(hexColor: string): boolean {
   const hex = hexColor.replace("#", "");
   const r = parseInt(hex.substr(0, 2), 16);
   const g = parseInt(hex.substr(2, 2), 16);
   const b = parseInt(hex.substr(4, 2), 16);
-  // Calculate relative luminance
+  // calculate relative luminance
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
   return luminance > 0.5;
 }
@@ -36,7 +36,7 @@ interface DrawingEditorProps {
   initialImage?: string;
 }
 
-// Pencil Icon - Excalidraw style
+// pencil icon - excalidraw style
 function PencilIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -58,7 +58,7 @@ function PencilIcon({ className }: { className?: string }) {
   );
 }
 
-// Eraser Icon - Excalidraw style
+// eraser icon - excalidraw style
 function EraserIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -98,7 +98,7 @@ export function DrawingEditor({
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
 
-  // Build colors array based on canvas background
+  // build colors array based on canvas background
   const colors = [
     isLightBg
       ? { name: "Black", value: "#1a1a1a" }
@@ -106,13 +106,13 @@ export function DrawingEditor({
     ...BASE_COLORS,
   ];
 
-  // Update undo/redo button states
+  // update undo/redo button states
   const updateHistoryState = useCallback(() => {
     setCanUndo(historyIndexRef.current > 0);
     setCanRedo(historyIndexRef.current < historyRef.current.length - 1);
   }, []);
 
-  // Save current canvas state to history
+  // save current canvas state to history
   const saveToHistory = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -122,17 +122,17 @@ export function DrawingEditor({
 
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-    // Remove any redo states when new action is performed
+    // remove any redo states when new action is performed
     historyRef.current = historyRef.current.slice(
       0,
       historyIndexRef.current + 1
     );
 
-    // Add new state
+    // add new state
     historyRef.current.push(imageData);
     historyIndexRef.current = historyRef.current.length - 1;
 
-    // Limit history to 50 states to prevent memory issues
+    // limit history to 50 states to prevent memory issues
     if (historyRef.current.length > 50) {
       historyRef.current.shift();
       historyIndexRef.current--;
@@ -141,7 +141,7 @@ export function DrawingEditor({
     updateHistoryState();
   }, [updateHistoryState]);
 
-  // Undo last action
+  // undo last action
   const handleUndo = useCallback(() => {
     if (historyIndexRef.current <= 0) return;
 
@@ -158,7 +158,7 @@ export function DrawingEditor({
     updateHistoryState();
   }, [updateHistoryState]);
 
-  // Redo last undone action
+  // redo last undone action
   const handleRedo = useCallback(() => {
     if (historyIndexRef.current >= historyRef.current.length - 1) return;
 
@@ -175,7 +175,7 @@ export function DrawingEditor({
     updateHistoryState();
   }, [updateHistoryState]);
 
-  // Get canvas background color from theme
+  // get canvas background color from theme
   const getCanvasBgColor = useCallback(() => {
     const bgColor = getComputedStyle(document.documentElement)
       .getPropertyValue("--color-background-primary")
@@ -183,7 +183,7 @@ export function DrawingEditor({
     return bgColor || "#FFFFFF";
   }, []);
 
-  // Initialize canvas with theme background
+  // initialize canvas with theme background
   const initCanvas = useCallback(
     (loadImage?: string) => {
       const canvas = canvasRef.current;
@@ -202,12 +202,12 @@ export function DrawingEditor({
       ctx.fillStyle = canvasBgRef.current;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Determine if background is light and set appropriate default stroke color
+      // determine if background is light and set appropriate default stroke color
       const bgIsLight = isLightColor(canvasBgRef.current);
       setIsLightBg(bgIsLight);
       setColor(bgIsLight ? "#1a1a1a" : "#ffffff");
 
-      // Reset history
+      // reset history
       historyRef.current = [];
       historyIndexRef.current = -1;
 
@@ -283,7 +283,7 @@ export function DrawingEditor({
     return () => window.removeEventListener("resize", handleResize);
   }, [isOpen]);
 
-  // Close color picker when clicking outside
+  // close color picker when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -450,14 +450,14 @@ export function DrawingEditor({
 
   return (
     <div className="z-50 fixed inset-0 flex justify-center items-center p-8">
-      {/* Backdrop */}
+      {/* backdrop */}
       <div
         className="absolute inset-0"
         style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
         onClick={onClose}
       />
 
-      {/* Modal Container */}
+      {/* modal container */}
       <div
         className="z-10 relative flex flex-col shadow-2xl rounded-2xl w-full overflow-hidden"
         style={{
@@ -467,7 +467,7 @@ export function DrawingEditor({
           height: "min(660px, 77vh)",
         }}
       >
-        {/* Header */}
+        {/* header */}
         <div
           className="flex justify-between items-center px-4 py-3 shrink-0"
           style={{ borderBottom: "1px solid var(--color-border-muted)" }}
@@ -479,7 +479,7 @@ export function DrawingEditor({
             {initialImage ? "Edit Drawing" : "New Drawing"}
           </span>
           <div className="flex items-center gap-1">
-            {/* Undo */}
+            {/* undo */}
             <button
               onClick={handleUndo}
               disabled={!canUndo}
@@ -490,7 +490,7 @@ export function DrawingEditor({
               <Undo2 className="w-4 h-4" />
             </button>
 
-            {/* Redo */}
+            {/* redo */}
             <button
               onClick={handleRedo}
               disabled={!canRedo}
@@ -519,7 +519,7 @@ export function DrawingEditor({
           </div>
         </div>
 
-        {/* Canvas */}
+        {/* canvas */}
         <div
           className="relative flex-1 m-3 rounded-sm overflow-hidden"
           style={{ border: "1px solid var(--color-border-muted)" }}
@@ -540,7 +540,7 @@ export function DrawingEditor({
             onTouchEnd={handleDrawEnd}
           />
 
-          {/* Floating Toolbar */}
+          {/* floating toolbar */}
           <div
             className="bottom-4 left-1/2 absolute flex items-center gap-0.5 shadow-lg px-1.5 py-1 rounded-sm -translate-x-1/2"
             style={{
@@ -548,7 +548,7 @@ export function DrawingEditor({
               border: "1px solid var(--color-border-default)",
             }}
           >
-            {/* Pencil Tool */}
+            {/* pencil tool */}
             <button
               onClick={() => setIsErasing(false)}
               className="flex justify-center items-center rounded-sm w-9 h-9 transition-colors"
@@ -565,7 +565,7 @@ export function DrawingEditor({
               <PencilIcon className="w-5 h-5" />
             </button>
 
-            {/* Eraser Tool */}
+            {/* eraser tool */}
             <button
               onClick={() => setIsErasing(true)}
               className="flex justify-center items-center rounded-sm w-9 h-9 transition-colors"
@@ -582,13 +582,13 @@ export function DrawingEditor({
               <EraserIcon className="w-5 h-5" />
             </button>
 
-            {/* Divider */}
+            {/* divider */}
             <div
               className="mx-2 w-px h-6"
               style={{ backgroundColor: "var(--color-border-muted)" }}
             />
 
-            {/* Color Picker */}
+            {/* color picker */}
             <div className="relative" ref={colorPickerRef}>
               <button
                 onClick={() => setShowColorPicker(!showColorPicker)}
@@ -609,7 +609,7 @@ export function DrawingEditor({
                 />
               </button>
 
-              {/* Color Picker Popup */}
+              {/* color picker popup */}
               {showColorPicker && (
                 <div
                   className="bottom-full left-1/2 absolute flex gap-1.5 shadow-lg mb-2 p-2 rounded-sm -translate-x-1/2"
@@ -643,13 +643,13 @@ export function DrawingEditor({
               )}
             </div>
 
-            {/* Divider */}
+            {/* divider */}
             <div
               className="mx-2 w-px h-6"
               style={{ backgroundColor: "var(--color-border-muted)" }}
             />
 
-            {/* Brush Sizes */}
+            {/* brush sizes */}
             <div className="flex items-center gap-0.5">
               {BRUSH_SIZES.map((size) => (
                 <button
@@ -684,7 +684,7 @@ export function DrawingEditor({
             </div>
           </div>
 
-          {/* Save Button - matches toolbar: py-1 padding + h-9 inner */}
+          {/* save button - matches toolbar: py-1 padding + h-9 inner */}
           <button
             onClick={handleSave}
             className="right-4 bottom-4 absolute flex justify-center items-center gap-1.5 hover:opacity-90 shadow-lg px-3 py-1 rounded-sm font-medium text-sm transition-opacity"

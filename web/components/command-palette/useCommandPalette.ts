@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import type { LucideIcon } from "lucide-react";
 
-// Types
+// types
 export interface FuzzyMatch {
   score: number;
   matchedIndices: number[];
@@ -31,8 +31,8 @@ export interface GroupedResults {
 }
 
 /**
- * Fuzzy match algorithm - matches characters sequentially with scoring
- * Inspired by Linear's command palette behavior
+ * fuzzy match algorithm - matches characters sequentially with scoring
+ * inspired by linear's command palette behavior
  */
 export function fuzzyMatch(query: string, text: string): FuzzyMatch | null {
   if (!query) return { score: 0, matchedIndices: [] };
@@ -48,12 +48,12 @@ export function fuzzyMatch(query: string, text: string): FuzzyMatch | null {
     if (textLower[i] === queryLower[queryIndex]) {
       matchedIndices.push(i);
 
-      // Bonus for consecutive matches
+      // bonus for consecutive matches
       if (lastMatchIndex === i - 1) {
         score += 5;
       }
 
-      // Bonus for match at word boundary (start of word)
+      // bonus for match at word boundary (start of word)
       if (
         i === 0 ||
         text[i - 1] === " " ||
@@ -63,7 +63,7 @@ export function fuzzyMatch(query: string, text: string): FuzzyMatch | null {
         score += 10;
       }
 
-      // Bonus for exact case match
+      // bonus for exact case match
       if (text[i] === query[queryIndex]) {
         score += 1;
       }
@@ -73,18 +73,18 @@ export function fuzzyMatch(query: string, text: string): FuzzyMatch | null {
     }
   }
 
-  // All query characters must be matched
+  // all query characters must be matched
   if (queryIndex !== queryLower.length) {
     return null;
   }
 
-  // Base score for matching
+  // base score for matching
   score += 50;
 
-  // Penalize by text length (prefer shorter matches)
+  // penalize by text length (prefer shorter matches)
   score -= text.length * 0.5;
 
-  // Bonus if query matches start of text
+  // bonus if query matches start of text
   if (textLower.startsWith(queryLower)) {
     score += 20;
   }
@@ -93,10 +93,10 @@ export function fuzzyMatch(query: string, text: string): FuzzyMatch | null {
 }
 
 /**
- * Search an item against a query, checking label and keywords
+ * search an item against a query, checking label and keywords
  */
 function searchItem(item: SearchableItem, query: string): SearchResult | null {
-  // Try matching label first
+  // try matching label first
   const labelMatch = fuzzyMatch(query, item.label);
   if (labelMatch) {
     return {
@@ -106,15 +106,15 @@ function searchItem(item: SearchableItem, query: string): SearchResult | null {
     };
   }
 
-  // Try matching keywords
+  // try matching keywords
   if (item.keywords) {
     for (const keyword of item.keywords) {
       const keywordMatch = fuzzyMatch(query, keyword);
       if (keywordMatch) {
         return {
           ...item,
-          matchedIndices: [], // No highlighting since match was on keyword
-          score: keywordMatch.score - 10, // Slightly lower priority than label matches
+          matchedIndices: [], // no highlighting since match was on keyword
+          score: keywordMatch.score - 10, // slightly lower priority than label matches
         };
       }
     }
@@ -130,10 +130,10 @@ interface UseCommandPaletteOptions {
 
 export function useCommandPalette({ items, isOpen }: UseCommandPaletteOptions) {
   const [query, setQuery] = useState("");
-  const [selectedIndex, setSelectedIndex] = useState(-1); // -1 = no selection, Enter creates new chat
+  const [selectedIndex, setSelectedIndex] = useState(-1); // -1 = no selection, enter creates new chat
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Filter and group results
+  // filter and group results
   const { groupedResults, flatResults } = useMemo(() => {
     const grouped: GroupedResults = {
       actions: [],
@@ -153,7 +153,7 @@ export function useCommandPalette({ items, isOpen }: UseCommandPaletteOptions) {
     };
 
     if (!query.trim()) {
-      // When no query, show all items grouped by type
+      // when no query, show all items grouped by type
       for (const item of items) {
         const result: SearchResult = {
           ...item,
@@ -163,7 +163,7 @@ export function useCommandPalette({ items, isOpen }: UseCommandPaletteOptions) {
         grouped[getGroupKey(item.type)].push(result);
       }
     } else {
-      // Search and filter
+      // search and filter
       for (const item of items) {
         const result = searchItem(item, query);
         if (result) {
@@ -171,18 +171,18 @@ export function useCommandPalette({ items, isOpen }: UseCommandPaletteOptions) {
         }
       }
 
-      // Sort each group by score
+      // sort each group by score
       grouped.actions.sort((a, b) => b.score - a.score);
       grouped.themes.sort((a, b) => b.score - a.score);
       grouped.chats.sort((a, b) => b.score - a.score);
     }
 
-    // Limit results per section
+    // limit results per section
     grouped.actions = grouped.actions.slice(0, 5);
     grouped.themes = grouped.themes.slice(0, 10);
     grouped.chats = grouped.chats.slice(0, 8);
 
-    // Create flat list for keyboard navigation
+    // create flat list for keyboard navigation
     const flat: SearchResult[] = [
       ...grouped.actions,
       ...grouped.chats,
@@ -192,37 +192,37 @@ export function useCommandPalette({ items, isOpen }: UseCommandPaletteOptions) {
     return { groupedResults: grouped, flatResults: flat };
   }, [items, query]);
 
-  // Reset state when opening/closing
+  // reset state when opening/closing
   useEffect(() => {
     if (isOpen) {
       setQuery("");
       setSelectedIndex(-1);
-      // Focus input after a tick to ensure DOM is ready
+      // focus input after a tick to ensure dOM is ready
       setTimeout(() => inputRef.current?.focus(), 0);
     }
   }, [isOpen]);
 
-  // Reset selection when results change (keep at -1 for new chat behavior)
+  // reset selection when results change (keep at -1 for new chat behavior)
   useEffect(() => {
     setSelectedIndex(-1);
   }, [flatResults.length]);
 
-  // Keyboard navigation
+  // keyboard navigation
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       switch (e.key) {
         case "ArrowDown":
           e.preventDefault();
           setSelectedIndex((prev) => {
-            if (prev < 0) return 0; // From no selection to first item
-            return prev < flatResults.length - 1 ? prev + 1 : -1; // Wrap to no selection
+            if (prev < 0) return 0; // from no selection to first item
+            return prev < flatResults.length - 1 ? prev + 1 : -1; // wrap to no selection
           });
           break;
         case "ArrowUp":
           e.preventDefault();
           setSelectedIndex((prev) => {
-            if (prev < 0) return flatResults.length - 1; // From no selection to last item
-            return prev > 0 ? prev - 1 : -1; // Wrap to no selection
+            if (prev < 0) return flatResults.length - 1; // from no selection to last item
+            return prev > 0 ? prev - 1 : -1; // wrap to no selection
           });
           break;
       }

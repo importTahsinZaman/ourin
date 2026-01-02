@@ -7,23 +7,23 @@ import {
 } from "@/lib/verifyChatToken";
 
 /**
- * Deterministically extract a clean title from model output.
- * Takes first line, strips markdown/quotes, limits to 5 words.
+ * deterministically extract a clean title from model output.
+ * takes first line, strips markdown/quotes, limits to 5 words.
  */
 function extractTitle(rawText: string): string {
   const title = rawText
-    // Take only the first line
+    // take only the first line
     .split("\n")[0]
     .trim()
-    // Remove markdown formatting (**, *, `, ~~)
+    // remove markdown formatting (**, *, `, ~~)
     .replace(/\*\*|__|\*|_|`|~~/g, "")
-    // Remove surrounding quotes
+    // remove surrounding quotes
     .replace(/^["'`]+|["'`]+$/g, "")
-    // Remove trailing punctuation (except ?)
+    // remove trailing punctuation (except ?)
     .replace(/[.,:;!]+$/, "")
     .trim();
 
-  // Limit to 5 words max
+  // limit to 5 words max
   const words = title.split(/\s+/).slice(0, 5);
   return words.join(" ");
 }
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { userMessage } = body;
 
-    // Extract token from Authorization header (preferred) or body (fallback)
+    // extract token from authorization header (preferred) or body (fallback)
     const chatToken =
       extractChatToken(req) || (body.chatToken as string | undefined);
 
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Special case: if asking about Ourin itself, return a fixed title
+    // special case: if asking about ourin itself, return a fixed title
     const lowerMessage = userMessage.toLowerCase();
     const isAskingAboutOurin =
       /\b(tell me about|what is|what's|explain|describe|introduce me to)\s+ourin\b/i.test(

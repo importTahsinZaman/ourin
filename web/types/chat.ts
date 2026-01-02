@@ -17,8 +17,8 @@ export interface FilePart {
 export interface ReasoningPart {
   type: "reasoning";
   text: string;
-  id?: string; // For tracking separate reasoning blocks in interleaved thinking
-  duration?: number; // Duration in seconds this block took to generate
+  id?: string; // for tracking separate reasoning blocks in interleaved thinking
+  duration?: number; // duration in seconds this block took to generate
 }
 
 export interface ToolInvocationPart {
@@ -51,7 +51,7 @@ export type MessagePart =
 export interface MessageMetadata {
   coreNames?: string[];
   reasoningLevel?: string | number;
-  thinkingDuration?: number; // Duration in seconds the model spent thinking
+  thinkingDuration?: number; // duration in seconds the model spent thinking
   webSearchEnabled?: boolean;
   [key: string]: unknown;
 }
@@ -60,7 +60,7 @@ export interface UIMessage {
   id: string;
   role: "user" | "assistant" | "system";
   parts: MessagePart[];
-  model?: string; // Model used for this message
+  model?: string; // model used for this message
   createdAt?: Date;
   metadata?: MessageMetadata;
 }

@@ -9,21 +9,21 @@ import { computeFileHash } from "@/lib/fileHash";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import type { Attachment } from "./useDraft";
 
-const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
+const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25mB
 const ALLOWED_TYPES = [
-  // Images
+  // images
   "image/jpeg",
   "image/png",
   "image/gif",
   "image/webp",
   "image/svg+xml",
-  // Documents
+  // documents
   "application/pdf",
   "text/plain",
   "text/csv",
   "text/markdown",
   "application/json",
-  // Office
+  // office
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "application/vnd.ms-excel",
@@ -46,31 +46,31 @@ export function validateFile(file: File): { valid: boolean; error?: string } {
 }
 
 /**
- * Determines if an attachment should be deleted from storage when removed from draft.
+ * determines if an attachment should be deleted from storage when removed from draft.
  *
- * Returns true only if:
- * - Attachment has a storageId
- * - Not a duplicate (file existed before this session, e.g., sent in previous chat)
- * - No other attachments in the current draft share the same storageId
+ * returns true only if:
+ * - attachment has a storageId
+ * - not a duplicate (file existed before this session, e.g., sent in previous chat)
+ * - no other attachments in the current draft share the same storageId
  */
 export function shouldDeleteFromStorage(
   attachment: Attachment,
   allAttachments: Attachment[]
 ): boolean {
-  // No storageId means nothing to delete
+  // no storageId means nothing to delete
   if (!attachment.storageId) return false;
 
-  // Duplicate files already existed in storage (sent in previous chat, etc.)
-  // They should not be deleted when removed from draft
+  // duplicate files already existed in storage (sent in previous chat, etc.)
+  // they should not be deleted when removed from draft
   if (attachment.isDuplicate) return false;
 
-  // Check if other attachments in the draft share the same storageId
+  // check if other attachments in the draft share the same storageId
   // (e.g., user attached the same new file multiple times)
   const othersWithSameStorage = allAttachments.filter(
     (a) => a.id !== attachment.id && a.storageId === attachment.storageId
   );
 
-  // Only delete if this is the last attachment using this storageId
+  // only delete if this is the last attachment using this storageId
   return othersWithSameStorage.length === 0;
 }
 

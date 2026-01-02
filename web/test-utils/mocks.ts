@@ -1,10 +1,10 @@
 /**
- * Test utilities and mock factories for testing.
+ * test utilities and mock factories for testing.
  */
 
 /**
- * Generate a valid chat token for testing.
- * Uses the same algorithm as the production code.
+ * generate a valid chat token for testing.
+ * uses the same algorithm as the production code.
  */
 export async function generateTestToken(
   userId: string,
@@ -32,7 +32,7 @@ export async function generateTestToken(
 }
 
 /**
- * Generate a tampered token (wrong signature).
+ * generate a tampered token (wrong signature).
  */
 export function generateTamperedToken(
   userId: string,
@@ -43,7 +43,7 @@ export function generateTamperedToken(
 }
 
 /**
- * Create a mock SSE stream for testing streaming responses.
+ * create a mock sSE stream for testing streaming responses.
  */
 export function createMockSSEStream(
   events: Array<{ type: string; data: unknown }>
@@ -62,7 +62,7 @@ export function createMockSSEStream(
 }
 
 /**
- * Create mock text-delta events for testing streaming.
+ * create mock text-delta events for testing streaming.
  */
 export function createTextDeltaEvents(
   text: string,
@@ -79,7 +79,7 @@ export function createTextDeltaEvents(
 }
 
 /**
- * Create mock reasoning events for testing.
+ * create mock reasoning events for testing.
  */
 export function createReasoningEvents(
   text: string,
@@ -93,7 +93,7 @@ export function createReasoningEvents(
 }
 
 /**
- * Wait for a specific duration (for timing tests).
+ * wait for a specific duration (for timing tests).
  */
 export function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));

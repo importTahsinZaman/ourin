@@ -1,12 +1,12 @@
 import { describe, it, expect } from "vitest";
 
 /**
- * Subscription business logic tests.
- * Tests period validation, status determination, and lifecycle management
- * without requiring the Convex runtime.
+ * subscription business logic tests.
+ * tests period validation, status determination, and lifecycle management
+ * without requiring the convex runtime.
  */
 
-// Period validation function from subscriptions.ts
+// period validation function from subscriptions.ts
 function validatePeriod(start: number, end: number): void {
   if (!Number.isFinite(start) || !Number.isFinite(end)) {
     throw new Error(`Invalid subscription period: start=${start}, end=${end}`);
@@ -23,12 +23,12 @@ function validatePeriod(start: number, end: number): void {
   }
 }
 
-// Subscription status check
+// subscription status check
 function isActiveSubscription(status: string | undefined): boolean {
   return status === "active";
 }
 
-// Check if subscription is in valid billing period
+// check if subscription is in valid billing period
 function isWithinPeriod(
   currentTime: number,
   periodStart: number,
@@ -37,7 +37,7 @@ function isWithinPeriod(
   return currentTime >= periodStart && currentTime <= periodEnd;
 }
 
-// Determine if subscription should be renewed
+// determine if subscription should be renewed
 function shouldRenew(cancelAtPeriodEnd: boolean, status: string): boolean {
   return status === "active" && !cancelAtPeriodEnd;
 }
@@ -245,23 +245,23 @@ describe("subscriptions", () => {
       const periodStart = now;
       const periodEnd = now + 30 * 24 * 60 * 60 * 1000;
 
-      // Validate period
+      // validate period
       expect(() => validatePeriod(periodStart, periodEnd)).not.toThrow();
 
-      // Check status
+      // check status
       expect(isActiveSubscription("active")).toBe(true);
 
-      // Within period
+      // within period
       expect(isWithinPeriod(now, periodStart, periodEnd)).toBe(true);
 
-      // Should renew
+      // should renew
       expect(shouldRenew(false, "active")).toBe(true);
     });
 
     it("handles subscription at period end", () => {
       const periodStart = 1000;
       const periodEnd = 2000;
-      const now = 2000; // Exactly at period end
+      const now = 2000; // exactly at period end
 
       expect(isWithinPeriod(now, periodStart, periodEnd)).toBe(true);
       expect(isActiveSubscription("active")).toBe(true);
@@ -270,13 +270,13 @@ describe("subscriptions", () => {
     it("handles subscription after period expires", () => {
       const periodStart = 1000;
       const periodEnd = 2000;
-      const now = 3000; // After period end
+      const now = 3000; // after period end
 
       expect(isWithinPeriod(now, periodStart, periodEnd)).toBe(false);
     });
 
     it("handles cancellation at end of period", () => {
-      // User requested cancellation but still has access until period end
+      // user requested cancellation but still has access until period end
       const status = "active";
       const cancelAtPeriodEnd = true;
 
@@ -300,29 +300,29 @@ describe("subscriptions", () => {
     });
 
     it("handles subscription renewal", () => {
-      // Old period
+      // old period
       const oldStart = 1000;
       const oldEnd = 2000;
 
-      // New period after renewal
+      // new period after renewal
       const newStart = 2000;
       const newEnd = 3000;
       const now = 2500;
 
-      // Old period no longer valid
+      // old period no longer valid
       expect(isWithinPeriod(now, oldStart, oldEnd)).toBe(false);
 
-      // New period is valid
+      // new period is valid
       expect(isWithinPeriod(now, newStart, newEnd)).toBe(true);
 
-      // Validate new period
+      // validate new period
       expect(() => validatePeriod(newStart, newEnd)).not.toThrow();
     });
   });
 
   describe("edge cases", () => {
     it("handles subscription created far in the past", () => {
-      const start = 946684800000; // Y2K
+      const start = 946684800000; // y2k
       const end = start + 30 * 24 * 60 * 60 * 1000;
       const now = Date.now();
 
@@ -378,7 +378,7 @@ describe("subscriptions", () => {
     });
 
     it("renewal logic for all Stripe statuses", () => {
-      // Only active without cancel flag should renew
+      // only active without cancel flag should renew
       for (const status of stripeStatuses) {
         if (status === "active") {
           expect(shouldRenew(false, status)).toBe(true);

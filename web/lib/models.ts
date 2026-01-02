@@ -1,6 +1,6 @@
-// Shared model definitions
+// shared model definitions
 
-// The only model available for non-authenticated users
+// the only model available for non-authenticated users
 //testing rq
 export const FREE_MODEL_ID = "google:gemini-2.5-flash-lite";
 
@@ -13,10 +13,10 @@ export interface ReasoningPreset {
 export interface ReasoningParameter {
   kind: "effort" | "budget";
   paramName: string;
-  // For effort-based (OpenAI, Gemini 3 Pro)
+  // for effort-based (openAI, gemini 3 pro)
   allowedValues?: string[];
   defaultValue?: string | number;
-  // For budget-based (Claude)
+  // for budget-based (claude)
   min?: number;
   max?: number;
   step?: number;
@@ -24,8 +24,8 @@ export interface ReasoningParameter {
 }
 
 export interface ModelPricing {
-  input: number; // Credits per 1M input tokens (1 credit = $0.001)
-  output: number; // Credits per 1M output tokens (1 credit = $0.001)
+  input: number; // credits per 1m input tokens (1 credit = $0.001)
+  output: number; // credits per 1m output tokens (1 credit = $0.001)
 }
 
 export interface Model {
@@ -35,15 +35,15 @@ export interface Model {
   provider: "google" | "anthropic" | "openai";
   supportsWebSearch: boolean;
   description: string;
-  releaseDate: number; // Unix timestamp
-  pricing: ModelPricing; // Credits per 1M tokens (1 credit = $0.001)
-  // Reasoning support
-  reasoningParameter?: ReasoningParameter; // If present, model supports reasoning
-  reasoningOnly?: boolean; // If true, reasoning cannot be disabled (e.g., Opus 4.5)
+  releaseDate: number; // unix timestamp
+  pricing: ModelPricing; // credits per 1m tokens (1 credit = $0.001)
+  // reasoning support
+  reasoningParameter?: ReasoningParameter; // if present, model supports reasoning
+  reasoningOnly?: boolean; // if true, reasoning cannot be disabled (e.g., opus 4.5)
 }
 
 export const MODELS: Model[] = [
-  // Google Models
+  // google models
   {
     id: "google:gemini-2.5-flash",
     apiModelId: "gemini-2.5-flash",
@@ -62,7 +62,7 @@ export const MODELS: Model[] = [
     description:
       "Highest-capability Gemini preview with strong reasoning and planning.",
     supportsWebSearch: true,
-    reasoningOnly: true, // Always uses reasoning
+    reasoningOnly: true, // always uses reasoning
     reasoningParameter: {
       kind: "effort",
       paramName: "thinking_config.thinking_level",
@@ -110,7 +110,7 @@ export const MODELS: Model[] = [
     description:
       "High-speed Gemini 3 model combining frontier intelligence with fast responses and strong search grounding.",
     supportsWebSearch: true,
-    releaseDate: 1765843200, // 2025-12-16 UTC
+    releaseDate: 1765843200, // 2025-12-16 uTC
     pricing: { input: 500, output: 3000 },
     reasoningParameter: {
       kind: "effort",
@@ -120,7 +120,7 @@ export const MODELS: Model[] = [
     },
   },
 
-  // Anthropic Models
+  // anthropic models
   {
     id: "anthropic:claude-sonnet-4-5-20250929",
     apiModelId: "claude-sonnet-4-5-20250929",
@@ -208,7 +208,7 @@ export const MODELS: Model[] = [
     description:
       "Fast, low-cost model for lightweight reasoning and high-throughput tasks",
     supportsWebSearch: true,
-    // 2024-07-01 UTC (Claude 3.5 Haiku release window)
+    // 2024-07-01 uTC (claude 3.5 haiku release window)
     releaseDate: 1719792000,
     pricing: { input: 800, output: 4000 },
   },
@@ -222,7 +222,7 @@ export const MODELS: Model[] = [
     supportsWebSearch: true,
     releaseDate: 1761955200, // 2025-11-01
     pricing: { input: 5000, output: 25000 },
-    reasoningOnly: true, // Always uses reasoning
+    reasoningOnly: true, // always uses reasoning
     reasoningParameter: {
       kind: "budget",
       paramName: "thinking.budget_tokens",
@@ -239,7 +239,7 @@ export const MODELS: Model[] = [
     },
   },
 
-  // OpenAI Models
+  // openAI models
   {
     id: "openai:gpt-5.2",
     apiModelId: "gpt-5.2",
@@ -263,9 +263,9 @@ export const MODELS: Model[] = [
     provider: "openai",
     description: "Flagship for everday advanced reasoning",
     supportsWebSearch: true,
-    // 2025-11-12 UTC (GPT-5.1 launch)
+    // 2025-11-12 uTC (gPT-5.1 launch)
     releaseDate: 1762905600,
-    // 1 credit = $0.001, Standard tier: $1.25 / $10.00 per 1M tokens
+    // 1 credit = $0.001, standard tier: $1.25 / $10.00 per 1m tokens
     pricing: { input: 1250, output: 10000 },
     reasoningParameter: {
       kind: "effort",
@@ -326,7 +326,7 @@ export const MODELS: Model[] = [
   },
 ];
 
-// Models sorted by release date (newest first)
+// models sorted by release date (newest first)
 export const MODELS_BY_DATE = [...MODELS].sort(
   (a, b) => b.releaseDate - a.releaseDate
 );
@@ -339,7 +339,7 @@ export function getModelDisplayName(modelId: string): string {
   const model = MODELS.find((m) => m.id === modelId);
   if (model) return model.name;
 
-  // Fallback: parse the model ID
+  // fallback: parse the model iD
   const parts = modelId.split(":");
   if (parts.length === 2) {
     return parts[1]
@@ -350,13 +350,13 @@ export function getModelDisplayName(modelId: string): string {
   return modelId;
 }
 
-// Check if model supports reasoning (has reasoningParameter)
+// check if model supports reasoning (has reasoningParameter)
 export function modelSupportsReasoning(modelId: string): boolean {
   const model = getModelInfo(modelId);
   return !!model.reasoningParameter;
 }
 
-// Check if reasoning can be disabled for this model
+// check if reasoning can be disabled for this model
 export function canDisableReasoning(modelId: string): boolean {
   const model = getModelInfo(modelId);
   return !!model.reasoningParameter && !model.reasoningOnly;

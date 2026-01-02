@@ -42,37 +42,37 @@ export function CommandPalette({
   currentConversationId,
   sidebarSide,
 }: CommandPaletteProps) {
-  // Fetch conversations
+  // fetch conversations
   const conversations = useQuery(api.conversations.list, isOpen ? {} : "skip");
 
-  // Get keybinds from user settings
+  // get keybinds from user settings
   const keybinds = useKeybinds();
   const [isMac, setIsMac] = useState(true);
 
-  // Theme context for inline theme switching
+  // theme context for inline theme switching
   const { themeId, setTheme, setCustomTheme, builtInThemes, customThemes } =
     useTheme();
 
-  // Track original theme when palette opens (for reverting on close)
+  // track original theme when palette opens (for reverting on close)
   const originalThemeIdRef = useRef<string | null>(null);
 
-  // Capture original theme when opening
+  // capture original theme when opening
   useEffect(() => {
     if (isOpen) {
       originalThemeIdRef.current = themeId;
     }
   }, [isOpen, themeId]);
 
-  // Detect Mac vs Windows
+  // detect mac vs windows
   useEffect(() => {
     setIsMac(navigator.platform.toUpperCase().indexOf("MAC") >= 0);
   }, []);
 
-  // Build searchable items
+  // build searchable items
   const items: SearchableItem[] = useMemo(() => {
     const result: SearchableItem[] = [];
 
-    // Actions (New Chat is handled by pressing Enter on the query)
+    // actions (new chat is handled by pressing enter on the query)
     result.push({
       id: "action-settings",
       label: "Settings",
@@ -105,15 +105,15 @@ export function CommandPalette({
       shortcut: formatKeybind(keybinds.appearance, isMac),
     });
 
-    // Themes (built-in + custom), sorted by most recently used
+    // themes (built-in + custom), sorted by most recently used
     const allThemes = [...builtInThemes, ...customThemes];
     const usageTimestamps = getThemeUsageTimestamps();
 
-    // Sort themes: recently used first, then by original order
+    // sort themes: recently used first, then by original order
     const sortedThemes = [...allThemes].sort((a, b) => {
       const aTime = usageTimestamps[a.id] || 0;
       const bTime = usageTimestamps[b.id] || 0;
-      return bTime - aTime; // Most recent first
+      return bTime - aTime; // most recent first
     });
 
     for (const theme of sortedThemes) {
@@ -132,10 +132,10 @@ export function CommandPalette({
       });
     }
 
-    // Conversations
+    // conversations
     if (conversations) {
       for (const conv of conversations) {
-        // Skip current conversation
+        // skip current conversation
         if (conv._id === currentConversationId) continue;
 
         result.push({
@@ -172,16 +172,16 @@ export function CommandPalette({
     handleKeyDown,
   } = useCommandPalette({ items, isOpen });
 
-  // Preview theme when hovering/navigating to theme items
+  // preview theme when hovering/navigating to theme items
   useEffect(() => {
     if (!isOpen) return;
 
     if (selectedItem?.type === "theme" && selectedItem.data) {
-      // Preview the theme
+      // preview the theme
       const theme = selectedItem.data as OurinTheme;
       setCustomTheme(theme);
     } else if (originalThemeIdRef.current) {
-      // Revert to original when not on a theme item
+      // revert to original when not on a theme item
       const allThemes = [...builtInThemes, ...customThemes];
       const originalTheme = allThemes.find(
         (t) => t.id === originalThemeIdRef.current
@@ -192,7 +192,7 @@ export function CommandPalette({
     }
   }, [selectedItem, isOpen, setCustomTheme, builtInThemes, customThemes]);
 
-  // Handle close - revert to original theme
+  // handle close - revert to original theme
   const handleClose = useCallback(() => {
     if (originalThemeIdRef.current) {
       setTheme(originalThemeIdRef.current);
@@ -200,13 +200,13 @@ export function CommandPalette({
     onClose();
   }, [onClose, setTheme]);
 
-  // Handle selection
+  // handle selection
   const handleSelect = useCallback(
     (item: SearchableItem) => {
       onClose();
 
       if (item.type === "theme" && item.data) {
-        // Confirm theme selection - persist to storage
+        // confirm theme selection - persist to storage
         const theme = item.data as OurinTheme;
         setTheme(theme.id);
       } else if (item.id === "action-settings") {
@@ -229,16 +229,16 @@ export function CommandPalette({
     ]
   );
 
-  // Handle Enter key
+  // handle enter key
   const handleKeyDownWithEnter = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === "Enter") {
         e.preventDefault();
         if (selectedItem) {
-          // If an item is selected, execute its action
+          // if an item is selected, execute its action
           handleSelect(selectedItem);
         } else if (query.trim()) {
-          // If no item selected but there's a query, create new chat with the query
+          // if no item selected but there's a query, create new chat with the query
           handleClose();
           onNewChatWithMessage(query.trim());
         }
@@ -259,7 +259,7 @@ export function CommandPalette({
     ]
   );
 
-  // Prevent body scroll when open
+  // prevent body scroll when open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -271,7 +271,7 @@ export function CommandPalette({
     };
   }, [isOpen]);
 
-  // Handle starting a new chat (used for the "Start a new chat" option)
+  // handle starting a new chat (used for the "start a new chat" option)
   const handleStartNewChat = useCallback(() => {
     if (query.trim()) {
       onClose();
@@ -281,17 +281,17 @@ export function CommandPalette({
 
   if (!isOpen) return null;
 
-  // Calculate flat index for each item
+  // calculate flat index for each item
   const actionStartIndex = 0;
   const chatStartIndex = groupedResults.actions.length;
   const themeStartIndex = chatStartIndex + groupedResults.chats.length;
 
   return (
     <div className="z-50 fixed inset-0 flex items-start justify-center pt-[15vh]">
-      {/* Click outside to close (invisible) */}
+      {/* click outside to close (invisible) */}
       <div className="absolute inset-0" onClick={handleClose} />
 
-      {/* Modal */}
+      {/* modal */}
       <div
         className="z-10 relative rounded-sm shadow-2xl overflow-hidden animate-scale-in"
         style={{
@@ -305,7 +305,7 @@ export function CommandPalette({
         aria-modal="true"
         aria-label="Command palette"
       >
-        {/* Search input */}
+        {/* search input */}
         <div
           className="flex items-center px-4 py-2.5"
           style={{ borderBottom: "1px solid var(--color-border-muted)" }}
@@ -326,12 +326,12 @@ export function CommandPalette({
           />
         </div>
 
-        {/* Results */}
+        {/* results */}
         <div
           className="overflow-y-auto py-1 flex-1"
           style={{ height: "395px" }}
         >
-          {/* Start new chat option - shown when there's a query */}
+          {/* start new chat option - shown when there's a query */}
           {query.trim() && (
             <div className="mb-1">
               <CommandPaletteItem
@@ -345,7 +345,7 @@ export function CommandPalette({
             </div>
           )}
 
-          {/* Actions section */}
+          {/* actions section */}
           {groupedResults.actions.length > 0 && (
             <div className="mb-2">
               <div
@@ -372,7 +372,7 @@ export function CommandPalette({
             </div>
           )}
 
-          {/* Chats section */}
+          {/* chats section */}
           {groupedResults.chats.length > 0 && (
             <div className="mb-2">
               <div
@@ -398,7 +398,7 @@ export function CommandPalette({
             </div>
           )}
 
-          {/* Themes section */}
+          {/* themes section */}
           {groupedResults.themes.length > 0 && (
             <div className="mb-2">
               <div

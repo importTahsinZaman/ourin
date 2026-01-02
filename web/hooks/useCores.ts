@@ -19,7 +19,7 @@ import {
 import { useInitialActiveCoresCount } from "@/contexts/CoresContext";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 
-// Unified core type that works for both local and server cores
+// unified core type that works for both local and server cores
 export interface Core {
   id: string;
   name: string;
@@ -28,7 +28,7 @@ export interface Core {
   order: number;
 }
 
-// Convert server core to unified type
+// convert server core to unified type
 function serverCoreToCore(core: Doc<"cores">): Core {
   return {
     id: core._id,
@@ -39,7 +39,7 @@ function serverCoreToCore(core: Doc<"cores">): Core {
   };
 }
 
-// Convert local core to unified type
+// convert local core to unified type
 function localCoreToCore(core: LocalCore): Core {
   return {
     id: core.id,
@@ -53,7 +53,7 @@ function localCoreToCore(core: LocalCore): Core {
 export function useCores() {
   const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
 
-  // Server-side data and mutations (only used when authenticated)
+  // server-side data and mutations (only used when authenticated)
   const serverCores = useQuery(api.cores.list, isAuthenticated ? {} : "skip");
   const syncFromLocalMutation = useMutation(api.cores.syncFromLocal);
   const toggleActiveMutation = useMutation(api.cores.toggleActive);
@@ -62,20 +62,20 @@ export function useCores() {
   const removeCoreMutation = useMutation(api.cores.remove);
   const reorderCoresMutation = useMutation(api.cores.reorder);
 
-  // Local cores state (initialized synchronously to prevent flash)
+  // local cores state (initialized synchronously to prevent flash)
   const [localCores, setLocalCoresState] = useState<LocalCore[]>(() =>
     getLocalCores()
   );
 
-  // Track if we've synced local cores on sign-up
+  // track if we've synced local cores on sign-up
   const hasSyncedRef = useRef(false);
 
-  // Sync local cores to server when user signs up (has no server cores)
+  // sync local cores to server when user signs up (has no server cores)
   useEffect(() => {
     if (!isAuthenticated || authLoading || hasSyncedRef.current) return;
-    if (serverCores === undefined) return; // Still loading
+    if (serverCores === undefined) return; // still loading
 
-    // User is authenticated and has no server cores - sync local ones
+    // user is authenticated and has no server cores - sync local ones
     if (serverCores.length === 0) {
       hasSyncedRef.current = true;
       const coresToSync = localCores.map((c) => ({
@@ -85,11 +85,11 @@ export function useCores() {
         order: c.order,
       }));
       syncFromLocalMutation({ cores: coresToSync }).then(() => {
-        // Clear local storage after successful sync
+        // clear local storage after successful sync
         clearLocalCores();
       });
     } else {
-      // User has existing server cores (login case) - clear local
+      // user has existing server cores (login case) - clear local
       hasSyncedRef.current = true;
       clearLocalCores();
       setLocalCoresState(getLocalCores());
@@ -102,17 +102,17 @@ export function useCores() {
     syncFromLocalMutation,
   ]);
 
-  // Reset sync flag when user logs out
+  // reset sync flag when user logs out
   useEffect(() => {
     if (!isAuthenticated && !authLoading) {
       hasSyncedRef.current = false;
-      // Reinitialize local cores from storage
+      // reinitialize local cores from storage
       setLocalCoresState(getLocalCores());
     }
   }, [isAuthenticated, authLoading]);
 
-  // Compute the current cores list
-  // Always show local cores as fallback to prevent flash while loading
+  // compute the current cores list
+  // always show local cores as fallback to prevent flash while loading
   const localCoresMapped = localCores.map(localCoreToCore);
   const hasServerCores =
     isAuthenticated && serverCores && serverCores.length > 0;
@@ -120,27 +120,27 @@ export function useCores() {
     ? serverCores.map(serverCoreToCore)
     : localCoresMapped;
 
-  // Compute active cores count
+  // compute active cores count
   const realActiveCoresCount = cores.filter((c) => c.isActive).length;
 
-  // Get initial count from context (read from cookie on server to prevent hydration mismatch)
+  // get initial count from context (read from cookie on server to prevent hydration mismatch)
   const initialActiveCoresCount = useInitialActiveCoresCount();
 
-  // Use initial count while loading, then real count once data is loaded
+  // use initial count while loading, then real count once data is loaded
   const isDataLoaded =
     !authLoading && (!isAuthenticated || serverCores !== undefined);
   const activeCoresCount = isDataLoaded
     ? realActiveCoresCount
     : initialActiveCoresCount;
 
-  // Update cookie cache when real count changes
+  // update cookie cache when real count changes
   useEffect(() => {
     if (isDataLoaded) {
       setCachedActiveCoresCount(realActiveCoresCount);
     }
   }, [isDataLoaded, realActiveCoresCount]);
 
-  // Get active system prompt
+  // get active system prompt
   const getActivePrompt = useCallback((): string => {
     if (isAuthenticated) {
       if (!serverCores) return "";
@@ -156,7 +156,7 @@ export function useCores() {
     }
   }, [isAuthenticated, serverCores]);
 
-  // Get active core names
+  // get active core names
   const getActiveCoreNames = useCallback((): string[] => {
     if (isAuthenticated) {
       if (!serverCores) return [];
@@ -172,7 +172,7 @@ export function useCores() {
     }
   }, [isAuthenticated, serverCores]);
 
-  // Toggle core active state
+  // toggle core active state
   const toggleActive = useCallback(
     async (coreId: string): Promise<boolean> => {
       if (isAuthenticated) {
@@ -194,7 +194,7 @@ export function useCores() {
     [isAuthenticated, toggleActiveMutation]
   );
 
-  // Create a new core
+  // create a new core
   const createCore = useCallback(
     async (name: string, content: string): Promise<boolean> => {
       if (isAuthenticated) {
@@ -213,7 +213,7 @@ export function useCores() {
     [isAuthenticated, createCoreMutation]
   );
 
-  // Update a core
+  // update a core
   const updateCore = useCallback(
     async (
       coreId: string,
@@ -235,7 +235,7 @@ export function useCores() {
     [isAuthenticated, updateCoreMutation]
   );
 
-  // Remove a core
+  // remove a core
   const removeCore = useCallback(
     async (coreId: string): Promise<boolean> => {
       if (isAuthenticated) {
@@ -257,7 +257,7 @@ export function useCores() {
     [isAuthenticated, removeCoreMutation]
   );
 
-  // Reorder cores
+  // reorder cores
   const reorderCores = useCallback(
     async (orderedIds: string[]): Promise<boolean> => {
       if (isAuthenticated) {
@@ -278,11 +278,11 @@ export function useCores() {
     [isAuthenticated, reorderCoresMutation]
   );
 
-  // Set specific cores as active by their IDs (used for regenerate with specific cores)
+  // set specific cores as active by their iDs (used for regenerate with specific cores)
   const setActiveCoresByIds = useCallback(
     async (activeIds: Set<string>): Promise<void> => {
       if (isAuthenticated && serverCores) {
-        // Server cores use _id
+        // server cores use _id
         for (const core of serverCores) {
           const shouldBeActive = activeIds.has(core._id);
           if (shouldBeActive !== core.isActive) {
@@ -290,7 +290,7 @@ export function useCores() {
           }
         }
       } else {
-        // Local cores use id
+        // local cores use id
         for (const core of localCores) {
           const shouldBeActive = activeIds.has(core.id);
           if (shouldBeActive !== core.isActive) {

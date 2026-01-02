@@ -1,6 +1,6 @@
 /**
  * 3-color theme system
- * All other colors are derived from these three base colors
+ * all other colors are derived from these three base colors
  */
 
 export interface OurinTheme {
@@ -11,9 +11,9 @@ export interface OurinTheme {
   version?: string;
   type: "light" | "dark";
   colors: {
-    background: string; // Base background color
-    text: string; // Base text color
-    accent: string; // Primary accent color (buttons, links, focus)
+    background: string; // base background color
+    text: string; // base text color
+    accent: string; // primary accent color (buttons, links, focus)
   };
 }
 

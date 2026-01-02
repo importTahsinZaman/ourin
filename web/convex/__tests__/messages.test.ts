@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-// Set up environment
+// set up environment
 process.env.COST_MARKUP = "1.0";
 process.env.SUBSCRIPTION_CREDITS = "10000";
 process.env.CREDIT_PACK_AMOUNT = "20000";
@@ -8,8 +8,8 @@ process.env.CREDIT_PACK_AMOUNT = "20000";
 import { calculateCredits, getSubscriptionCredits } from "../pricing";
 
 /**
- * These tests verify the message and token tracking logic without requiring a full Convex runtime.
- * They test the business rules and calculations used by the messages mutations.
+ * these tests verify the message and token tracking logic without requiring a full convex runtime.
+ * they test the business rules and calculations used by the messages mutations.
  */
 
 describe("Message Token Tracking Logic", () => {
@@ -20,7 +20,7 @@ describe("Message Token Tracking Logic", () => {
         outputTokens: undefined as number | undefined,
       };
 
-      // Simulate patch
+      // simulate patch
       const updated = {
         ...message,
         inputTokens: 1000,
@@ -38,7 +38,7 @@ describe("Message Token Tracking Logic", () => {
         usedOwnKey: undefined as boolean | undefined,
       };
 
-      // When user's own key is used
+      // when user's own key is used
       const updatedWithKey = {
         ...message,
         usedOwnKey: true,
@@ -52,7 +52,7 @@ describe("Message Token Tracking Logic", () => {
     it("skips credit deduction when usedOwnKey=true", () => {
       const usedOwnKey = true;
 
-      // The updateTokens mutation returns early if usedOwnKey
+      // the updateTokens mutation returns early if usedOwnKey
       const shouldDeduct = !usedOwnKey;
       expect(shouldDeduct).toBe(false);
     });
@@ -102,9 +102,9 @@ describe("Message Token Tracking Logic", () => {
         );
       }
 
-      // Claude Sonnet: (10000*3000 + 5000*15000) / 1M = 105 credits
-      // Claude Sonnet: (20000*3000 + 10000*15000) / 1M = 210 credits
-      // GPT-5.1: (15000*1250 + 8000*10000) / 1M = 99 credits
+      // claude sonnet: (10000*3000 + 5000*15000) / 1m = 105 credits
+      // claude sonnet: (20000*3000 + 10000*15000) / 1m = 210 credits
+      // gPT-5.1: (15000*1250 + 8000*10000) / 1m = 99 credits
       expect(totalUsed).toBe(105 + 210 + 99);
     });
 
@@ -130,7 +130,7 @@ describe("Message Token Tracking Logic", () => {
         },
       ];
 
-      // Filter like the query does
+      // filter like the query does
       const filteredMessages = allMessages.filter((msg) => !msg.wasForked);
 
       let totalUsed = 0;
@@ -142,7 +142,7 @@ describe("Message Token Tracking Logic", () => {
         );
       }
 
-      // Only non-forked messages counted
+      // only non-forked messages counted
       expect(filteredMessages.length).toBe(2);
       expect(totalUsed).toBe(105 + 210);
     });
@@ -187,9 +187,9 @@ describe("Message Token Tracking Logic", () => {
     it("filters by billing period (createdAt >= periodStart)", () => {
       const periodStart = 1000000;
       const allMessages = [
-        { createdAt: 500000, inputTokens: 100000, outputTokens: 50000 }, // Before period
-        { createdAt: 1000001, inputTokens: 10000, outputTokens: 5000 }, // In period
-        { createdAt: 2000000, inputTokens: 20000, outputTokens: 10000 }, // In period
+        { createdAt: 500000, inputTokens: 100000, outputTokens: 50000 }, // before period
+        { createdAt: 1000001, inputTokens: 10000, outputTokens: 5000 }, // in period
+        { createdAt: 2000000, inputTokens: 20000, outputTokens: 10000 }, // in period
       ];
 
       const periodMessages = allMessages.filter(
@@ -206,7 +206,7 @@ describe("Message Token Tracking Logic", () => {
 
       const subscriptionBalance = subscriptionCredits - totalUsed; // -5000
 
-      // Overage is negative balance (how much we need to deduct from purchased)
+      // overage is negative balance (how much we need to deduct from purchased)
       const overage = Math.abs(Math.min(0, subscriptionBalance));
       expect(overage).toBe(5000);
     });
@@ -223,16 +223,16 @@ describe("Message Token Tracking Logic", () => {
 
     it("calculates amount to deduct from purchases", () => {
       const messageCost = 500;
-      const subscriptionBalance = -300; // Already overspent by 300
+      const subscriptionBalance = -300; // already overspent by 300
 
-      // Deduct the minimum of message cost and absolute overage
+      // deduct the minimum of message cost and absolute overage
       const toDeduct = Math.min(messageCost, Math.abs(subscriptionBalance));
       expect(toDeduct).toBe(300);
     });
 
     it("deducts full message cost when overage exceeds cost", () => {
       const messageCost = 500;
-      const subscriptionBalance = -1000; // Already overspent by 1000
+      const subscriptionBalance = -1000; // already overspent by 1000
 
       const toDeduct = Math.min(messageCost, Math.abs(subscriptionBalance));
       expect(toDeduct).toBe(500);
@@ -432,7 +432,7 @@ describe("Streaming Message Logic", () => {
         { type: "reasoning" as const, text: "thinking...", id: "r1" },
       ];
 
-      // Simulate patch
+      // simulate patch
       const updated = { parts: newParts };
       expect(updated.parts.length).toBe(2);
       expect(updated.parts[0].text).toBe("Hello ");
@@ -513,7 +513,7 @@ describe("addSourcesToLastAssistant Logic", () => {
   it("skips discarded messages", () => {
     const messages = [
       { role: "assistant", discardedAt: undefined },
-      { role: "assistant", discardedAt: Date.now() }, // Discarded
+      { role: "assistant", discardedAt: Date.now() }, // discarded
     ];
 
     const lastAssistant = [...messages]

@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-// Set up environment
+// set up environment
 process.env.CHAT_AUTH_SECRET = "test-secret";
 
 /**
- * Tests for useOurinChat hook logic.
- * These tests verify SSE parsing, state management, and streaming behavior
- * without requiring React rendering or actual network calls.
+ * tests for useOurinChat hook logic.
+ * these tests verify sSE parsing, state management, and streaming behavior
+ * without requiring react rendering or actual network calls.
  */
 
 describe("useOurinChat Streaming Logic", () => {
@@ -118,20 +118,20 @@ describe("useOurinChat Streaming Logic", () => {
     it("maintains chronological order of parts", () => {
       const accumulator = createPartAccumulator();
 
-      // First reasoning
+      // first reasoning
       accumulator.startReasoning("0");
       accumulator.addReasoningDelta("0", "Thinking first...");
       accumulator.endReasoning("0", 3);
 
-      // Then text
+      // then text
       accumulator.addTextDelta("Here's the answer: ");
 
-      // More reasoning
+      // more reasoning
       accumulator.startReasoning("1");
       accumulator.addReasoningDelta("1", "Reconsidering...");
       accumulator.endReasoning("1", 2);
 
-      // Final text
+      // final text
       accumulator.addTextDelta("42");
 
       const parts = accumulator.getParts();
@@ -199,7 +199,7 @@ describe("useOurinChat Streaming Logic", () => {
       accumulator.startReasoning("0");
       accumulator.addReasoningDelta("0", "thinking...");
 
-      // Advance 5 seconds
+      // advance 5 seconds
       vi.setSystemTime(now + 5000);
 
       const duration = accumulator.endReasoning("0");
@@ -210,7 +210,7 @@ describe("useOurinChat Streaming Logic", () => {
     it("returns 0 duration when start time not tracked", () => {
       const accumulator = createPartAccumulator();
 
-      // Add reasoning without proper start
+      // add reasoning without proper start
       accumulator.addReasoningDelta("0", "thinking...");
       const duration = accumulator.endReasoning("0");
 
@@ -291,9 +291,9 @@ describe("useOurinChat Streaming Logic", () => {
       accumulator.addTextDelta("Hello ");
       accumulator.startReasoning("0");
       accumulator.addReasoningDelta("0", "partial thinking...");
-      // Abort happens here - no endReasoning
+      // abort happens here - no endReasoning
 
-      // Finalize partial content
+      // finalize partial content
       accumulator.finalizeAll();
 
       const parts = accumulator.getParts();
@@ -304,7 +304,7 @@ describe("useOurinChat Streaming Logic", () => {
     });
 
     it("continues accumulating after abort finalization", () => {
-      // Verify that finalizeAll creates a clean state for the returned parts
+      // verify that finalizeAll creates a clean state for the returned parts
       const accumulator = createPartAccumulator();
 
       accumulator.addTextDelta("Before abort");
@@ -354,13 +354,13 @@ describe("useOurinChat Streaming Logic", () => {
       const titleGenerated = new Set<string>();
       const convId = "conv_123";
 
-      // First time - should generate
+      // first time - should generate
       const shouldGenerate1 = !titleGenerated.has(convId);
       expect(shouldGenerate1).toBe(true);
 
       titleGenerated.add(convId);
 
-      // Second time - should skip
+      // second time - should skip
       const shouldGenerate2 = !titleGenerated.has(convId);
       expect(shouldGenerate2).toBe(false);
     });
@@ -391,10 +391,10 @@ describe("useOurinChat Streaming Logic", () => {
     });
 
     it("uses consistent ID for streaming message", () => {
-      // The assistant message ID is generated once and used for both UI and DB
+      // the assistant message iD is generated once and used for both uI and dB
       const assistantMessageId = crypto.randomUUID();
 
-      // Verify it's a valid UUID format
+      // verify it's a valid uUID format
       expect(assistantMessageId).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
       );
@@ -487,10 +487,10 @@ describe("useOurinChat Streaming Logic", () => {
       persistIfChanged(parts1);
       expect(persistCount).toBe(1);
 
-      persistIfChanged(parts2); // Same content
+      persistIfChanged(parts2); // same content
       expect(persistCount).toBe(1);
 
-      persistIfChanged(parts3); // Different content
+      persistIfChanged(parts3); // different content
       expect(persistCount).toBe(2);
     });
 
@@ -724,7 +724,7 @@ describe("useOurinChat Streaming Logic", () => {
           streamingConversationId
         );
 
-        // Different conversations, should return ready
+        // different conversations, should return ready
         expect(effectiveStatus).toBe("ready");
       });
     });
@@ -781,23 +781,23 @@ describe("useOurinChat Streaming Logic", () => {
 
     describe("Conversation Switch Scenarios", () => {
       it("scenario: user sends in A, switches to B, A continues streaming", () => {
-        // Simulate the state at various points
+        // simulate the state at various points
         const stateManager = createMultiConversationStateManager();
 
-        // 1. User sends message in Conv A
+        // 1. user sends message in conv a
         stateManager.startSending("conv-A");
         expect(stateManager.getEffectiveStatus("conv-A")).toBe("submitted");
         expect(stateManager.getEffectiveStatus("conv-B")).toBe("ready");
 
-        // 2. Streaming starts for Conv A
+        // 2. streaming starts for conv a
         stateManager.startStreaming("conv-A");
         expect(stateManager.getEffectiveStatus("conv-A")).toBe("streaming");
         expect(stateManager.getEffectiveStatus("conv-B")).toBe("ready");
 
-        // 3. User switches to Conv B - Conv B should show ready
+        // 3. user switches to conv b - conv b should show ready
         expect(stateManager.getEffectiveStatus("conv-B")).toBe("ready");
 
-        // 4. Streaming completes for Conv A
+        // 4. streaming completes for conv a
         stateManager.completeStreaming("conv-A");
         expect(stateManager.getEffectiveStatus("conv-A")).toBe("ready");
         expect(stateManager.getEffectiveStatus("conv-B")).toBe("ready");
@@ -806,29 +806,29 @@ describe("useOurinChat Streaming Logic", () => {
       it("scenario: user can send in B while A is streaming in background", () => {
         const stateManager = createMultiConversationStateManager();
 
-        // 1. Start streaming in Conv A
+        // 1. start streaming in conv a
         stateManager.startSending("conv-A");
         stateManager.startStreaming("conv-A");
         expect(stateManager.getEffectiveStatus("conv-A")).toBe("streaming");
 
-        // 2. User switches to Conv B - shows ready because A is streaming
+        // 2. user switches to conv b - shows ready because a is streaming
         expect(stateManager.getEffectiveStatus("conv-B")).toBe("ready");
 
-        // 3. User starts sending in Conv B
-        // Note: This replaces the tracked streaming conversation
-        // (A's fetch continues in background but is no longer tracked)
+        // 3. user starts sending in conv b
+        // note: this replaces the tracked streaming conversation
+        // (a's fetch continues in background but is no longer tracked)
         stateManager.startSending("conv-B");
         expect(stateManager.getEffectiveStatus("conv-B")).toBe("submitted");
 
-        // Conv A now shows "ready" because B is the tracked streaming conversation
-        // (A's background fetch continues but isn't reflected in UI state)
+        // conv a now shows "ready" because b is the tracked streaming conversation
+        // (a's background fetch continues but isn't reflected in uI state)
         expect(stateManager.getEffectiveStatus("conv-A")).toBe("ready");
       });
     });
   });
 });
 
-// Helper function to parse SSE lines
+// helper function to parse sSE lines
 function parseSSELine(line: string): any | null {
   if (!line.trim()) return null;
 
@@ -847,7 +847,7 @@ function parseSSELine(line: string): any | null {
   }
 }
 
-// Helper class to accumulate message parts
+// helper class to accumulate message parts
 function createPartAccumulator() {
   const orderedParts: any[] = [];
   const toolInvocations = new Map<string, any>();
@@ -859,7 +859,7 @@ function createPartAccumulator() {
 
   return {
     addTextDelta(delta: string) {
-      // Finalize reasoning if active
+      // finalize reasoning if active
       if (currentReasoningId) {
         this.endReasoning(currentReasoningId);
       }
@@ -873,7 +873,7 @@ function createPartAccumulator() {
     },
 
     startReasoning(id: string) {
-      // Finalize text if active
+      // finalize text if active
       currentTextPartIndex = null;
 
       currentReasoningId = id;
@@ -914,7 +914,7 @@ function createPartAccumulator() {
     },
 
     addToolCall(toolCallId: string, toolName: string, args: any) {
-      // Finalize text and reasoning
+      // finalize text and reasoning
       currentTextPartIndex = null;
       if (currentReasoningId) {
         this.endReasoning(currentReasoningId);
@@ -940,7 +940,7 @@ function createPartAccumulator() {
     },
 
     finalizeAll() {
-      // Finalize any pending reasoning without adding duration
+      // finalize any pending reasoning without adding duration
       if (currentReasoningText) {
         orderedParts.push({
           type: "reasoning",
@@ -967,7 +967,7 @@ function createPartAccumulator() {
   };
 }
 
-// Helper class to manage status transitions
+// helper class to manage status transitions
 function createStatusManager(onStatusChange: (status: string) => void) {
   let status = "ready";
   let error: Error | null = null;
@@ -1005,7 +1005,7 @@ function createStatusManager(onStatusChange: (status: string) => void) {
   };
 }
 
-// Helper function to compute effective status (mirrors useOurinChat logic)
+// helper function to compute effective status (mirrors useOurinChat logic)
 function computeEffectiveStatus(
   status: string,
   currentConversationId: string | null,
@@ -1021,7 +1021,7 @@ function computeEffectiveStatus(
   return status;
 }
 
-// Helper function to check if UI state should be updated (mirrors guard logic)
+// helper function to check if uI state should be updated (mirrors guard logic)
 function shouldUpdateUIState(
   conversationIdRef: { current: string | null },
   targetConvId: string | null
@@ -1029,7 +1029,7 @@ function shouldUpdateUIState(
   return conversationIdRef.current === targetConvId;
 }
 
-// Helper class to manage multi-conversation streaming state
+// helper class to manage multi-conversation streaming state
 function createMultiConversationStateManager() {
   let status = "ready";
   let streamingConversationId: string | null = null;

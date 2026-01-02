@@ -4,13 +4,13 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { calculateCredits } from "./pricing";
 import type { Id } from "./_generated/dataModel";
 
-// NOTE: CREDIT_PACK_AMOUNT and CREDIT_PACK_PRICE_CENTS are now in Convex env vars.
-// Use getCreditPackAmount() and getCreditPackPriceCents() from ./pricing
+// nOTE: cREDIT_pACK_aMOUNT and cREDIT_pACK_pRICE_cENTS are now in convex env vars.
+// use getCreditPackAmount() and getCreditPackPriceCents() from ./pricing
 
 /**
- * Record a new credit pack purchase.
- * Called by webhook after successful Stripe payment.
- * Idempotent - checks for existing purchase by payment intent ID.
+ * record a new credit pack purchase.
+ * called by webhook after successful stripe payment.
+ * idempotent - checks for existing purchase by payment intent iD.
  */
 export const recordPurchase = mutation({
   args: {
@@ -21,7 +21,7 @@ export const recordPurchase = mutation({
     centsPaid: v.number(),
   },
   handler: async (ctx, args) => {
-    // Idempotency check - don't create duplicate records
+    // idempotency check - don't create duplicate records
     const existing = await ctx.db
       .query("creditPurchases")
       .withIndex("by_payment_intent", (q) =>
@@ -37,8 +37,8 @@ export const recordPurchase = mutation({
       return existing._id;
     }
 
-    // Create new purchase record
-    // Cast string userId to Id<"users"> for database insertion
+    // create new purchase record
+    // cast string userId to id<"users"> for database insertion
     const purchaseId = await ctx.db.insert("creditPurchases", {
       userId: args.userId as Id<"users">,
       stripePaymentIntentId: args.stripePaymentIntentId,
@@ -58,7 +58,7 @@ export const recordPurchase = mutation({
 });
 
 /**
- * Get total purchased credits balance for the authenticated user.
+ * get total purchased credits balance for the authenticated user.
  */
 export const getPurchasedBalance = query({
   args: {},
@@ -93,14 +93,14 @@ export const getPurchasedBalance = query({
 });
 
 /**
- * Get purchased credits balance by user ID (for server-side use).
+ * get purchased credits balance by user iD (for server-side use).
  */
 export const getPurchasedBalanceByUserId = query({
   args: {
     userId: v.string(),
   },
   handler: async (ctx, { userId }) => {
-    // Cast string userId to Id<"users"> for database queries
+    // cast string userId to id<"users"> for database queries
     const activePurchases = await ctx.db
       .query("creditPurchases")
       .withIndex("by_user_status", (q) =>
@@ -113,9 +113,9 @@ export const getPurchasedBalanceByUserId = query({
 });
 
 /**
- * Deduct credits from purchased packs (FIFO order - oldest first).
- * Called when subscription credits are depleted and purchased credits are used.
- * Calculates the cost internally using the shared pricing module.
+ * deduct credits from purchased packs (fIFO order - oldest first).
+ * called when subscription credits are depleted and purchased credits are used.
+ * calculates the cost internally using the shared pricing module.
  */
 export const deductPurchasedCredits = mutation({
   args: {
@@ -125,15 +125,15 @@ export const deductPurchasedCredits = mutation({
     outputTokens: v.number(),
   },
   handler: async (ctx, { userId, model, inputTokens, outputTokens }) => {
-    // Calculate cost using shared pricing (with markup)
+    // calculate cost using shared pricing (with markup)
     const amount = calculateCredits(model, inputTokens, outputTokens);
 
     if (amount <= 0) {
       return { deducted: 0, remaining: 0, cost: 0 };
     }
 
-    // Get active purchases
-    // Cast string userId to Id<"users"> for database queries
+    // get active purchases
+    // cast string userId to id<"users"> for database queries
     const activePurchases = await ctx.db
       .query("creditPurchases")
       .withIndex("by_user_status", (q) =>
@@ -141,7 +141,7 @@ export const deductPurchasedCredits = mutation({
       )
       .collect();
 
-    // Sort by purchasedAt (oldest first - FIFO)
+    // sort by purchasedAt (oldest first - fIFO)
     activePurchases.sort((a, b) => a.purchasedAt - b.purchasedAt);
 
     let remainingToDeduct = amount;
@@ -177,7 +177,7 @@ export const deductPurchasedCredits = mutation({
 });
 
 /**
- * Get purchase history for the authenticated user.
+ * get purchase history for the authenticated user.
  */
 export const getPurchaseHistory = query({
   args: {},

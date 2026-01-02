@@ -1,6 +1,6 @@
 /**
- * Font CSS variable mapping for the application.
- * Maps font IDs to their CSS variable or fallback stack.
+ * font cSS variable mapping for the application.
+ * maps font iDs to their cSS variable or fallback stack.
  */
 export const FONT_CSS_MAP: Record<string, string> = {
   inter: "var(--font-inter)",
@@ -17,8 +17,8 @@ export const FONT_CSS_MAP: Record<string, string> = {
 };
 
 /**
- * Get the CSS font-family value for a given font ID.
- * Falls back to Lato if the font ID is not found.
+ * get the cSS font-family value for a given font iD.
+ * falls back to lato if the font iD is not found.
  */
 export function getFontFamily(fontId: string): string {
   return FONT_CSS_MAP[fontId] || FONT_CSS_MAP.lato;

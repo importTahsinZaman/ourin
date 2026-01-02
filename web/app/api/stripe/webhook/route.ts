@@ -7,26 +7,26 @@ import { trackServerEvent } from "@/lib/posthog-server";
 import Stripe from "stripe";
 
 /**
- * Get the current period start/end from subscription.
- * Stripe API structures vary by version - try multiple locations.
+ * get the current period start/end from subscription.
+ * stripe aPI structures vary by version - try multiple locations.
  */
 function getSubscriptionPeriod(subscription: Stripe.Subscription): {
   start: number;
   end: number;
 } {
-  // Try subscription-level period (older API versions)
-  // @ts-expect-error - may exist on older API versions
+  // try subscription-level period (older aPI versions)
+  // @ts-expect-error - may exist on older aPI versions
   if (subscription.current_period_start && subscription.current_period_end) {
-    // @ts-expect-error - may exist on older API versions
+    // @ts-expect-error - may exist on older aPI versions
     const start = subscription.current_period_start * 1000;
-    // @ts-expect-error - may exist on older API versions
+    // @ts-expect-error - may exist on older aPI versions
     const end = subscription.current_period_end * 1000;
     if (!isNaN(start) && !isNaN(end)) {
       return { start, end };
     }
   }
 
-  // Try item-level period (newer API versions like 2025-11-17)
+  // try item-level period (newer aPI versions like 2025-11-17)
   const firstItem = subscription.items?.data?.[0];
   if (firstItem?.current_period_start && firstItem?.current_period_end) {
     const start = firstItem.current_period_start * 1000;
@@ -36,7 +36,7 @@ function getSubscriptionPeriod(subscription: Stripe.Subscription): {
     }
   }
 
-  // Fallback to billing cycle anchor
+  // fallback to billing cycle anchor
   if (subscription.billing_cycle_anchor) {
     const start = subscription.billing_cycle_anchor * 1000;
     const end = (subscription.billing_cycle_anchor + 30 * 24 * 60 * 60) * 1000;
@@ -45,7 +45,7 @@ function getSubscriptionPeriod(subscription: Stripe.Subscription): {
     }
   }
 
-  // Final fallback: use current time
+  // final fallback: use current time
   const now = Date.now();
   console.warn(
     "getSubscriptionPeriod: No valid period data found, using current time"
@@ -57,11 +57,11 @@ function getSubscriptionPeriod(subscription: Stripe.Subscription): {
 }
 
 /**
- * Handle Stripe webhook events.
- * This endpoint receives events from Stripe and updates the database accordingly.
+ * handle stripe webhook events.
+ * this endpoint receives events from stripe and updates the database accordingly.
  */
 export async function POST(req: Request) {
-  // Stripe is disabled in self-hosting mode
+  // stripe is disabled in self-hosting mode
   if (IS_SELF_HOSTING) {
     return NextResponse.json(
       { error: "Billing features are disabled in self-hosting mode" },
@@ -102,17 +102,17 @@ export async function POST(req: Request) {
           break;
         }
 
-        // Handle credit pack purchase (one-time payment)
+        // handle credit pack purchase (one-time payment)
         if (session.mode === "payment" && purchaseType === "credit_pack") {
           const paymentIntentId = session.payment_intent as string;
 
-          // Get credit pack config - amount from Convex, price from Stripe (source of truth)
+          // get credit pack config - amount from convex, price from stripe (source of truth)
           const [config, price] = await Promise.all([
             convex.query(api.config.getBillingConfig, {}),
             stripe.prices.retrieve(CREDIT_PACK_PRICE_ID),
           ]);
 
-          // Record the credit pack purchase
+          // record the credit pack purchase
           await convex.mutation(api.creditPurchases.recordPurchase, {
             userId,
             stripePaymentIntentId: paymentIntentId,
@@ -134,12 +134,12 @@ export async function POST(req: Request) {
           break;
         }
 
-        // Handle subscription checkout
+        // handle subscription checkout
         if (session.mode === "subscription") {
           const customerId = session.customer as string;
           const subscriptionId = session.subscription as string;
 
-          // Get subscription details
+          // get subscription details
           const subscription = await stripe.subscriptions.retrieve(
             subscriptionId,
             {
@@ -149,7 +149,7 @@ export async function POST(req: Request) {
 
           const period = getSubscriptionPeriod(subscription);
 
-          // Create subscription record in Convex
+          // create subscription record in convex
           await convex.mutation(api.subscriptions.createSubscription, {
             userId,
             stripeCustomerId: customerId,
@@ -171,7 +171,7 @@ export async function POST(req: Request) {
 
       case "invoice.paid": {
         const invoice = event.data.object as Stripe.Invoice;
-        // In API 2025-11-17, subscription is under parent.subscription_details
+        // in aPI 2025-11-17, subscription is under parent.subscription_details
         const subscriptionRef =
           invoice.parent?.subscription_details?.subscription;
         const subscriptionId =
@@ -181,13 +181,13 @@ export async function POST(req: Request) {
 
         if (!subscriptionId) break;
 
-        // Get subscription to update period
+        // get subscription to update period
         const subscription =
           await stripe.subscriptions.retrieve(subscriptionId);
         const period = getSubscriptionPeriod(subscription);
 
-        // Update subscription period - this automatically resets the calculated balance
-        // since balance = SUBSCRIPTION_CREDITS - sum(messages where createdAt >= periodStart)
+        // update subscription period - this automatically resets the calculated balance
+        // since balance = sUBSCRIPTION_cREDITS - sum(messages where createdAt >= periodStart)
         await convex.mutation(api.subscriptions.updateSubscription, {
           stripeSubscriptionId: subscriptionId,
           status: subscription.status,
@@ -205,7 +205,7 @@ export async function POST(req: Request) {
         const subscriptionId = subscription.id;
         const period = getSubscriptionPeriod(subscription);
 
-        // Update subscription status
+        // update subscription status
         await convex.mutation(api.subscriptions.updateSubscription, {
           stripeSubscriptionId: subscriptionId,
           status: subscription.status,
@@ -225,7 +225,7 @@ export async function POST(req: Request) {
         const subscriptionId = subscription.id;
         const period = getSubscriptionPeriod(subscription);
 
-        // Mark subscription as canceled
+        // mark subscription as canceled
         await convex.mutation(api.subscriptions.updateSubscription, {
           stripeSubscriptionId: subscriptionId,
           status: "canceled",
@@ -236,7 +236,7 @@ export async function POST(req: Request) {
 
         console.log(`Subscription ${subscriptionId} canceled`);
 
-        // Try to get userId from subscription metadata
+        // try to get userId from subscription metadata
         const canceledUserId = subscription.metadata?.userId;
         if (canceledUserId) {
           await trackServerEvent(canceledUserId, "subscription_event", {

@@ -1,12 +1,12 @@
 import { describe, it, expect } from "vitest";
 
 /**
- * Credit purchases business logic tests.
- * Tests FIFO deduction, balance calculations, and status transitions
- * without requiring the Convex runtime.
+ * credit purchases business logic tests.
+ * tests fIFO deduction, balance calculations, and status transitions
+ * without requiring the convex runtime.
  */
 
-// Simulate purchase record
+// simulate purchase record
 interface Purchase {
   id: string;
   creditsAmount: number;
@@ -15,19 +15,19 @@ interface Purchase {
   status: "active" | "depleted";
 }
 
-// Business logic: calculate balance from active purchases
+// business logic: calculate balance from active purchases
 function calculateBalance(purchases: Purchase[]): number {
   return purchases
     .filter((p) => p.status === "active")
     .reduce((sum, p) => sum + p.creditsRemaining, 0);
 }
 
-// Business logic: FIFO deduction (oldest first)
+// business logic: fIFO deduction (oldest first)
 function deductCredits(
   purchases: Purchase[],
   amount: number
 ): { purchases: Purchase[]; deducted: number; remaining: number } {
-  // Sort by purchasedAt (oldest first - FIFO)
+  // sort by purchasedAt (oldest first - fIFO)
   const sorted = [...purchases]
     .filter((p) => p.status === "active")
     .sort((a, b) => a.purchasedAt - b.purchasedAt);
@@ -56,7 +56,7 @@ function deductCredits(
     remainingToDeduct -= deductFromThis;
   }
 
-  // Include depleted purchases unchanged
+  // include depleted purchases unchanged
   const depletedPurchases = purchases.filter((p) => p.status === "depleted");
 
   return {
@@ -66,7 +66,7 @@ function deductCredits(
   };
 }
 
-// Business logic: check if purchase already exists (idempotency)
+// business logic: check if purchase already exists (idempotency)
 function purchaseExists(
   purchases: { stripePaymentIntentId: string }[],
   paymentIntentId: string
@@ -179,7 +179,7 @@ describe("creditPurchases", () => {
 
       const result = deductCredits(purchases, 5000);
 
-      // Old purchase should be deducted first
+      // old purchase should be deducted first
       const oldPurchase = result.purchases.find((p) => p.id === "old");
       const newPurchase = result.purchases.find((p) => p.id === "new");
 
@@ -214,7 +214,7 @@ describe("creditPurchases", () => {
         },
       ];
 
-      // Deduct 8000 - should deplete oldest (5000) and take 3000 from middle
+      // deduct 8000 - should deplete oldest (5000) and take 3000 from middle
       const result = deductCredits(purchases, 8000);
 
       const oldest = result.purchases.find((p) => p.id === "oldest");
@@ -324,7 +324,7 @@ describe("creditPurchases", () => {
         },
       ];
 
-      // Deduct 12000 - should deplete first two (10000) and take 2000 from third
+      // deduct 12000 - should deplete first two (10000) and take 2000 from third
       const result = deductCredits(purchases, 12000);
 
       const p1 = result.purchases.find((p) => p.id === "1");
@@ -362,7 +362,7 @@ describe("creditPurchases", () => {
 
   describe("purchase scenarios", () => {
     it("tracks usage across multiple purchases correctly", () => {
-      // User buys 3 credit packs over time
+      // user buys 3 credit packs over time
       let purchases: Purchase[] = [
         {
           id: "pack1",
@@ -373,12 +373,12 @@ describe("creditPurchases", () => {
         },
       ];
 
-      // Use some credits
+      // use some credits
       let result = deductCredits(purchases, 3000);
       purchases = result.purchases;
       expect(calculateBalance(purchases)).toBe(7000);
 
-      // Buy another pack
+      // buy another pack
       purchases.push({
         id: "pack2",
         creditsAmount: 10000,
@@ -388,15 +388,15 @@ describe("creditPurchases", () => {
       });
       expect(calculateBalance(purchases)).toBe(17000);
 
-      // Use more credits - should still deduct from pack1 first (FIFO)
+      // use more credits - should still deduct from pack1 first (fIFO)
       result = deductCredits(purchases, 8000);
       purchases = result.purchases;
 
       const pack1 = purchases.find((p) => p.id === "pack1");
       const pack2 = purchases.find((p) => p.id === "pack2");
 
-      // Pack1 had 7000, should be depleted (7000 used)
-      // Pack2 should have 10000 - 1000 = 9000
+      // pack1 had 7000, should be depleted (7000 used)
+      // pack2 should have 10000 - 1000 = 9000
       expect(pack1?.status).toBe("depleted");
       expect(pack2?.creditsRemaining).toBe(9000);
       expect(calculateBalance(purchases)).toBe(9000);
@@ -450,7 +450,7 @@ describe("creditPurchases", () => {
         },
       ];
 
-      // Series of deductions
+      // series of deductions
       for (let i = 0; i < 10; i++) {
         const result = deductCredits(purchases, 1000);
         purchases = result.purchases;

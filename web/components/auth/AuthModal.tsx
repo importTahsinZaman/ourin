@@ -45,28 +45,28 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
     const result = await signIn("password", formData);
 
-    // Handle result based on flow
+    // handle result based on flow
     if (result && typeof result === "object" && "signingIn" in result) {
       if (flow === "signUp") {
-        // For signup with email verification, signingIn: false means OTP was sent
-        // Show verification step regardless of signingIn value
+        // for signup with email verification, signingIn: false means oTP was sent
+        // show verification step regardless of signingIn value
         setStep("verification");
         setLoading(false);
       } else if (result.signingIn === false) {
-        // For signin, signingIn: false means wrong credentials
+        // for signin, signingIn: false means wrong credentials
         setError("Invalid email or password");
         setLoading(false);
       } else {
-        // Success - reset loading state immediately
-        // Modal close is handled by parent component via auth state,
+        // success - reset loading state immediately
+        // modal close is handled by parent component via auth state,
         // but we reset loading here in case of any delay
         setLoading(false);
       }
     } else {
-      // Unexpected result format - reset loading to avoid stuck state
+      // unexpected result format - reset loading to avoid stuck state
       setLoading(false);
     }
-    // On success, auth state updates automatically and HomeClient will re-render
+    // on success, auth state updates automatically and homeClient will re-render
   };
 
   const handleVerificationSubmit = async (e: React.FormEvent) => {
@@ -85,10 +85,10 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       setError("Invalid verification code. Please try again.");
       setLoading(false);
     } else {
-      // Success - reset loading state immediately
+      // success - reset loading state immediately
       setLoading(false);
     }
-    // On success, auth state updates automatically
+    // on success, auth state updates automatically
   };
 
   const handleResendCode = async () => {
@@ -118,19 +118,19 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setError(null);
   };
 
-  // Verification step UI (after signup sends OTP)
+  // verification step uI (after signup sends oTP)
   if (step === "verification") {
     return (
       <div className="z-50 fixed inset-0 flex justify-center items-center">
-        {/* Backdrop */}
+        {/* backdrop */}
         <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
-        {/* Modal */}
+        {/* modal */}
         <div
           className="relative shadow-2xl mx-4 rounded-sm w-full max-w-md"
           style={{ backgroundColor: "var(--color-background-elevated)" }}
         >
-          {/* Header */}
+          {/* header */}
           <div
             className="flex justify-between items-center px-6 py-4 border-b"
             style={{ borderColor: "var(--color-border-default)" }}
@@ -159,7 +159,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </button>
           </div>
 
-          {/* Verification Form */}
+          {/* verification form */}
           <form onSubmit={handleVerificationSubmit} className="space-y-4 p-6">
             <p
               className="text-sm text-center"
@@ -185,7 +185,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               </div>
             )}
 
-            {/* Verification Code */}
+            {/* verification code */}
             <div>
               <label
                 className="block mb-2 font-medium text-sm"
@@ -219,7 +219,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               </div>
             </div>
 
-            {/* Submit button */}
+            {/* submit button */}
             <button
               type="submit"
               disabled={loading || verificationCode.length < 6}
@@ -233,7 +233,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               )}
             </button>
 
-            {/* Resend */}
+            {/* resend */}
             <p
               className="text-sm text-center"
               style={{ color: "var(--color-text-secondary)" }}
@@ -255,18 +255,18 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     );
   }
 
-  // Credentials step UI (email + password form)
+  // credentials step uI (email + password form)
   return (
     <div className="z-50 fixed inset-0 flex justify-center items-center">
-      {/* Backdrop */}
+      {/* backdrop */}
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
-      {/* Modal */}
+      {/* modal */}
       <div
         className="relative shadow-2xl mx-4 rounded-sm w-full max-w-md"
         style={{ backgroundColor: "var(--color-background-elevated)" }}
       >
-        {/* Header */}
+        {/* header */}
         <div
           className="flex justify-between items-center px-6 py-4 border-b"
           style={{ borderColor: "var(--color-border-default)" }}
@@ -286,7 +286,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </button>
         </div>
 
-        {/* Form */}
+        {/* form */}
         <form onSubmit={handleSubmit} className="space-y-4 p-6">
           {error && (
             <div
@@ -300,7 +300,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </div>
           )}
 
-          {/* Email */}
+          {/* email */}
           <div>
             <label
               className="block mb-2 font-medium text-sm"
@@ -329,7 +329,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </div>
           </div>
 
-          {/* Password */}
+          {/* password */}
           <div>
             <label
               className="block mb-2 font-medium text-sm"
@@ -371,7 +371,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </div>
           </div>
 
-          {/* Submit button */}
+          {/* submit button */}
           <button
             type="submit"
             disabled={loading}
@@ -387,7 +387,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             )}
           </button>
 
-          {/* Toggle */}
+          {/* toggle */}
           <p
             className="text-sm text-center"
             style={{ color: "var(--color-text-secondary)" }}

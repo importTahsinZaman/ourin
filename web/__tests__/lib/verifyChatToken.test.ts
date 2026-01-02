@@ -29,7 +29,7 @@ describe("verifyChatToken", () => {
 
       const token = await generateTestToken("user123", TEST_SECRET, now);
 
-      // Advance time by 59 seconds
+      // advance time by 59 seconds
       vi.setSystemTime(now + 59000);
 
       const result = await verifyChatToken(token);
@@ -65,7 +65,7 @@ describe("verifyChatToken", () => {
 
       const token = await generateTestToken("user123", TEST_SECRET, now);
 
-      // Advance time by 5 minutes and 1 second (300001ms)
+      // advance time by 5 minutes and 1 second (300001ms)
       vi.setSystemTime(now + 300001);
 
       const result = await verifyChatToken(token);
@@ -80,7 +80,7 @@ describe("verifyChatToken", () => {
 
       const token = await generateTestToken("user123", TEST_SECRET, now);
 
-      // Advance time by exactly 300001ms (just past the 5 minute limit)
+      // advance time by exactly 300001ms (just past the 5 minute limit)
       vi.setSystemTime(now + 300001);
 
       const result = await verifyChatToken(token);
@@ -92,7 +92,7 @@ describe("verifyChatToken", () => {
       const now = Date.now();
       vi.setSystemTime(now);
 
-      // Token from 1 hour ago
+      // token from 1 hour ago
       const token = await generateTestToken(
         "user123",
         TEST_SECRET,
@@ -114,12 +114,12 @@ describe("verifyChatToken", () => {
     });
 
     it("rejects token with tampered userId", async () => {
-      // Generate valid token then tamper with userId
+      // generate valid token then tamper with userId
       const token = await generateTestToken("user123", TEST_SECRET);
       const decoded = atob(token);
       const [_userId, timestamp, signature] = decoded.split(":");
 
-      // Create tampered token with different userId but same signature
+      // create tampered token with different userId but same signature
       const tamperedToken = btoa(`hacker:${timestamp}:${signature}`);
 
       const result = await verifyChatToken(tamperedToken);
@@ -127,7 +127,7 @@ describe("verifyChatToken", () => {
     });
 
     it("rejects token with tampered timestamp", async () => {
-      // Use a specific timestamp to ensure we can tamper it
+      // use a specific timestamp to ensure we can tamper it
       const originalTimestamp = Date.now() - 1000; // 1 second ago
       const token = await generateTestToken(
         "user123",
@@ -137,7 +137,7 @@ describe("verifyChatToken", () => {
       const decoded = atob(token);
       const [userId, _timestamp, signature] = decoded.split(":");
 
-      // Create tampered token with different timestamp (current time) but same signature
+      // create tampered token with different timestamp (current time) but same signature
       const differentTimestamp = originalTimestamp + 500; // 500ms later
       const tamperedToken = btoa(
         `${userId}:${differentTimestamp}:${signature}`
@@ -182,12 +182,12 @@ describe("verifyChatToken", () => {
     });
 
     it("rejects token with empty userId", async () => {
-      // Generate token with empty userId
+      // generate token with empty userId
       const token = await generateTestToken("", TEST_SECRET);
-      // This should still technically work since empty string is valid base64 content
+      // this should still technically work since empty string is valid base64 content
       // but let's verify the behavior
       const result = await verifyChatToken(token);
-      // Empty userId is technically valid - the signature will verify
+      // empty userId is technically valid - the signature will verify
       expect(result.valid).toBe(true);
       expect(result.userId).toBe("");
     });
@@ -223,29 +223,29 @@ describe("verifyChatToken", () => {
 
     it("handles userId with colons (delimiter character)", async () => {
       // userId contains colons which is the delimiter - this is a potential vulnerability
-      // The current implementation splits on ":" which means this will fail
+      // the current implementation splits on ":" which means this will fail
       const userIdWithColons = "user:with:colons";
       const token = await generateTestToken(userIdWithColons, TEST_SECRET);
 
-      // This will fail because split(':') will give more than 3 parts
+      // this will fail because split(':') will give more than 3 parts
       // which means signature won't match expected position
       const result = await verifyChatToken(token);
-      // The behavior depends on how split handles this
-      // With 5 parts: [user, with, colons, timestamp, signature]
-      // userId becomes "user", timestampStr becomes "with" -> NaN -> old timestamp check fails
+      // the behavior depends on how split handles this
+      // with 5 parts: [user, with, colons, timestamp, signature]
+      // userId becomes "user", timestampStr becomes "with" -> naN -> old timestamp check fails
       expect(result.valid).toBe(false);
     });
 
     it("verifies signature using constant-time comparison via crypto.subtle", async () => {
-      // Note: crypto.subtle.sign is used which provides timing-safe operations
-      // This test verifies that the comparison happens via signature verification
+      // note: crypto.subtle.sign is used which provides timing-safe operations
+      // this test verifies that the comparison happens via signature verification
       // not via a simple string comparison that could be timing-attacked
 
       const token = await generateTestToken("user123", TEST_SECRET);
 
-      // The implementation uses crypto.subtle.sign and then hex string comparison
-      // The hex comparison is NOT constant-time, which is a potential vulnerability
-      // but the primary security comes from the HMAC verification itself
+      // the implementation uses crypto.subtle.sign and then hex string comparison
+      // the hex comparison is nOT constant-time, which is a potential vulnerability
+      // but the primary security comes from the hMAC verification itself
       const result = await verifyChatToken(token);
       expect(result.valid).toBe(true);
     });

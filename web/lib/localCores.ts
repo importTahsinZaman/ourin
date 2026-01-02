@@ -1,4 +1,4 @@
-// Local storage utilities for cores (used when not logged in)
+// local storage utilities for cores (used when not logged in)
 
 import { DEFAULT_CORES as DEFAULT_CORE_DATA } from "@/convex/defaultCores";
 import { setCookie } from "@/lib/cookies";
@@ -16,7 +16,7 @@ export interface LocalCore {
   updatedAt: number;
 }
 
-// Build local cores from shared defaults
+// build local cores from shared defaults
 const DEFAULT_CORES: LocalCore[] = DEFAULT_CORE_DATA.map((core) => ({
   id: `default-${core.name.toLowerCase().replace(/\s+/g, "-")}`,
   name: core.name,
@@ -27,7 +27,7 @@ const DEFAULT_CORES: LocalCore[] = DEFAULT_CORE_DATA.map((core) => ({
   updatedAt: Date.now(),
 }));
 
-// Read cores from localStorage synchronously (for SSR-safe initialization)
+// read cores from localStorage synchronously (for sSR-safe initialization)
 export function getLocalCores(): LocalCore[] {
   if (typeof window === "undefined") {
     return DEFAULT_CORES;
@@ -36,7 +36,7 @@ export function getLocalCores(): LocalCore[] {
   try {
     const stored = localStorage.getItem(LOCAL_CORES_KEY);
     if (!stored) {
-      // Initialize with defaults
+      // initialize with defaults
       localStorage.setItem(LOCAL_CORES_KEY, JSON.stringify(DEFAULT_CORES));
       return DEFAULT_CORES;
     }
@@ -46,27 +46,27 @@ export function getLocalCores(): LocalCore[] {
   }
 }
 
-// Save cores to localStorage
+// save cores to localStorage
 export function setLocalCores(cores: LocalCore[]): void {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(LOCAL_CORES_KEY, JSON.stringify(cores));
   } catch {
-    // Ignore storage errors
+    // ignore storage errors
   }
 }
 
-// Clear local cores (called on login when user has existing server cores)
+// clear local cores (called on login when user has existing server cores)
 export function clearLocalCores(): void {
   if (typeof window === "undefined") return;
   try {
     localStorage.removeItem(LOCAL_CORES_KEY);
   } catch {
-    // Ignore storage errors
+    // ignore storage errors
   }
 }
 
-// Check if local cores exist and have been modified from defaults
+// check if local cores exist and have been modified from defaults
 export function hasLocalCores(): boolean {
   if (typeof window === "undefined") return false;
   try {
@@ -76,7 +76,7 @@ export function hasLocalCores(): boolean {
   }
 }
 
-// Get active cores' system prompt (concatenated)
+// get active cores' system prompt (concatenated)
 export function getLocalActivePrompt(): string {
   const cores = getLocalCores();
   const activeCores = cores
@@ -90,7 +90,7 @@ export function getLocalActivePrompt(): string {
   return activeCores.map((c) => c.content).join("\n\n");
 }
 
-// Get active cores' names
+// get active cores' names
 export function getLocalActiveCoreNames(): string[] {
   const cores = getLocalCores();
   const activeCores = cores
@@ -104,17 +104,17 @@ export function getLocalActiveCoreNames(): string[] {
   return activeCores.map((c) => c.name);
 }
 
-// Toggle a core's active state
+// toggle a core's active state
 export function toggleLocalCoreActive(coreId: string): LocalCore[] | null {
   const cores = getLocalCores();
   const core = cores.find((c) => c.id === coreId);
   if (!core) return null;
 
-  // If trying to deactivate, check if it's the only active one
+  // if trying to deactivate, check if it's the only active one
   if (core.isActive) {
     const activeCores = cores.filter((c) => c.isActive);
     if (activeCores.length <= 1) {
-      return null; // Can't deactivate the last active core
+      return null; // can't deactivate the last active core
     }
   }
 
@@ -125,7 +125,7 @@ export function toggleLocalCoreActive(coreId: string): LocalCore[] | null {
   return updatedCores;
 }
 
-// Create a new core
+// create a new core
 export function createLocalCore(name: string, content: string): LocalCore[] {
   const cores = getLocalCores();
   const maxOrder =
@@ -147,7 +147,7 @@ export function createLocalCore(name: string, content: string): LocalCore[] {
   return updatedCores;
 }
 
-// Update an existing core
+// update an existing core
 export function updateLocalCore(
   coreId: string,
   updates: { name?: string; content?: string }
@@ -160,11 +160,11 @@ export function updateLocalCore(
   return updatedCores;
 }
 
-// Remove a core
+// remove a core
 export function removeLocalCore(coreId: string): LocalCore[] | null {
   const cores = getLocalCores();
 
-  // Can't delete the only core
+  // can't delete the only core
   if (cores.length <= 1) {
     return null;
   }
@@ -174,7 +174,7 @@ export function removeLocalCore(coreId: string): LocalCore[] | null {
 
   let updatedCores = cores.filter((c) => c.id !== coreId);
 
-  // If we removed an active core and it was the only active one, activate another
+  // if we removed an active core and it was the only active one, activate another
   if (coreToRemove.isActive) {
     const hasActive = updatedCores.some((c) => c.isActive);
     if (!hasActive && updatedCores.length > 0) {
@@ -188,7 +188,7 @@ export function removeLocalCore(coreId: string): LocalCore[] | null {
   return updatedCores;
 }
 
-// Reorder cores
+// reorder cores
 export function reorderLocalCores(orderedIds: string[]): LocalCore[] {
   const cores = getLocalCores();
   const updatedCores = cores.map((core) => {
@@ -203,10 +203,10 @@ export function reorderLocalCores(orderedIds: string[]): LocalCore[] {
   return updatedCores;
 }
 
-// Cookie name for active cores count (readable server-side)
+// cookie name for active cores count (readable server-side)
 const ACTIVE_CORES_COUNT_COOKIE = "ourin-active-cores-count";
 
-// Set active cores count in cookie (for SSR)
+// set active cores count in cookie (for sSR)
 export function setCachedActiveCoresCount(count: number): void {
   setCookie(ACTIVE_CORES_COUNT_COOKIE, String(count));
 }

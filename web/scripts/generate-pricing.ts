@@ -1,9 +1,9 @@
 /**
- * Script to generate MODEL_PRICING from models.ts
+ * script to generate mODEL_pRICING from models.ts
  *
- * Run: npx tsx scripts/generate-pricing.ts
+ * run: npx tsx scripts/generate-pricing.ts
  *
- * This ensures convex/pricing.ts stays in sync with lib/models.ts
+ * this ensures convex/pricing.ts stays in sync with lib/models.ts
  */
 
 import { MODELS } from "../lib/models";
@@ -19,10 +19,10 @@ function generatePricing() {
   );
 
   const content = `/**
- * AUTO-GENERATED FILE - DO NOT EDIT DIRECTLY
+ * aUTO-gENERATED fILE - dO nOT eDIT dIRECTLY
  *
- * Generated from lib/models.ts by scripts/generate-pricing.ts
- * Run: npx tsx scripts/generate-pricing.ts
+ * generated from lib/models.ts by scripts/generate-pricing.ts
+ * run: npx tsx scripts/generate-pricing.ts
  */
 
 export const MODEL_PRICING: Record<string, { input: number; output: number }> = {

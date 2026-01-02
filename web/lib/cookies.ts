@@ -1,12 +1,12 @@
 /**
- * Set a cookie with proper security flags.
+ * set a cookie with proper security flags.
  *
- * Security flags:
- * - SameSite=Lax: Prevents CSRF attacks while allowing normal navigation
- * - Secure: Only send over HTTPS
+ * security flags:
+ * - sameSite=lax: prevents cSRF attacks while allowing normal navigation
+ * - secure: only send over hTTPS
  *
- * Note: These are preference/UI cookies, not auth cookies.
- * Auth is handled by Convex Auth which manages its own cookies.
+ * note: these are preference/uI cookies, not auth cookies.
+ * auth is handled by convex auth which manages its own cookies.
  */
 export function setCookie(
   name: string,
@@ -22,8 +22,8 @@ export function setCookie(
 }
 
 /**
- * Delete a cookie by setting max-age to 0.
- * Uses matching attributes (path, SameSite, Secure) to ensure deletion works.
+ * delete a cookie by setting max-age to 0.
+ * uses matching attributes (path, sameSite, secure) to ensure deletion works.
  */
 export function deleteCookie(name: string): void {
   if (typeof window === "undefined") return;
@@ -35,8 +35,8 @@ export function deleteCookie(name: string): void {
 }
 
 /**
- * Get a cookie value by name.
- * Handles values containing "=" characters (e.g., Base64-encoded data).
+ * get a cookie value by name.
+ * handles values containing "=" characters (e.g., base64-encoded data).
  */
 export function getCookie(name: string): string | null {
   if (typeof window === "undefined") return null;

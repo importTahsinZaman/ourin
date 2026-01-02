@@ -23,7 +23,7 @@ export function CoreEditorModal({
   const [name, setName] = useState(initialName);
   const [content, setContent] = useState(initialContent);
 
-  // Reset form when modal opens with new values
+  // reset form when modal opens with new values
   useEffect(() => {
     if (isOpen) {
       setName(initialName);
@@ -31,7 +31,7 @@ export function CoreEditorModal({
     }
   }, [isOpen, initialName, initialContent]);
 
-  // Close on escape key
+  // close on escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -48,7 +48,7 @@ export function CoreEditorModal({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onCancel]);
 
-  // Prevent body scroll when modal is open
+  // prevent body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -72,10 +72,10 @@ export function CoreEditorModal({
 
   return (
     <div className="z-50 fixed inset-0 flex justify-center items-center">
-      {/* Backdrop */}
+      {/* backdrop */}
       <div className="absolute inset-0 bg-black/50" onClick={onCancel} />
 
-      {/* Modal */}
+      {/* modal */}
       <div
         className="z-10 relative flex flex-col shadow-2xl mx-4 rounded-sm w-full max-w-2xl max-h-[80vh] overflow-hidden animate-slide-up"
         style={{
@@ -83,7 +83,7 @@ export function CoreEditorModal({
           border: "1px solid var(--color-border-default)",
         }}
       >
-        {/* Header */}
+        {/* header */}
         <div
           className="flex flex-shrink-0 justify-between items-center px-6 py-4"
           style={{ borderBottom: "1px solid var(--color-border-muted)" }}
@@ -103,9 +103,9 @@ export function CoreEditorModal({
           </button>
         </div>
 
-        {/* Content */}
+        {/* content */}
         <div className="flex-1 p-6 overflow-y-auto">
-          {/* Name input */}
+          {/* name input */}
           <div className="mb-4">
             <label
               className="block mb-2 font-medium text-sm"
@@ -128,7 +128,7 @@ export function CoreEditorModal({
             />
           </div>
 
-          {/* Content textarea */}
+          {/* content textarea */}
           <div className="mb-4">
             <label
               className="block mb-2 font-medium text-sm"
@@ -159,7 +159,7 @@ export function CoreEditorModal({
           </div>
         </div>
 
-        {/* Footer */}
+        {/* footer */}
         <div
           className="flex flex-shrink-0 justify-end items-center gap-3 px-6 py-4"
           style={{ borderTop: "1px solid var(--color-border-muted)" }}

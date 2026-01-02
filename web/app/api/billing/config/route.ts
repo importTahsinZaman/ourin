@@ -11,12 +11,12 @@ import { IS_SELF_HOSTING } from "@/lib/config";
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 /**
- * Get billing configuration for display in UI.
- * Fetches credit amounts from Convex and prices from Stripe (source of truth).
- * In self-hosting mode, returns minimal config indicating billing is disabled.
+ * get billing configuration for display in uI.
+ * fetches credit amounts from convex and prices from stripe (source of truth).
+ * in self-hosting mode, returns minimal config indicating billing is disabled.
  */
 export async function GET() {
-  // In self-hosting mode, return minimal config
+  // in self-hosting mode, return minimal config
   if (IS_SELF_HOSTING) {
     return NextResponse.json({
       isSelfHosting: true,
@@ -28,7 +28,7 @@ export async function GET() {
   }
 
   try {
-    // Fetch in parallel
+    // fetch in parallel
     const [convexConfig, subscriptionPrice, creditPackPrice] =
       await Promise.all([
         convex.query(api.config.getBillingConfig, {}),
@@ -47,7 +47,7 @@ export async function GET() {
     });
   } catch (error) {
     console.error("Failed to fetch billing config:", error);
-    // Return defaults on error so UI doesn't break
+    // return defaults on error so uI doesn't break
     return NextResponse.json({
       isSelfHosting: false,
       subscriptionCredits: 10000,

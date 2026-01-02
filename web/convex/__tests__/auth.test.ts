@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 
 /**
- * Tests for the Authentication and Account Linking logic.
- * These tests verify the anonymous -> real account upgrade flow,
+ * tests for the authentication and account linking logic.
+ * these tests verify the anonymous -> real account upgrade flow,
  * pending link management, and email verification handling.
  */
 
@@ -145,8 +145,8 @@ describe("Account Linking Logic (createOrUpdateUser callback)", () => {
       const anonymousUserId = "user_anon_123";
       const newUserId = "user_new_456";
 
-      // After upgrade, we return the original anonymous user ID
-      // This ensures conversations created while anonymous are preserved
+      // after upgrade, we return the original anonymous user iD
+      // this ensures conversations created while anonymous are preserved
       const returnedUserId = anonymousUserId;
 
       expect(returnedUserId).toBe("user_anon_123");
@@ -184,12 +184,12 @@ describe("Account Linking Logic (createOrUpdateUser callback)", () => {
 
     it("does not overwrite existing emailVerificationTime", () => {
       const existingUser = {
-        emailVerificationTime: 1000000000000, // Existing timestamp
+        emailVerificationTime: 1000000000000, // existing timestamp
       };
       const profile = { emailVerified: true };
       const now = Date.now();
 
-      // Only set if not already set
+      // only set if not already set
       const shouldSetEmailVerificationTime =
         profile.emailVerified && !existingUser.emailVerificationTime;
 
@@ -365,11 +365,11 @@ describe("Account Linking Logic (createOrUpdateUser callback)", () => {
 
       // isAnonymous already false, so not updated
       expect(updates.isAnonymous).toBeUndefined();
-      // Email changed, so updated
+      // email changed, so updated
       expect(updates.email).toBe("new@example.com");
-      // Already has verification time, so not updated
+      // already has verification time, so not updated
       expect(updates.emailVerificationTime).toBeUndefined();
-      // Already has name fields, so not updated
+      // already has name fields, so not updated
       expect(updates.firstName).toBeUndefined();
       expect(updates.lastName).toBeUndefined();
     });
@@ -595,7 +595,7 @@ describe("Pending Account Link Logic (registerPendingAccountLink)", () => {
       };
       const newAnonymousUserId = "user_new";
 
-      // After deletion of existing and creation of new
+      // after deletion of existing and creation of new
       const newLink = {
         email: "test@example.com",
         anonymousUserId: newAnonymousUserId,
@@ -671,7 +671,7 @@ describe("getCurrentUser Logic", () => {
       };
 
       // 0 is falsy, so this would be false
-      // In practice, we'd never set emailVerificationTime to 0
+      // in practice, we'd never set emailVerificationTime to 0
       const emailVerified = !!user.emailVerificationTime;
 
       expect(emailVerified).toBe(false);
@@ -785,7 +785,7 @@ describe("getCurrentUser Logic", () => {
 describe("Full Sign-Up Flow Scenarios", () => {
   describe("Anonymous User Sign-Up with Account Linking", () => {
     it("completes full flow: anonymous -> signup -> verify -> linked", () => {
-      // Step 1: Anonymous user exists
+      // step 1: anonymous user exists
       const anonymousUser = {
         _id: "user_anon_123",
         isAnonymous: true,
@@ -793,14 +793,14 @@ describe("Full Sign-Up Flow Scenarios", () => {
         emailVerificationTime: undefined,
       };
 
-      // Step 2: User starts signup, pending link created
+      // step 2: user starts signup, pending link created
       const pendingLink = {
         email: "test@example.com",
         anonymousUserId: anonymousUser._id,
         createdAt: Date.now(),
       };
 
-      // Step 3: User verifies email, createOrUpdateUser called
+      // step 3: user verifies email, createOrUpdateUser called
       const profile = {
         email: "test@example.com",
         emailVerified: true,
@@ -808,7 +808,7 @@ describe("Full Sign-Up Flow Scenarios", () => {
         lastName: "User",
       };
 
-      // Step 4: Pending link found, anonymous user upgraded
+      // step 4: pending link found, anonymous user upgraded
       const foundLink = pendingLink.email === profile.email?.toLowerCase();
       expect(foundLink).toBe(true);
 
@@ -821,11 +821,11 @@ describe("Full Sign-Up Flow Scenarios", () => {
         lastName: profile.lastName,
       };
 
-      // Step 5: Verify final state
+      // step 5: verify final state
       expect(upgradedUser.isAnonymous).toBe(false);
       expect(upgradedUser.email).toBe("test@example.com");
       expect(upgradedUser.emailVerificationTime).toBeDefined();
-      expect(upgradedUser._id).toBe("user_anon_123"); // Same ID preserved!
+      expect(upgradedUser._id).toBe("user_anon_123"); // same iD preserved!
     });
 
     it("preserves conversations by keeping same user ID", () => {
@@ -834,10 +834,10 @@ describe("Full Sign-Up Flow Scenarios", () => {
         { _id: "conv_2", userId: "user_anon_123", title: "Chat 2" },
       ];
 
-      // After account linking, user ID stays the same
+      // after account linking, user iD stays the same
       const returnedUserId = "user_anon_123";
 
-      // All conversations still belong to this user
+      // all conversations still belong to this user
       const userConversations = conversations.filter(
         (c) => c.userId === returnedUserId
       );
@@ -862,7 +862,7 @@ describe("Full Sign-Up Flow Scenarios", () => {
 
       expect(pendingLink).toBeUndefined();
 
-      // New user would be created
+      // new user would be created
       const newUser = {
         email: profile.email,
         emailVerificationTime: profile.emailVerified ? Date.now() : undefined,
@@ -878,10 +878,10 @@ describe("Full Sign-Up Flow Scenarios", () => {
 
   describe("Sign-Up Before Verification", () => {
     it("does not set emailVerificationTime before OTP verified", () => {
-      // During signup (before OTP verification)
+      // during signup (before oTP verification)
       const profileDuringSignup = {
         email: "test@example.com",
-        emailVerified: false, // Not verified yet
+        emailVerified: false, // not verified yet
       };
 
       const emailVerificationTime = profileDuringSignup.emailVerified
@@ -892,10 +892,10 @@ describe("Full Sign-Up Flow Scenarios", () => {
     });
 
     it("sets emailVerificationTime after OTP verified", () => {
-      // After OTP verification
+      // after oTP verification
       const profileAfterVerification = {
         email: "test@example.com",
-        emailVerified: true, // Now verified
+        emailVerified: true, // now verified
       };
 
       const emailVerificationTime = profileAfterVerification.emailVerified

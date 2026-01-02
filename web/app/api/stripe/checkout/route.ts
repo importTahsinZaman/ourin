@@ -8,10 +8,10 @@ import {
 import { IS_SELF_HOSTING } from "@/lib/config";
 
 /**
- * Create a Stripe Checkout session for subscribing to the $10/month plan.
+ * create a stripe checkout session for subscribing to the $10/month plan.
  */
 export async function POST(req: Request) {
-  // Stripe is disabled in self-hosting mode
+  // stripe is disabled in self-hosting mode
   if (IS_SELF_HOSTING) {
     return NextResponse.json(
       { error: "Billing features are disabled in self-hosting mode" },
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    // Extract token from Authorization header (preferred) or body (fallback)
+    // extract token from authorization header (preferred) or body (fallback)
     const chatToken =
       extractChatToken(req) || (body.chatToken as string | undefined);
 
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
 
     const userId = result.userId;
 
-    // Create Stripe Checkout session for subscription only
+    // create stripe checkout session for subscription only
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       line_items: [

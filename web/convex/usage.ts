@@ -6,11 +6,11 @@ import { isSelfHosting } from "./config";
 import type { Doc } from "./_generated/dataModel";
 
 /**
- * Calculate usage summary for the current billing period.
- * Usage is calculated from user messages with token data.
- * (Tokens are stored on user messages since they're saved before streaming)
+ * calculate usage summary for the current billing period.
+ * usage is calculated from user messages with token data.
+ * (tokens are stored on user messages since they're saved before streaming)
  *
- * In self-hosting mode, returns token usage only (no credit calculations).
+ * in self-hosting mode, returns token usage only (no credit calculations).
  */
 export const getUsageSummary = query({
   args: {},
@@ -18,9 +18,9 @@ export const getUsageSummary = query({
     const userId = await getAuthUserId(ctx);
     if (!userId) return null;
 
-    // In self-hosting mode, return simplified usage stats (just tokens, no credits)
+    // in self-hosting mode, return simplified usage stats (just tokens, no credits)
     if (isSelfHosting()) {
-      // Get all user messages with token data
+      // get all user messages with token data
       const messages = await ctx.db
         .query("messages")
         .withIndex("by_user_created", (q) => q.eq("userId", userId))
@@ -61,7 +61,7 @@ export const getUsageSummary = query({
         totalOutputTokens,
         messageCount: messages.length,
         byModel,
-        // Credit fields not applicable in self-hosting mode
+        // credit fields not applicable in self-hosting mode
         subscriptionBalance: null,
         purchasedBalance: null,
         purchasedTotal: null,
@@ -72,7 +72,7 @@ export const getUsageSummary = query({
       };
     }
 
-    // Get subscription for period info
+    // get subscription for period info
     const subscription = await ctx.db
       .query("subscriptions")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -85,7 +85,7 @@ export const getUsageSummary = query({
     const periodStart = subscription.currentPeriodStart;
     const periodEnd = subscription.currentPeriodEnd;
 
-    // Get user messages with token data in current period (exclude forked messages)
+    // get user messages with token data in current period (exclude forked messages)
     const messages = await ctx.db
       .query("messages")
       .withIndex("by_user_created", (q) => q.eq("userId", userId))
@@ -99,7 +99,7 @@ export const getUsageSummary = query({
       )
       .collect();
 
-    // Calculate totals
+    // calculate totals
     let totalCreditsUsed = 0;
     let totalInputTokens = 0;
     let totalOutputTokens = 0;
@@ -126,10 +126,10 @@ export const getUsageSummary = query({
       byModel[model].credits += credits;
     }
 
-    // Calculate subscription balance (can be negative if overspent)
+    // calculate subscription balance (can be negative if overspent)
     const subscriptionBalance = getSubscriptionCredits() - totalCreditsUsed;
 
-    // Get purchased credits balance
+    // get purchased credits balance
     const activePurchases = await ctx.db
       .query("creditPurchases")
       .withIndex("by_user_status", (q) =>
@@ -147,7 +147,7 @@ export const getUsageSummary = query({
       0
     );
 
-    // Total balance = subscription (capped at 0) + purchased
+    // total balance = subscription (capped at 0) + purchased
     const totalBalance = Math.max(0, subscriptionBalance) + purchasedBalance;
 
     return {
@@ -168,7 +168,7 @@ export const getUsageSummary = query({
 });
 
 /**
- * Get usage history for the current user.
+ * get usage history for the current user.
  */
 export const getUsageHistory = query({
   args: {
@@ -178,7 +178,7 @@ export const getUsageHistory = query({
     const userId = await getAuthUserId(ctx);
     if (!userId) return [];
 
-    // Get user messages with token data (exclude forked messages)
+    // get user messages with token data (exclude forked messages)
     const messages = await ctx.db
       .query("messages")
       .withIndex("by_user_created", (q) => q.eq("userId", userId))

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Mock dependencies
+// mock dependencies
 vi.mock("@/lib/verifyChatToken", () => ({
   verifyChatToken: vi.fn(),
   extractChatToken: vi.fn(() => null),
@@ -17,7 +17,7 @@ vi.mock("@ai-sdk/anthropic", () => ({
 import { verifyChatToken } from "@/lib/verifyChatToken";
 import { generateText } from "ai";
 
-// Import after mocking
+// import after mocking
 import { POST } from "@/app/api/chat/title/route";
 
 describe("POST /api/chat/title", () => {
@@ -108,7 +108,7 @@ describe("POST /api/chat/title", () => {
 
       const response = await POST(request);
 
-      // Empty string should be rejected
+      // empty string should be rejected
       expect(response.status).toBe(400);
     });
   });
@@ -336,7 +336,7 @@ describe("POST /api/chat/title", () => {
       const response = await POST(request);
       const data = await response.json();
 
-      // Question mark should be preserved since it's meaningful
+      // question mark should be preserved since it's meaningful
       expect(data.title).toContain("?");
     });
   });

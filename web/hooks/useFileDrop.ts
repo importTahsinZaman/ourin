@@ -18,21 +18,21 @@ interface UseFileDropReturn {
 }
 
 /**
- * Hook for handling file drag-and-drop functionality.
+ * hook for handling file drag-and-drop functionality.
  *
- * Handles the common gotchas of drag-and-drop:
- * - Nested element events causing flicker (uses counter approach)
- * - Preventing default browser behavior
- * - Filtering for file drags only
+ * handles the common gotchas of drag-and-drop:
+ * - nested element events causing flicker (uses counter approach)
+ * - preventing default browser behavior
+ * - filtering for file drags only
  */
 export function useFileDrop({
   onDrop,
   disabled = false,
 }: UseFileDropOptions): UseFileDropReturn {
   const [isDragging, setIsDragging] = useState(false);
-  // Counter to handle nested element drag events
-  // Increments on dragenter, decrements on dragleave
-  // Only show overlay when counter > 0
+  // counter to handle nested element drag events
+  // increments on dragenter, decrements on dragleave
+  // only show overlay when counter > 0
   const dragCounterRef = useRef(0);
 
   const handleDragEnter = useCallback(
@@ -42,7 +42,7 @@ export function useFileDrop({
 
       if (disabled) return;
 
-      // Check if the drag contains files
+      // check if the drag contains files
       if (!e.dataTransfer.types.includes("Files")) return;
 
       dragCounterRef.current += 1;
@@ -60,7 +60,7 @@ export function useFileDrop({
 
       if (disabled) return;
 
-      // Set the drop effect
+      // set the drop effect
       if (e.dataTransfer.types.includes("Files")) {
         e.dataTransfer.dropEffect = "copy";
       }
@@ -88,7 +88,7 @@ export function useFileDrop({
       e.preventDefault();
       e.stopPropagation();
 
-      // Reset state
+      // reset state
       dragCounterRef.current = 0;
       setIsDragging(false);
 

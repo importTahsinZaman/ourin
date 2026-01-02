@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Use vi.hoisted to define mocks that can be referenced in vi.mock factories
+// use vi.hoisted to define mocks that can be referenced in vi.mock factories
 const { mockCheckoutSessionsCreate } = vi.hoisted(() => ({
   mockCheckoutSessionsCreate: vi.fn(),
 }));
 
-// Mock dependencies before importing the route
+// mock dependencies before importing the route
 vi.mock("@/lib/verifyChatToken", () => ({
   verifyChatToken: vi.fn(),
   extractChatToken: vi.fn(() => null),
@@ -24,7 +24,7 @@ vi.mock("@/lib/stripe", () => ({
 
 import { verifyChatToken } from "@/lib/verifyChatToken";
 
-// Import after mocking
+// import after mocking
 import { POST } from "@/app/api/stripe/checkout/route";
 
 describe("POST /api/stripe/checkout", () => {
@@ -80,8 +80,8 @@ describe("POST /api/stripe/checkout", () => {
     });
 
     it("proceeds when userId is undefined but valid is true", async () => {
-      // Note: Route doesn't explicitly check for undefined userId,
-      // it only checks for "anonymous". Empty userId will be used in metadata.
+      // note: route doesn't explicitly check for undefined userId,
+      // it only checks for "anonymous". empty userId will be used in metadata.
       vi.mocked(verifyChatToken).mockResolvedValue({
         valid: true,
         userId: undefined,
@@ -102,7 +102,7 @@ describe("POST /api/stripe/checkout", () => {
 
       const response = await POST(request);
 
-      // Route proceeds with undefined userId (converted to empty string in metadata)
+      // route proceeds with undefined userId (converted to empty string in metadata)
       expect(response.status).toBe(200);
     });
   });
@@ -338,7 +338,7 @@ describe("POST /api/stripe/checkout", () => {
       const response = await POST(request);
       const data = await response.json();
 
-      // Route only returns url, not sessionId (security best practice)
+      // route only returns url, not sessionId (security best practice)
       expect(data.url).toBeDefined();
       expect(data.sessionId).toBeUndefined();
     });

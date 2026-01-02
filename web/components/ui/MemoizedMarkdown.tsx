@@ -15,15 +15,15 @@ import { useTheme } from "@/components/providers/ThemeProvider";
 import "katex/dist/katex.min.css";
 
 /**
- * Escape currency dollar signs to prevent them from being interpreted as LaTeX math.
- * Uses Pandoc's rule: a closing $ followed by a digit is likely currency, not math.
- * This escapes patterns like $10, $2.1B, $410M, etc.
+ * escape currency dollar signs to prevent them from being interpreted as laTeX math.
+ * uses pandoc's rule: a closing $ followed by a digit is likely currency, not math.
+ * this escapes patterns like $10, $2.1b, $410m, etc.
  */
 function escapeCurrencyDollarSigns(content: string): string {
-  // Match $ followed by a digit (currency pattern like $10, $2.5, $410M)
-  // This covers: $10, $2.1B, $410M, $1,000, etc.
-  // Note: In JS regex replacement, $$ = literal $, $1 = captured group
-  // So "\\$$$1" = backslash + literal $ + captured digit
+  // match $ followed by a digit (currency pattern like $10, $2.5, $410m)
+  // this covers: $10, $2.1b, $410m, $1,000, etc.
+  // note: in jS regex replacement, $$ = literal $, $1 = captured group
+  // so "\\$$$1" = backslash + literal $ + captured digit
   return content.replace(/\$(\d)/g, "\\$$$1");
 }
 
@@ -43,23 +43,23 @@ function CodeBlock({
   const { theme } = useTheme();
   const themeType = theme.type;
 
-  // Try synchronous highlighting first (instant after Shiki initializes)
-  // This runs during render, so no flash if highlighter is ready
+  // try synchronous highlighting first (instant after shiki initializes)
+  // this runs during render, so no flash if highlighter is ready
   const syncHtml = useMemo(
     () => highlightCodeSync(children, language, themeType),
     [children, language, themeType]
   );
 
-  // Check if the requested language is loaded (for non-preloaded languages)
+  // check if the requested language is loaded (for non-preloaded languages)
   const languageReady = isLanguageLoaded(language);
 
-  // Async fallback for:
-  // 1. Before Shiki initializes (syncHtml is null)
-  // 2. When language isn't loaded (need to load it dynamically)
+  // async fallback for:
+  // 1. before shiki initializes (syncHtml is null)
+  // 2. when language isn't loaded (need to load it dynamically)
   const [asyncHtml, setAsyncHtml] = useState<string | null>(null);
 
   useEffect(() => {
-    // Skip async if sync worked AND the language was properly loaded
+    // skip async if sync worked aND the language was properly loaded
     // (not falling back to plaintext for an unloaded language)
     if (syncHtml && languageReady) {
       setAsyncHtml(null);
@@ -81,7 +81,7 @@ function CodeBlock({
     };
   }, [children, language, themeType, syncHtml, languageReady]);
 
-  // Use sync result if available, otherwise async result
+  // use sync result if available, otherwise async result
   const highlightedHtml = syncHtml || asyncHtml;
 
   const handleCopy = async () => {
@@ -92,7 +92,7 @@ function CodeBlock({
 
   return (
     <div className="group relative my-4">
-      {/* Language label - above code block */}
+      {/* language label - above code block */}
       {language && (
         <div
           className="px-3 pt-2 pb-0 rounded-t-md font-mono text-xs"
@@ -106,8 +106,8 @@ function CodeBlock({
       )}
 
       {highlightedHtml ? (
-        // Syntax-highlighted code from Shiki
-        // Background is overridden in globals.css to use --color-code-background
+        // syntax-highlighted code from shiki
+        // background is overridden in globals.css to use --color-code-background
         <div
           className={`shiki-wrapper overflow-x-auto text-sm [&_pre]:p-4 [&_pre]:m-0 [&_pre]:overflow-x-auto [&_code]:font-mono ${
             language ? "rounded-b-md" : "rounded-sm"
@@ -120,7 +120,7 @@ function CodeBlock({
           dangerouslySetInnerHTML={{ __html: highlightedHtml }}
         />
       ) : (
-        // Fallback: plain code while loading (same background to prevent flash)
+        // fallback: plain code while loading (same background to prevent flash)
         <pre
           className={`p-4 overflow-x-auto text-sm ${
             language ? "rounded-b-md" : "rounded-sm"
@@ -146,7 +146,7 @@ function CodeBlock({
         </pre>
       )}
 
-      {/* Copy button */}
+      {/* copy button */}
       <button
         onClick={handleCopy}
         className="top-2 right-2 z-10 absolute opacity-0 group-hover:opacity-100 p-1 rounded text-xs transition-opacity"
@@ -165,7 +165,7 @@ function CodeBlock({
 }
 
 function MarkdownRenderer({ content }: { content: string }) {
-  // Preprocess content to escape currency dollar signs
+  // preprocess content to escape currency dollar signs
   const processedContent = useMemo(
     () => escapeCurrencyDollarSigns(content),
     [content]
@@ -176,7 +176,7 @@ function MarkdownRenderer({ content }: { content: string }) {
       remarkPlugins={[remarkGfm, remarkMath]}
       rehypePlugins={[rehypeKatex]}
       components={{
-        // Code blocks
+        // code blocks
         code({ className, children, ...props }) {
           const match = /language-(\w+)/.exec(className || "");
           const isBlock = String(children).includes("\n");
@@ -207,12 +207,12 @@ function MarkdownRenderer({ content }: { content: string }) {
           );
         },
 
-        // Paragraphs
+        // paragraphs
         p({ children }) {
           return <p className="my-2 break-words leading-relaxed">{children}</p>;
         },
 
-        // Headings
+        // headings
         h1({ children }) {
           return (
             <h1
@@ -244,7 +244,7 @@ function MarkdownRenderer({ content }: { content: string }) {
           );
         },
 
-        // Lists
+        // lists
         ul({ children }) {
           return <ul className="space-y-1 my-2 pl-6 list-disc">{children}</ul>;
         },
@@ -261,7 +261,7 @@ function MarkdownRenderer({ content }: { content: string }) {
           );
         },
 
-        // Links
+        // links
         a({ href, children }) {
           return (
             <a
@@ -276,7 +276,7 @@ function MarkdownRenderer({ content }: { content: string }) {
           );
         },
 
-        // Blockquote
+        // blockquote
         blockquote({ children }) {
           return (
             <blockquote
@@ -291,7 +291,7 @@ function MarkdownRenderer({ content }: { content: string }) {
           );
         },
 
-        // Tables
+        // tables
         table({ children }) {
           return (
             <div className="my-4 overflow-x-auto">
@@ -340,7 +340,7 @@ function MarkdownRenderer({ content }: { content: string }) {
           );
         },
 
-        // Horizontal rule
+        // horizontal rule
         hr() {
           return (
             <hr
@@ -350,12 +350,12 @@ function MarkdownRenderer({ content }: { content: string }) {
           );
         },
 
-        // Strong
+        // strong
         strong({ children }) {
           return <strong className="font-semibold">{children}</strong>;
         },
 
-        // Emphasis
+        // emphasis
         em({ children }) {
           return <em className="italic">{children}</em>;
         },
@@ -371,7 +371,7 @@ export const MemoizedMarkdown = memo(
     return <MarkdownRenderer content={content} />;
   },
   (prevProps, nextProps) => {
-    // Only re-render if content changed
+    // only re-render if content changed
     return (
       prevProps.content === nextProps.content && prevProps.id === nextProps.id
     );

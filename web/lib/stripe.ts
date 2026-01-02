@@ -1,8 +1,8 @@
 import Stripe from "stripe";
 
 /**
- * Lazy-loaded Stripe client instance.
- * Uses lazy initialization to avoid crashing on import when STRIPE_SECRET_KEY
+ * lazy-loaded stripe client instance.
+ * uses lazy initialization to avoid crashing on import when sTRIPE_sECRET_kEY
  * is not set (i.e., in self-hosting mode).
  */
 let _stripe: Stripe | null = null;
@@ -23,8 +23,8 @@ export function getStripe(): Stripe {
 }
 
 /**
- * @deprecated Use getStripe() instead to avoid import-time crashes in self-hosting mode.
- * Kept for backwards compatibility - will throw if STRIPE_SECRET_KEY is not set.
+ * @deprecated use getStripe() instead to avoid import-time crashes in self-hosting mode.
+ * kept for backwards compatibility - will throw if sTRIPE_sECRET_kEY is not set.
  */
 export const stripe = new Proxy({} as Stripe, {
   get(_target, prop) {
@@ -33,29 +33,29 @@ export const stripe = new Proxy({} as Stripe, {
 });
 
 /**
- * Stripe price ID for the $10/month subscription (flat fee).
- * This should be created in the Stripe dashboard.
+ * stripe price iD for the $10/month subscription (flat fee).
+ * this should be created in the stripe dashboard.
  */
 export const SUBSCRIPTION_PRICE_ID =
   process.env.STRIPE_SUBSCRIPTION_PRICE_ID ?? "";
 
 /**
- * Stripe price ID for the $20 credit pack (one-time purchase).
- * This should be created as a one-time product in the Stripe dashboard.
+ * stripe price iD for the $20 credit pack (one-time purchase).
+ * this should be created as a one-time product in the stripe dashboard.
  */
 export const CREDIT_PACK_PRICE_ID =
   process.env.STRIPE_CREDIT_PACK_PRICE_ID ?? "";
 
 /**
- * Stripe webhook secret for verifying webhook signatures.
+ * stripe webhook secret for verifying webhook signatures.
  */
 export const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET ?? "";
 
-// NOTE: SUBSCRIPTION_CREDITS, CREDIT_PACK_AMOUNT, and CREDIT_PACK_PRICE_CENTS
-// are now managed in Convex env vars. Use api.config.getBillingConfig to fetch.
+// nOTE: sUBSCRIPTION_cREDITS, cREDIT_pACK_aMOUNT, and cREDIT_pACK_pRICE_cENTS
+// are now managed in convex env vars. use api.config.getBillingConfig to fetch.
 
 /**
- * Format a credit amount as USD.
+ * format a credit amount as uSD.
  */
 export function creditsToUsd(credits: number): string {
   const dollars = credits / 100;
@@ -66,7 +66,7 @@ export function creditsToUsd(credits: number): string {
 }
 
 /**
- * Get subscription status display text.
+ * get subscription status display text.
  */
 export function getSubscriptionStatusText(status: string): string {
   switch (status) {

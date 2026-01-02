@@ -2,14 +2,14 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
 /**
- * Merge Tailwind CSS classes with clsx
+ * merge tailwind cSS classes with clsx
  */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
 /**
- * Format a date relative to now (Today, Yesterday, etc.)
+ * format a date relative to now (today, yesterday, etc.)
  */
 export function formatRelativeDate(date: Date | number): string {
   const d = typeof date === "number" ? new Date(date) : date;
@@ -31,7 +31,7 @@ export function formatRelativeDate(date: Date | number): string {
 }
 
 /**
- * Group items by a key function
+ * group items by a key function
  */
 export function groupBy<T, K extends string | number>(
   items: T[],
@@ -51,7 +51,7 @@ export function groupBy<T, K extends string | number>(
 }
 
 /**
- * Truncate text to a maximum length
+ * truncate text to a maximum length
  */
 export function truncate(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
@@ -59,14 +59,14 @@ export function truncate(text: string, maxLength: number): string {
 }
 
 /**
- * Generate a random ID
+ * generate a random iD
  */
 export function generateId(): string {
   return crypto.randomUUID();
 }
 
 /**
- * Debounce a function
+ * debounce a function
  */
 export function debounce<T extends (...args: unknown[]) => unknown>(
   fn: T,
@@ -80,7 +80,7 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
 }
 
 /**
- * Format file size in human-readable format
+ * format file size in human-readable format
  */
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return "0 B";
@@ -91,71 +91,71 @@ export function formatFileSize(bytes: number): string {
 }
 
 /**
- * Check if a file type is an image
+ * check if a file type is an image
  */
 export function isImageFile(mimeType: string): boolean {
   return mimeType.startsWith("image/");
 }
 
 /**
- * Check if a file type is a PDF
+ * check if a file type is a pDF
  */
 export function isPdfFile(mimeType: string): boolean {
   return mimeType === "application/pdf";
 }
 
 /**
- * Get file extension from filename
+ * get file extension from filename
  */
 export function getFileExtension(filename: string): string {
   return filename.split(".").pop()?.toLowerCase() || "";
 }
 
 /**
- * Sleep for a given number of milliseconds
+ * sleep for a given number of milliseconds
  */
 export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
- * Detect if a hex color is light or dark based on relative luminance.
- * Supports both 3-digit (#RGB) and 6-digit (#RRGGBB) hex formats.
+ * detect if a hex color is light or dark based on relative luminance.
+ * supports both 3-digit (#rGB) and 6-digit (#rRGGBB) hex formats.
  */
 export function isLightColor(hex: string): boolean {
-  // Remove # if present
+  // remove # if present
   const cleanHex = hex.replace(/^#/, "");
 
   let r: number, g: number, b: number;
 
   if (cleanHex.length === 3) {
-    // 3-digit hex: #RGB -> #RRGGBB
+    // 3-digit hex: #rGB -> #rRGGBB
     r = parseInt(cleanHex[0] + cleanHex[0], 16);
     g = parseInt(cleanHex[1] + cleanHex[1], 16);
     b = parseInt(cleanHex[2] + cleanHex[2], 16);
   } else if (cleanHex.length === 6) {
-    // 6-digit hex: #RRGGBB
+    // 6-digit hex: #rRGGBB
     r = parseInt(cleanHex.slice(0, 2), 16);
     g = parseInt(cleanHex.slice(2, 4), 16);
     b = parseInt(cleanHex.slice(4, 6), 16);
   } else {
-    // Invalid format, default to light
+    // invalid format, default to light
     return true;
   }
 
-  // Check for NaN (invalid hex characters)
+  // check for naN (invalid hex characters)
   if (isNaN(r) || isNaN(g) || isNaN(b)) {
     return true;
   }
 
-  // Using relative luminance formula (ITU-R BT.601)
+  // using relative luminance formula (iTU-r bT.601)
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
   return luminance > 0.5;
 }
 
 /**
- * Validate a hex color string.
- * Returns true if valid 3-digit or 6-digit hex (with or without #).
+ * validate a hex color string.
+ * returns true if valid 3-digit or 6-digit hex (with or without #).
  */
 export function isValidHexColor(hex: string): boolean {
   return /^#?([a-fA-F0-9]{3}|[a-fA-F0-9]{6})$/.test(hex);

@@ -43,13 +43,13 @@ import type {
   MessagePart,
 } from "@/types/chat";
 
-// Get file extension for badge display
+// get file extension for badge display
 function getFileExtension(fileName: string, mimeType: string): string {
-  // Try to get from filename first
+  // try to get from filename first
   const ext = fileName.split(".").pop()?.toUpperCase();
   if (ext && ext.length <= 4) return ext;
 
-  // Fallback to mime type
+  // fallback to mime type
   if (mimeType.includes("pdf")) return "PDF";
   if (mimeType.includes("word")) return "DOC";
   if (mimeType.includes("excel") || mimeType.includes("spreadsheet"))
@@ -59,7 +59,7 @@ function getFileExtension(fileName: string, mimeType: string): string {
   return "FILE";
 }
 
-// Truncate filename for display
+// truncate filename for display
 function truncateFileName(name: string, maxLength: number = 25): string {
   if (name.length <= maxLength) return name;
   const ext = name.split(".").pop() || "";
@@ -69,16 +69,16 @@ function truncateFileName(name: string, maxLength: number = 25): string {
   return ext ? `${truncatedName}.${ext}` : truncatedName;
 }
 
-// Format reasoning level for display
+// format reasoning level for display
 function formatReasoningLevel(level: unknown, model?: string): string | null {
   if (level === undefined || level === null || level === "off") return null;
 
-  // Check if the model supports reasoning
+  // check if the model supports reasoning
   if (model) {
     const modelInfo = getModelInfo(model);
     if (!modelInfo.reasoningParameter) return null;
 
-    // For budget-based (Claude), format as "Xk tokens"
+    // for budget-based (claude), format as "xk tokens"
     if (
       modelInfo.reasoningParameter?.kind === "budget" &&
       typeof level === "number"
@@ -87,7 +87,7 @@ function formatReasoningLevel(level: unknown, model?: string): string | null {
     }
   }
 
-  // For effort-based or string values, capitalize
+  // for effort-based or string values, capitalize
   if (typeof level === "string") {
     return level.charAt(0).toUpperCase() + level.slice(1);
   }
@@ -95,7 +95,7 @@ function formatReasoningLevel(level: unknown, model?: string): string | null {
   return String(level);
 }
 
-// Types for chronological message chunks
+// types for chronological message chunks
 type MessageChunk =
   | {
       type: "steps";
@@ -106,8 +106,8 @@ type MessageChunk =
   | { type: "text"; content: string }
   | { type: "sources"; sources: WebSearchSource[] };
 
-// Chunk message parts for chronological rendering
-// Groups consecutive non-text parts into "steps" chunks, with text chunks between them
+// chunk message parts for chronological rendering
+// groups consecutive non-text parts into "steps" chunks, with text chunks between them
 function chunkMessageParts(parts: MessagePart[]): MessageChunk[] {
   const chunks: MessageChunk[] = [];
   let currentStepsParts: MessagePart[] = [];
@@ -135,17 +135,17 @@ function chunkMessageParts(parts: MessagePart[]): MessageChunk[] {
 
   for (const part of parts) {
     if (part.type === "text") {
-      // Finalize any pending steps group
+      // finalize any pending steps group
       finalizeStepsChunk();
-      // Add text chunk (only if non-empty)
+      // add text chunk (only if non-empty)
       const textPart = part as { type: "text"; text: string };
       if (textPart.text.trim()) {
         chunks.push({ type: "text", content: textPart.text });
       }
     } else if (part.type === "sources") {
-      // Finalize any pending steps group
+      // finalize any pending steps group
       finalizeStepsChunk();
-      // Add sources chunk
+      // add sources chunk
       const sourcesPart = part as SourcesPart;
       if (sourcesPart.sources.length > 0) {
         chunks.push({ type: "sources", sources: sourcesPart.sources });
@@ -156,13 +156,13 @@ function chunkMessageParts(parts: MessagePart[]): MessageChunk[] {
     }
   }
 
-  // Don't forget the last steps group
+  // don't forget the last steps group
   finalizeStepsChunk();
 
   return chunks;
 }
 
-// Collapsible sources section for web search results
+// collapsible sources section for web search results
 function SourcesSection({ sources }: { sources: WebSearchSource[] }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -257,7 +257,7 @@ interface MessageListProps {
     reasoningLevel?: string | number
   ) => void;
   onFork: (messageId: string) => void;
-  currentModel: string; // Used as fallback if message has no model
+  currentModel: string; // used as fallback if message has no model
   isAuthenticated: boolean;
 }
 
@@ -285,13 +285,13 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
     }: MessageListProps,
     ref
   ) {
-    // Defer message updates to keep UI responsive during conversation switches
+    // defer message updates to keep uI responsive during conversation switches
     const messages = useDeferredValue(rawMessages);
 
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editContent, setEditContent] = useState("");
     const [editAttachments, setEditAttachments] = useState<FilePart[]>([]);
-    // Edit config state
+    // edit config state
     const [editModel, setEditModel] = useState<string>("");
     const [editReasoningLevel, setEditReasoningLevel] = useState<
       string | number
@@ -299,14 +299,14 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
     const [editWebSearchEnabled, setEditWebSearchEnabled] = useState(false);
     const [copiedId, setCopiedId] = useState<string | null>(null);
 
-    // File upload state and refs for edit mode
+    // file upload state and refs for edit mode
     const editFileInputRef = useRef<HTMLInputElement>(null);
     const [isUploadingEditFile, setIsUploadingEditFile] = useState(false);
 
-    // Use the shared file upload hook
+    // use the shared file upload hook
     const { processFile, checkDuplicate } = useFileUpload();
 
-    // Expose edit mode methods via ref
+    // expose edit mode methods via ref
     useImperativeHandle(
       ref,
       () => ({
@@ -338,12 +338,12 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
       new Map()
     );
 
-    // Clean up stale refs when messages change
+    // clean up stale refs when messages change
     const messageIds = useMemo(
       () => new Set(messages.map((m) => m.id)),
       [messages]
     );
-    // Remove refs for messages that no longer exist
+    // remove refs for messages that no longer exist
     useMemo(() => {
       const refs = regenerateButtonRefs.current;
       for (const id of refs.keys()) {
@@ -353,12 +353,12 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
       }
     }, [messageIds]);
 
-    // Dynamic spacer height - shrinks as assistant response grows
-    // Start with 0 to avoid hydration mismatch, will be calculated on mount
+    // dynamic spacer height - shrinks as assistant response grows
+    // start with 0 to avoid hydration mismatch, will be calculated on mount
     const [spacerHeight, setSpacerHeight] = useState(0);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // Find the index of the last user message (memoized)
+    // find the index of the last user message (memoized)
     const lastUserMessageIndex = useMemo(
       () =>
         messages.reduce(
@@ -368,12 +368,12 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
       [messages]
     );
 
-    // Calculate spacer height - memoized to avoid recreating on every render
+    // calculate spacer height - memoized to avoid recreating on every render
     const calculateSpacerHeight = useCallback(() => {
       const container = containerRef.current;
       if (!container) return;
 
-      // Get the scroll container (parent with overflow-y-auto)
+      // get the scroll container (parent with overflow-y-auto)
       const scrollContainer = container.closest(
         ".overflow-y-auto"
       ) as HTMLElement;
@@ -381,7 +381,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
 
       const viewportHeight = scrollContainer.clientHeight;
 
-      // Find the last user message element
+      // find the last user message element
       const lastUserMessage = container.querySelector(
         '[data-last-user-message="true"]'
       ) as HTMLElement;
@@ -390,7 +390,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
         return;
       }
 
-      // Find the spacer element to determine where actual content ends
+      // find the spacer element to determine where actual content ends
       const spacerElement = container.querySelector(
         "[data-spacer]"
       ) as HTMLElement;
@@ -399,25 +399,25 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
         return;
       }
 
-      // Content height is the spacer's position (top of spacer = end of content)
+      // content height is the spacer's position (top of spacer = end of content)
       const contentHeightWithoutSpacer = spacerElement.offsetTop;
 
-      // User message position from top of content
+      // user message position from top of content
       const userMessageTop = lastUserMessage.offsetTop;
 
-      // Calculate exact spacer needed so that max scroll puts user message at top with padding
-      // When scrolled to max: userMessageTop - maxScroll = padding
+      // calculate exact spacer needed so that max scroll puts user message at top with padding
+      // when scrolled to max: userMessageTop - maxScroll = padding
       // maxScroll = contentHeightWithoutSpacer + spacer - viewportHeight
-      // So: spacer = userMessageTop - padding + viewportHeight - contentHeightWithoutSpacer
+      // so: spacer = userMessageTop - padding + viewportHeight - contentHeightWithoutSpacer
       const padding = 30;
 
-      // Only add spacer if content overflows viewport - otherwise no scrolling needed
+      // only add spacer if content overflows viewport - otherwise no scrolling needed
       if (contentHeightWithoutSpacer <= viewportHeight) {
         setSpacerHeight(0);
         return;
       }
 
-      // Minimum bottom padding when content overflows
+      // minimum bottom padding when content overflows
       const minBottomPadding = 32;
 
       const neededSpacer = Math.max(
@@ -428,7 +428,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
       setSpacerHeight(neededSpacer);
     }, []);
 
-    // Recalculate spacer height on messages change and window resize
+    // recalculate spacer height on messages change and window resize
     useLayoutEffect(() => {
       calculateSpacerHeight();
 
@@ -436,7 +436,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
       return () => window.removeEventListener("resize", calculateSpacerHeight);
     }, [messages, calculateSpacerHeight]);
 
-    // Use ResizeObserver to recalculate during streaming as content grows
+    // use resizeObserver to recalculate during streaming as content grows
     useLayoutEffect(() => {
       const container = containerRef.current;
       if (!container) return;
@@ -459,7 +459,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
       setTimeout(() => setCopiedId(null), 2000);
     };
 
-    // Helper to get default reasoning level for a model
+    // helper to get default reasoning level for a model
     const getDefaultReasoningLevel = (modelId: string): string | number => {
       const modelInfo = getModelInfo(modelId);
       if (!modelInfo.reasoningParameter) {
@@ -480,7 +480,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
       setEditAttachments(fileParts);
       setEditingId(message.id);
 
-      // Initialize edit config from message's original settings
+      // initialize edit config from message's original settings
       const messageModel = message.model || currentModel;
       setEditModel(messageModel);
       setEditReasoningLevel(
@@ -522,7 +522,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
       setEditWebSearchEnabled(false);
     };
 
-    // Helper to process a file and add to edit attachments
+    // helper to process a file and add to edit attachments
     const processEditFile = useCallback(
       async (file: File, category?: "image" | "document") => {
         const attachment = {
@@ -550,7 +550,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
       [processFile]
     );
 
-    // Handle paste in edit mode - extract images from clipboard
+    // handle paste in edit mode - extract images from clipboard
     const handleEditPaste = useCallback(
       async (e: React.ClipboardEvent) => {
         const items = e.clipboardData?.items;
@@ -567,7 +567,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
           }
         }
 
-        // If no images, let default paste handle text
+        // if no images, let default paste handle text
         if (imageFiles.length === 0) return;
 
         e.preventDefault();
@@ -575,7 +575,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
 
         try {
           for (const file of imageFiles) {
-            // Generate filename for pasted images
+            // generate filename for pasted images
             const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
             const extension = file.type.split("/")[1] || "png";
             const namedFile = new File(
@@ -595,7 +595,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
       [processEditFile]
     );
 
-    // Handle file upload in edit mode
+    // handle file upload in edit mode
     const handleEditFileSelect = useCallback(
       async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
@@ -611,7 +611,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
           console.error("Failed to upload file:", error);
         } finally {
           setIsUploadingEditFile(false);
-          // Reset the input
+          // reset the input
           if (editFileInputRef.current) {
             editFileInputRef.current.value = "";
           }
@@ -637,7 +637,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
           const isLastAssistant = isAssistant && index === messages.length - 1;
           const isLastUserMessage = index === lastUserMessageIndex;
 
-          // User message
+          // user message
           if (isUser) {
             return (
               <div
@@ -649,9 +649,9 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
                 style={{ scrollMarginTop: "30px" }}
               >
                 {isEditing ? (
-                  // Edit mode
+                  // edit mode
                   <div className="w-full max-w-[85%]">
-                    {/* Show attached files above textarea in edit mode (using editAttachments state) */}
+                    {/* show attached files above textarea in edit mode (using editAttachments state) */}
                     {editAttachments.length > 0 && (
                       <div className="flex flex-wrap justify-end gap-2 mb-2">
                         {editAttachments.map((filePart, i) => {
@@ -746,7 +746,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
                       autoFocus
                     />
 
-                    {/* Edit config bar - same order as ChatInput: Model, Reasoning, Attach, Web Search */}
+                    {/* edit config bar - same order as chatInput: model, reasoning, attach, web search */}
                     <div
                       className="flex items-center gap-1 mt-2 px-2 py-1.5 rounded-sm"
                       style={{
@@ -754,7 +754,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
                         border: "1px solid var(--color-border-default)",
                       }}
                     >
-                      {/* Hidden file input */}
+                      {/* hidden file input */}
                       <input
                         ref={editFileInputRef}
                         type="file"
@@ -764,7 +764,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
                         className="hidden"
                       />
 
-                      {/* Model & Cores selector */}
+                      {/* model & cores selector */}
                       <ModelCoresDropdown
                         selectedModel={editModel}
                         onModelChange={(modelId) => {
@@ -776,14 +776,14 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
                         isAuthenticated={isAuthenticated}
                       />
 
-                      {/* Reasoning selector */}
+                      {/* reasoning selector */}
                       <ReasoningDropdown
                         selectedModel={editModel}
                         reasoningLevel={editReasoningLevel}
                         onReasoningLevelChange={setEditReasoningLevel}
                       />
 
-                      {/* Attach button */}
+                      {/* attach button */}
                       <button
                         onClick={() => editFileInputRef.current?.click()}
                         disabled={isUploadingEditFile}
@@ -798,7 +798,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
                         )}
                       </button>
 
-                      {/* Web search toggle (only for models that support it) */}
+                      {/* web search toggle (only for models that support it) */}
                       {(() => {
                         const editModelInfo = getModelInfo(editModel);
                         if (!editModelInfo.supportsWebSearch) return null;
@@ -827,10 +827,10 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
                         );
                       })()}
 
-                      {/* Spacer */}
+                      {/* spacer */}
                       <div className="flex-1" />
 
-                      {/* Cancel button */}
+                      {/* cancel button */}
                       <button
                         onClick={handleCancelEdit}
                         className="flex items-center gap-1.5 hover:bg-[var(--color-background-hover)] px-2.5 py-1 rounded-sm text-sm transition-colors"
@@ -840,7 +840,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
                         Cancel
                       </button>
 
-                      {/* Send button */}
+                      {/* send button */}
                       <button
                         onClick={handleSaveEdit}
                         disabled={
@@ -859,9 +859,9 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
                     </div>
                   </div>
                 ) : (
-                  // Display mode
+                  // display mode
                   (() => {
-                    // Filter file parts once to avoid duplicate filtering
+                    // filter file parts once to avoid duplicate filtering
                     const fileParts = message.parts.filter(
                       (p) => p.type === "file"
                     ) as Array<{
@@ -873,14 +873,14 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
 
                     return (
                       <>
-                        {/* Render file attachments as cards above text */}
+                        {/* render file attachments as cards above text */}
                         {fileParts.length > 0 && (
                           <div className="flex flex-wrap justify-end gap-2 mb-2 max-w-[85%]">
                             {fileParts.map((filePart, i) => {
                               const isImage = isImageFile(filePart.mediaType);
 
                               if (isImage && filePart.url) {
-                                // Image card - just the image
+                                // image card - just the image
                                 return (
                                   <div
                                     key={i}
@@ -907,7 +907,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
                                 );
                               }
 
-                              // Non-image file card - title + badge
+                              // non-image file card - title + badge
                               return (
                                 <div
                                   key={i}
@@ -953,7 +953,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
                           </div>
                         )}
 
-                        {/* Render text content */}
+                        {/* render text content */}
                         {textContent && (
                           <div
                             className="px-4 py-2.5 rounded-sm max-w-[85%] overflow-hidden text-base"
@@ -969,9 +969,9 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
                           </div>
                         )}
 
-                        {/* Action buttons */}
+                        {/* action buttons */}
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {/* Message metadata tooltip */}
+                          {/* message metadata tooltip */}
                           {(message.model ||
                             message.metadata?.coreNames?.length) && (
                             <div className="group/info relative">
@@ -1044,25 +1044,25 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
             );
           }
 
-          // Assistant message
+          // assistant message
           if (isAssistant) {
             const isEmpty = !textContent.trim();
-            // Show thinking indicator when streaming/submitted and no text response yet
+            // show thinking indicator when streaming/submitted and no text response yet
             const isActivelyThinking =
               isLastAssistant && (isStreaming || isSubmitted) && isEmpty;
 
-            // Chunk message parts for chronological rendering
+            // chunk message parts for chronological rendering
             const chunks = chunkMessageParts(message.parts);
 
             return (
               <div key={message.id} className="group">
-                {/* Render chunks chronologically */}
+                {/* render chunks chronologically */}
                 {chunks.map((chunk, chunkIndex) => {
                   const isLastChunk = chunkIndex === chunks.length - 1;
                   const chunkKey = `${message.id}-chunk-${chunkIndex}`;
 
                   if (chunk.type === "steps") {
-                    // Unified accordion for all steps (reasoning and/or tool calls)
+                    // unified accordion for all steps (reasoning and/or tool calls)
                     return (
                       <StepsAccordion
                         key={chunkKey}
@@ -1072,7 +1072,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
                       />
                     );
                   } else if (chunk.type === "text") {
-                    // Text chunk - render as markdown
+                    // text chunk - render as markdown
                     return (
                       <div
                         key={chunkKey}
@@ -1086,7 +1086,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
                       </div>
                     );
                   } else if (chunk.type === "sources") {
-                    // Sources chunk - render sources section
+                    // sources chunk - render sources section
                     return (
                       <SourcesSection key={chunkKey} sources={chunk.sources} />
                     );
@@ -1094,7 +1094,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
                   return null;
                 })}
 
-                {/* Show accordion if actively thinking and no chunks yet */}
+                {/* show accordion if actively thinking and no chunks yet */}
                 {isActivelyThinking && chunks.length === 0 && (
                   <StepsAccordion
                     parts={[]}
@@ -1103,7 +1103,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
                   />
                 )}
 
-                {/* Action buttons - hidden while streaming */}
+                {/* action buttons - hidden while streaming */}
                 {!(isLastAssistant && isStreaming) && (
                   <div className="relative flex gap-1 opacity-0 group-hover:opacity-100 mt-2 transition-opacity">
                     <button
@@ -1168,7 +1168,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
           return null;
         })}
 
-        {/* Initial thinking indicator - before assistant message exists */}
+        {/* initial thinking indicator - before assistant message exists */}
         {isSubmitted &&
           (messages.length === 0 ||
             messages[messages.length - 1].role !== "assistant") && (
@@ -1179,14 +1179,14 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
             />
           )}
 
-        {/* Dynamic spacer - shrinks as assistant response grows */}
+        {/* dynamic spacer - shrinks as assistant response grows */}
         <div
           data-spacer
           style={{ minHeight: spacerHeight }}
           aria-hidden="true"
         />
 
-        {/* Image preview modal */}
+        {/* image preview modal */}
         {previewImage && (
           <div
             className="z-[100] fixed flex flex-col justify-center items-center"
@@ -1200,7 +1200,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
             }}
             onClick={() => setPreviewImage(null)}
           >
-            {/* Image container with close button */}
+            {/* image container with close button */}
             <div className="relative" onClick={(e) => e.stopPropagation()}>
               <button
                 onClick={() => setPreviewImage(null)}
@@ -1222,7 +1222,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
                   }}
                 />
               </div>
-              {/* Filename - below image */}
+              {/* filename - below image */}
               <p className="mt-3 text-white/70 text-sm text-center">
                 {previewImage.fileName}
               </p>

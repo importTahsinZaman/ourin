@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Use vi.hoisted to define mocks that can be referenced in vi.mock factories
+// use vi.hoisted to define mocks that can be referenced in vi.mock factories
 const { mockConvexQuery, mockCheckoutSessionsCreate } = vi.hoisted(() => ({
   mockConvexQuery: vi.fn(),
   mockCheckoutSessionsCreate: vi.fn(),
 }));
 
-// Mock dependencies before importing the route
+// mock dependencies before importing the route
 vi.mock("@/lib/verifyChatToken", () => ({
   verifyChatToken: vi.fn(),
   extractChatToken: vi.fn(() => null),
@@ -33,7 +33,7 @@ vi.mock("@/lib/stripe", () => ({
 
 import { verifyChatToken } from "@/lib/verifyChatToken";
 
-// Import after mocking
+// import after mocking
 import { POST } from "@/app/api/stripe/buy-credits/route";
 
 describe("POST /api/stripe/buy-credits", () => {

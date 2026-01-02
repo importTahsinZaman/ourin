@@ -49,15 +49,15 @@ export function ThemeEditorPanel({
   const panelRef = useRef<HTMLDivElement>(null);
   const nameDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Editor should be visible if hovering OR color picker is open
+  // editor should be visible if hovering oR color picker is open
   const showEditor = isHoveringSelected || isColorPickerOpen;
 
-  // Sync local theme name when the custom theme changes
+  // sync local theme name when the custom theme changes
   useEffect(() => {
     setLocalThemeName(currentCustomTheme?.name ?? "");
   }, [currentCustomTheme?.name]);
 
-  // Cleanup debounce on unmount
+  // cleanup debounce on unmount
   useEffect(() => {
     return () => {
       if (nameDebounceRef.current) {
@@ -66,7 +66,7 @@ export function ThemeEditorPanel({
     };
   }, []);
 
-  // Update editor position when hovering selected custom theme
+  // update editor position when hovering selected custom theme
   const updateEditorPosition = useCallback((themeId: string) => {
     const cardEl = cardRefs.current.get(themeId);
     if (cardEl) {
@@ -79,7 +79,7 @@ export function ThemeEditorPanel({
     }
   }, []);
 
-  // Generate the next available "Theme n" name
+  // generate the next available "theme n" name
   const getNextThemeName = useCallback(() => {
     const existingNumbers = customThemes
       .map((t) => {
@@ -95,7 +95,7 @@ export function ThemeEditorPanel({
     return `Theme ${n}`;
   }, [customThemes]);
 
-  // Create a new theme based on the current theme (auto-detect light/dark)
+  // create a new theme based on the current theme (auto-detect light/dark)
   const handleCreateNew = useCallback(() => {
     const newTheme: OurinTheme = {
       id: `custom-${Date.now()}`,
@@ -108,11 +108,11 @@ export function ThemeEditorPanel({
       },
     };
 
-    // Add and auto-select the new theme (avoids stale closure issues with setTheme)
+    // add and auto-select the new theme (avoids stale closure issues with setTheme)
     addCustomTheme(newTheme, true);
   }, [theme, getNextThemeName, addCustomTheme]);
 
-  // Update custom theme property (auto-saves, auto-detects light/dark)
+  // update custom theme property (auto-saves, auto-detects light/dark)
   const updateCustomTheme = useCallback(
     (updates: Partial<OurinTheme>) => {
       if (!currentCustomTheme) return;
@@ -122,7 +122,7 @@ export function ThemeEditorPanel({
         ...(updates.colors || {}),
       };
 
-      // Auto-detect type if background color changed
+      // auto-detect type if background color changed
       const newType = updates.colors?.background
         ? isLightColor(updates.colors.background)
           ? "light"
@@ -141,7 +141,7 @@ export function ThemeEditorPanel({
     [currentCustomTheme, addCustomTheme]
   );
 
-  // Debounced theme name change handler
+  // debounced theme name change handler
   const handleThemeNameChange = useCallback(
     (newName: string) => {
       setLocalThemeName(newName);
@@ -157,7 +157,7 @@ export function ThemeEditorPanel({
     [updateCustomTheme]
   );
 
-  // Memoize filtered theme lists
+  // memoize filtered theme lists
   const lightThemes = useMemo(
     () => builtInThemes.filter((t) => t.type === "light"),
     [builtInThemes]
@@ -167,7 +167,7 @@ export function ThemeEditorPanel({
     [builtInThemes]
   );
 
-  // Callbacks for ThemeCard
+  // callbacks for themeCard
   const handleThemeSelect = useCallback(
     (id: string) => setTheme(id),
     [setTheme]
@@ -185,7 +185,7 @@ export function ThemeEditorPanel({
     setIsHoveringSelected(false);
   }, []);
 
-  // Ref callback for custom theme cards
+  // ref callback for custom theme cards
   const getCardRef = useCallback(
     (themeId: string) => (el: HTMLButtonElement | null) => {
       if (el) {
@@ -205,7 +205,7 @@ export function ThemeEditorPanel({
       )}
       ref={panelRef}
     >
-      {/* Floating editor - appears on the opposite side when hovering selected custom theme */}
+      {/* floating editor - appears on the opposite side when hovering selected custom theme */}
       {currentCustomTheme &&
         editorPosition !== null &&
         isOpen &&
@@ -223,7 +223,7 @@ export function ThemeEditorPanel({
             onMouseEnter={() => setIsHoveringSelected(true)}
             onMouseLeave={() => setIsHoveringSelected(false)}
           >
-            {/* Invisible bridge to connect editor to card */}
+            {/* invisible bridge to connect editor to card */}
             <div
               className={cn(
                 "top-0 absolute h-full",
@@ -232,7 +232,7 @@ export function ThemeEditorPanel({
               onMouseEnter={() => setIsHoveringSelected(true)}
             />
             <div className="space-y-3 p-3">
-              {/* Header */}
+              {/* header */}
               <div className="flex justify-between items-center">
                 <span
                   className="font-medium text-xs"
@@ -249,7 +249,7 @@ export function ThemeEditorPanel({
                 </button>
               </div>
 
-              {/* Theme name */}
+              {/* theme name */}
               <input
                 value={localThemeName}
                 onChange={(e) => handleThemeNameChange(e.target.value)}
@@ -262,7 +262,7 @@ export function ThemeEditorPanel({
                 placeholder="Theme name"
               />
 
-              {/* Colors */}
+              {/* colors */}
               <div className="space-y-2">
                 <ColorInput
                   label="Background"
@@ -305,7 +305,7 @@ export function ThemeEditorPanel({
           </div>
         )}
 
-      {/* Main panel */}
+      {/* main panel */}
       <aside
         className={cn(
           "relative h-full overflow-hidden",
@@ -319,7 +319,7 @@ export function ThemeEditorPanel({
         }}
       >
         <div className="flex flex-col w-[320px] h-full">
-          {/* Header */}
+          {/* header */}
           <div
             className="flex flex-shrink-0 justify-between items-center px-4 py-3"
             style={{ borderBottom: "1px solid var(--color-border-muted)" }}
@@ -339,10 +339,10 @@ export function ThemeEditorPanel({
             </button>
           </div>
 
-          {/* Content */}
+          {/* content */}
           <div className="flex-1 p-4 overflow-y-auto">
             <div className="space-y-6">
-              {/* Built-in themes */}
+              {/* built-in themes */}
               <div>
                 <div className="flex justify-between items-center mb-3">
                   <h3
@@ -353,7 +353,7 @@ export function ThemeEditorPanel({
                   </h3>
                 </div>
                 <div className="gap-2 grid grid-cols-2 max-h-[360px] overflow-y-auto">
-                  {/* Light themes column */}
+                  {/* light themes column */}
                   <div className="flex flex-col gap-2 pb-1">
                     {lightThemes.map((t) => (
                       <ThemeCard
@@ -364,7 +364,7 @@ export function ThemeEditorPanel({
                       />
                     ))}
                   </div>
-                  {/* Dark themes column */}
+                  {/* dark themes column */}
                   <div className="flex flex-col gap-2 pb-1">
                     {darkThemes.map((t) => (
                       <ThemeCard
@@ -378,7 +378,7 @@ export function ThemeEditorPanel({
                 </div>
               </div>
 
-              {/* Custom themes */}
+              {/* custom themes */}
               <div>
                 <div className="flex justify-between items-center mb-3">
                   <h3
@@ -437,7 +437,7 @@ export function ThemeEditorPanel({
                 )}
               </div>
 
-              {/* UI Font selector */}
+              {/* uI font selector */}
               <div>
                 <h3
                   className="mb-3 font-medium text-sm"
@@ -479,7 +479,7 @@ export function ThemeEditorPanel({
                 </div>
               </div>
 
-              {/* Layout */}
+              {/* layout */}
               <div>
                 <h3
                   className="mb-3 font-medium text-sm"

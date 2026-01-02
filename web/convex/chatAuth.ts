@@ -3,9 +3,9 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 
 /**
- * Generate a short-lived token for users to call the chat API.
- * The token is an HMAC signature that proves the user's identity at generation time.
- * With anonymous auth, all users should have a real userId.
+ * generate a short-lived token for users to call the chat aPI.
+ * the token is an hMAC signature that proves the user's identity at generation time.
+ * with anonymous auth, all users should have a real userId.
  */
 export const generateChatToken = mutation({
   args: {},
@@ -18,7 +18,7 @@ export const generateChatToken = mutation({
   }> => {
     const userId = await getAuthUserId(ctx);
 
-    // Due to anonymous auth, userId should always exist
+    // due to anonymous auth, userId should always exist
     if (!userId) {
       throw new Error("Not authenticated - please sign in");
     }
@@ -30,7 +30,7 @@ export const generateChatToken = mutation({
       throw new Error("CHAT_AUTH_SECRET environment variable is not set");
     }
 
-    // Create a simple token: base64(userId:timestamp:signature)
+    // create a simple token: base64(userId:timestamp:signature)
     const data = `${userId}:${timestamp}`;
     const encoder = new TextEncoder();
     const key = await crypto.subtle.importKey(
@@ -51,13 +51,13 @@ export const generateChatToken = mutation({
 
     const token = btoa(`${data}:${signatureHex}`);
 
-    // All users are authenticated now (including anonymous)
+    // all users are authenticated now (including anonymous)
     return { token, timestamp, isAuthenticated: true };
   },
 });
 
 /**
- * Verify a chat token. This is exported for use in the API route.
+ * verify a chat token. this is exported for use in the aPI route.
  */
 export async function verifyChatToken(
   token: string,
@@ -68,13 +68,13 @@ export async function verifyChatToken(
     const [userId, timestampStr, signature] = decoded.split(":");
     const timestamp = parseInt(timestampStr, 10);
 
-    // Check token is not expired (5 minute validity)
+    // check token is not expired (5 minute validity)
     const now = Date.now();
     if (now - timestamp > 300000) {
       return { valid: false };
     }
 
-    // Verify signature
+    // verify signature
     const data = `${userId}:${timestamp}`;
     const encoder = new TextEncoder();
     const key = await crypto.subtle.importKey(

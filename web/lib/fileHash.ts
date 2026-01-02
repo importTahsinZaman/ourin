@@ -1,27 +1,27 @@
 /**
- * File hashing utilities using SHA-256 for content deduplication.
- * Uses Web Workers for non-blocking hash computation on large files.
+ * file hashing utilities using sHA-256 for content deduplication.
+ * uses web workers for non-blocking hash computation on large files.
  */
 
-// Threshold for using Web Worker (files larger than this use worker)
-const WORKER_THRESHOLD = 1024 * 1024; // 1MB
+// threshold for using web worker (files larger than this use worker)
+const WORKER_THRESHOLD = 1024 * 1024; // 1mB
 
 /**
- * Compute SHA-256 hash of a file.
- * Uses Web Worker for large files to avoid blocking the main thread.
+ * compute sHA-256 hash of a file.
+ * uses web worker for large files to avoid blocking the main thread.
  */
 export async function computeFileHash(file: File): Promise<string> {
-  // For small files, compute directly on main thread (faster due to no worker overhead)
+  // for small files, compute directly on main thread (faster due to no worker overhead)
   if (file.size < WORKER_THRESHOLD) {
     return computeHashDirect(file);
   }
 
-  // For large files, use Web Worker
+  // for large files, use web worker
   return computeHashInWorker(file);
 }
 
 /**
- * Compute hash directly on main thread (for small files).
+ * compute hash directly on main thread (for small files).
  */
 async function computeHashDirect(file: File): Promise<string> {
   const buffer = await file.arrayBuffer();
@@ -30,11 +30,11 @@ async function computeHashDirect(file: File): Promise<string> {
 }
 
 /**
- * Compute hash in a Web Worker (for large files).
+ * compute hash in a web worker (for large files).
  */
 function computeHashInWorker(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
-    // Create inline worker from blob
+    // create inline worker from blob
     const workerCode = `
       self.onmessage = async (e) => {
         try {
@@ -71,13 +71,13 @@ function computeHashInWorker(file: File): Promise<string> {
       reject(error);
     };
 
-    // Send file to worker
+    // send file to worker
     worker.postMessage(file);
   });
 }
 
 /**
- * Convert ArrayBuffer to hex string.
+ * convert arrayBuffer to hex string.
  */
 function arrayBufferToHex(buffer: ArrayBuffer): string {
   const hashArray = Array.from(new Uint8Array(buffer));

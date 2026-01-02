@@ -41,32 +41,32 @@ export function ModelCoresDropdown({
   const containerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Get user tier info
+  // get user tier info
   const tierInfo = useQuery(api.billing.getUserTier);
 
-  // Cores data and mutations (works for both logged-in and anonymous users)
+  // cores data and mutations (works for both logged-in and anonymous users)
   const { cores, activeCoresCount, toggleActive, removeCore, reorderCores } =
     useCores();
 
-  // Helper to check if user can access a model based on their tier
+  // helper to check if user can access a model based on their tier
   const canAccessModel = useCallback(
     (modelId: string, _modelProvider: string) => {
-      // Not authenticated - only free model
+      // not authenticated - only free model
       if (!isAuthenticated) {
         return modelId === FREE_MODEL_ID;
       }
 
-      // Loading tier info - be permissive
+      // loading tier info - be permissive
       if (!tierInfo) {
         return true;
       }
 
-      // Anonymous or Free tier - only free model
+      // anonymous or free tier - only free model
       if (tierInfo.tier === "anonymous" || tierInfo.tier === "free") {
         return modelId === FREE_MODEL_ID;
       }
 
-      // Subscriber or self-hosted - all models
+      // subscriber or self-hosted - all models
       if (tierInfo.tier === "subscriber" || tierInfo.tier === "self_hosted") {
         return true;
       }
@@ -76,7 +76,7 @@ export function ModelCoresDropdown({
     [isAuthenticated, tierInfo]
   );
 
-  // Get reason why model is locked
+  // get reason why model is locked
   const getLockReason = useCallback(
     (_modelProvider: string) => {
       if (!isAuthenticated) {
@@ -85,7 +85,7 @@ export function ModelCoresDropdown({
       if (!tierInfo) {
         return "";
       }
-      // Self-hosted and subscriber have full access - no lock reason
+      // self-hosted and subscriber have full access - no lock reason
       if (tierInfo.tier === "self_hosted" || tierInfo.tier === "subscriber") {
         return "";
       }
@@ -97,20 +97,20 @@ export function ModelCoresDropdown({
     [isAuthenticated, tierInfo]
   );
 
-  // Global core editor
+  // global core editor
   const { openEditor, isOpen: coreEditorOpen } = useCoreEditor();
 
-  // Drag state for reordering
+  // drag state for reordering
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
 
-  // System prompt preview modal
+  // system prompt preview modal
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const modelInfo = getModelInfo(selectedModel);
 
-  // Filter models by search (sorted by release date, newest first)
-  // For unauthenticated or free tier users, put the free model at the top
+  // filter models by search (sorted by release date, newest first)
+  // for unauthenticated or free tier users, put the free model at the top
   const filteredModels = useMemo(() => {
     const searchLower = search.toLowerCase();
     const filtered = MODELS_BY_DATE.filter(
@@ -120,7 +120,7 @@ export function ModelCoresDropdown({
         m.description.toLowerCase().includes(searchLower)
     );
 
-    // Put free model first for unauthenticated or free tier users
+    // put free model first for unauthenticated or free tier users
     const shouldPrioritizeFreeModel =
       !isAuthenticated ||
       tierInfo?.tier === "anonymous" ||
@@ -137,7 +137,7 @@ export function ModelCoresDropdown({
     return filtered;
   }, [search, isAuthenticated, tierInfo?.tier]);
 
-  // Filter cores by search
+  // filter cores by search
   const filteredCores = useMemo(() => {
     if (!cores) return undefined;
     const searchLower = search.toLowerCase();
@@ -148,7 +148,7 @@ export function ModelCoresDropdown({
     );
   }, [cores, search]);
 
-  // Memoize the prompt preview (uses separators for visual display)
+  // memoize the prompt preview (uses separators for visual display)
   const previewPrompt = useMemo(() => {
     if (!cores) return "No active cores";
     const activeCores = cores
@@ -158,7 +158,7 @@ export function ModelCoresDropdown({
     return activeCores.map((c) => c.content).join("\n\n---\n\n");
   }, [cores]);
 
-  // Close on outside click (but not when modal is open)
+  // close on outside click (but not when modal is open)
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (coreEditorOpen || previewOpen) return;
@@ -175,19 +175,19 @@ export function ModelCoresDropdown({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [coreEditorOpen, previewOpen]);
 
-  // Check if should open above and focus search
+  // check if should open above and focus search
   useEffect(() => {
     if (isOpen && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
       setOpenAbove(spaceBelow < 400);
 
-      // Focus search input
+      // focus search input
       setTimeout(() => searchInputRef.current?.focus(), 0);
     }
   }, [isOpen]);
 
-  // Close modal on Escape key
+  // close modal on escape key
   useEffect(() => {
     if (!previewOpen) return;
 
@@ -201,7 +201,7 @@ export function ModelCoresDropdown({
     return () => document.removeEventListener("keydown", handleEscape);
   }, [previewOpen]);
 
-  // Close dropdown on Escape key
+  // close dropdown on escape key
   useEffect(() => {
     if (!isOpen) return;
 
@@ -216,10 +216,10 @@ export function ModelCoresDropdown({
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen]);
 
-  // Model selection - keeps dropdown open
+  // model selection - keeps dropdown open
   const handleModelSelect = useCallback(
     (modelId: string, modelProvider: string) => {
-      // Check if user can select this model based on their tier
+      // check if user can select this model based on their tier
       if (!canAccessModel(modelId, modelProvider)) {
         const reason = getLockReason(modelProvider);
         toast.error("Model not available", {
@@ -232,7 +232,7 @@ export function ModelCoresDropdown({
     [onModelChange, canAccessModel, getLockReason]
   );
 
-  // Core toggle - keeps dropdown open
+  // core toggle - keeps dropdown open
   const handleCoreToggle = useCallback(
     async (coreId: string) => {
       const success = await toggleActive(coreId);
@@ -243,7 +243,7 @@ export function ModelCoresDropdown({
     [toggleActive]
   );
 
-  // Core edit
+  // core edit
   const handleCoreEdit = useCallback(
     (core: Core) => {
       setIsOpen(false);
@@ -253,7 +253,7 @@ export function ModelCoresDropdown({
     [openEditor]
   );
 
-  // Core delete
+  // core delete
   const handleCoreDelete = useCallback(
     async (coreId: string) => {
       const success = await removeCore(coreId);
@@ -264,14 +264,14 @@ export function ModelCoresDropdown({
     [removeCore]
   );
 
-  // New core
+  // new core
   const handleNewCore = useCallback(() => {
     setIsOpen(false);
     setSearch("");
     openEditor();
   }, [openEditor]);
 
-  // Drag handlers for reordering
+  // drag handlers for reordering
   const handleDragStart = useCallback((e: React.DragEvent, coreId: string) => {
     setDraggedId(coreId);
     e.dataTransfer.effectAllowed = "move";
@@ -306,7 +306,7 @@ export function ModelCoresDropdown({
   return (
     <>
       <div ref={containerRef} className="relative">
-        {/* Trigger button */}
+        {/* trigger button */}
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="flex items-center gap-1.5 hover:bg-[var(--color-background-hover)] px-2 py-1.5 rounded-sm transition-colors"
@@ -334,7 +334,7 @@ export function ModelCoresDropdown({
           />
         </button>
 
-        {/* Dropdown menu */}
+        {/* dropdown menu */}
         {isOpen && (
           <div
             className={cn(
@@ -346,7 +346,7 @@ export function ModelCoresDropdown({
               border: "1px solid var(--color-border-default)",
             }}
           >
-            {/* Search */}
+            {/* search */}
             <div
               className="p-2"
               style={{ borderBottom: "1px solid var(--color-border-muted)" }}
@@ -370,9 +370,9 @@ export function ModelCoresDropdown({
               </div>
             </div>
 
-            {/* Two-column layout */}
+            {/* two-column layout */}
             <div className="flex max-h-[400px]">
-              {/* Models column (left) */}
+              {/* models column (left) */}
               <div
                 className="flex-1 p-1.5 min-w-0 overflow-y-auto"
                 style={{ borderRight: "1px solid var(--color-border-muted)" }}
@@ -444,9 +444,9 @@ export function ModelCoresDropdown({
                 })}
               </div>
 
-              {/* Cores column (right) */}
+              {/* cores column (right) */}
               <div className="flex flex-col flex-1 min-w-0">
-                {/* Scrollable cores list */}
+                {/* scrollable cores list */}
                 <div className="flex-1 space-y-0.5 p-1.5 overflow-y-auto">
                   <div
                     className="flex items-center gap-1.5 px-2.5 py-1 font-medium text-xs uppercase tracking-wider"
@@ -508,7 +508,7 @@ export function ModelCoresDropdown({
                         </span>
                       </div>
                       <div className="flex items-center gap-0.5 shrink-0">
-                        {/* Edit/Delete (visible on hover) */}
+                        {/* edit/delete (visible on hover) */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -533,7 +533,7 @@ export function ModelCoresDropdown({
                   ))}
                 </div>
 
-                {/* Sticky footer buttons */}
+                {/* sticky footer buttons */}
                 <div
                   className="flex gap-1 p-1.5 shrink-0"
                   style={{ borderTop: "1px solid var(--color-border-muted)" }}
@@ -561,7 +561,7 @@ export function ModelCoresDropdown({
         )}
       </div>
 
-      {/* System Prompt Preview Modal */}
+      {/* system prompt preview modal */}
       {previewOpen && (
         <div
           className="z-50 fixed inset-0 flex justify-center items-center bg-black/50 p-4"
@@ -575,7 +575,7 @@ export function ModelCoresDropdown({
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
+            {/* header */}
             <div
               className="flex justify-between items-center px-4 py-3 shrink-0"
               style={{ borderBottom: "1px solid var(--color-border-muted)" }}
@@ -595,7 +595,7 @@ export function ModelCoresDropdown({
               </button>
             </div>
 
-            {/* Content */}
+            {/* content */}
             <div className="flex-1 p-4 overflow-y-auto">
               <pre
                 className="font-mono text-sm whitespace-pre-wrap"
@@ -605,7 +605,7 @@ export function ModelCoresDropdown({
               </pre>
             </div>
 
-            {/* Footer */}
+            {/* footer */}
             <div
               className="px-4 py-3 shrink-0"
               style={{ borderTop: "1px solid var(--color-border-muted)" }}

@@ -63,7 +63,7 @@ function saveDraftToStorage(
     }
     localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(drafts));
 
-    // Also save to cookie for new chat to prevent hydration flash
+    // also save to cookie for new chat to prevent hydration flash
     if (!conversationId) {
       const cookieValue = text.trim()
         ? encodeURIComponent(text.substring(0, 500))
@@ -71,7 +71,7 @@ function saveDraftToStorage(
       setCookie(NEW_CHAT_DRAFT_COOKIE, cookieValue, 60 * 60 * 24 * 7); // 7 days
     }
   } catch {
-    // Ignore storage errors
+    // ignore storage errors
   }
 }
 
@@ -110,7 +110,7 @@ function saveAttachmentsDraftToStorage(
     );
     const key = getDraftKey(conversationId);
 
-    // Only persist ready attachments with storageId
+    // only persist ready attachments with storageId
     const toPersist: PersistedAttachment[] = attachments
       .filter((a) => a.status === "ready" && a.storageId && a.url)
       .map((a) => ({
@@ -130,7 +130,7 @@ function saveAttachmentsDraftToStorage(
     }
     localStorage.setItem(ATTACHMENT_DRAFT_KEY, JSON.stringify(drafts));
   } catch {
-    // Ignore storage errors
+    // ignore storage errors
   }
 }
 
@@ -145,11 +145,11 @@ function clearAttachmentsDraftFromStorage(
     delete drafts[getDraftKey(conversationId)];
     localStorage.setItem(ATTACHMENT_DRAFT_KEY, JSON.stringify(drafts));
   } catch {
-    // Ignore storage errors
+    // ignore storage errors
   }
 }
 
-// Exported utility functions for external use
+// exported utility functions for external use
 export function clearNewChatDraft(): void {
   if (typeof window === "undefined") return;
   try {
@@ -158,7 +158,7 @@ export function clearNewChatDraft(): void {
     localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(drafts));
     deleteCookie(NEW_CHAT_DRAFT_COOKIE);
   } catch {
-    // Ignore storage errors
+    // ignore storage errors
   }
 }
 
@@ -180,7 +180,7 @@ export function setNewChatDraft(text: string, autoSend = false): void {
       localStorage.setItem(AUTO_SEND_KEY, "true");
     }
   } catch {
-    // Ignore storage errors
+    // ignore storage errors
   }
 }
 
@@ -228,7 +228,7 @@ export function useDraft({
   conversationId,
   initialDraft = "",
 }: UseDraftOptions): UseDraftReturn {
-  // Use initialDraft for new chat to prevent hydration flash
+  // use initialDraft for new chat to prevent hydration flash
   const [text, setTextState] = useState(!conversationId ? initialDraft : "");
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [autoSendPending, setAutoSendPending] = useState(false);
@@ -239,7 +239,7 @@ export function useDraft({
     conversationId
   );
 
-  // Capture auto-send flag synchronously on mount
+  // capture auto-send flag synchronously on mount
   useEffect(() => {
     if (!conversationId) {
       const hasAutoSendFlag = localStorage.getItem(AUTO_SEND_KEY) === "true";
@@ -249,7 +249,7 @@ export function useDraft({
     }
   }, [conversationId]);
 
-  // Load draft or first-visit message on mount/conversation change
+  // load draft or first-visit message on mount/conversation change
   useEffect(() => {
     currentConversationRef.current = conversationId;
 
@@ -269,7 +269,7 @@ export function useDraft({
       setTextState(draft);
     }
 
-    // Load attachment drafts
+    // load attachment drafts
     const savedAttachments = loadAttachmentsDraft(conversationId);
     if (savedAttachments.length > 0) {
       const restored: Attachment[] = savedAttachments.map((a) => ({
@@ -286,7 +286,7 @@ export function useDraft({
       setAttachments([]);
     }
 
-    // Resize textarea after setting text
+    // resize textarea after setting text
     requestAnimationFrame(() => {
       const textarea = textareaRef.current;
       if (textarea) {
@@ -299,7 +299,7 @@ export function useDraft({
     });
   }, [conversationId, initialDraft]);
 
-  // Trigger auto-send when ready
+  // trigger auto-send when ready
   useEffect(() => {
     if (shouldAutoSend && text.trim()) {
       localStorage.removeItem(AUTO_SEND_KEY);

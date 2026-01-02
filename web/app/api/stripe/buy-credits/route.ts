@@ -10,11 +10,11 @@ import { api } from "@/convex/_generated/api";
 import { IS_SELF_HOSTING } from "@/lib/config";
 
 /**
- * Create a Stripe Checkout session for purchasing a credit pack.
- * Requires an active subscription (membership model).
+ * create a stripe checkout session for purchasing a credit pack.
+ * requires an active subscription (membership model).
  */
 export async function POST(req: Request) {
-  // Stripe is disabled in self-hosting mode
+  // stripe is disabled in self-hosting mode
   if (IS_SELF_HOSTING) {
     return NextResponse.json(
       { error: "Billing features are disabled in self-hosting mode" },
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    // Check if credit pack price is configured
+    // check if credit pack price is configured
     if (!CREDIT_PACK_PRICE_ID) {
       console.error("STRIPE_CREDIT_PACK_PRICE_ID not configured");
       return NextResponse.json(
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
-    // Extract token from Authorization header (preferred) or body (fallback)
+    // extract token from authorization header (preferred) or body (fallback)
     const chatToken =
       extractChatToken(req) || (body.chatToken as string | undefined);
 
@@ -64,7 +64,7 @@ export async function POST(req: Request) {
 
     const userId = result.userId;
 
-    // Verify user has an active subscription (required to buy credit packs)
+    // verify user has an active subscription (required to buy credit packs)
     const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
     const subscription = await convex.query(
       api.subscriptions.getSubscriptionByUserId,
@@ -80,7 +80,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Create Stripe Checkout session for one-time payment
+    // create stripe checkout session for one-time payment
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       customer: subscription.stripeCustomerId,

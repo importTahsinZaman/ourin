@@ -12,14 +12,14 @@ import { IS_SELF_HOSTING } from "@/lib/config";
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 /**
- * Save an API key with server-side encryption.
- * The client sends the plain key, we encrypt it here where the secret is available.
+ * save an aPI key with server-side encryption.
+ * the client sends the plain key, we encrypt it here where the secret is available.
  *
- * Disabled in self-hosting mode - all requests use server-side API keys.
- * Requires an active subscription - BYOK is a subscriber-only feature.
+ * disabled in self-hosting mode - all requests use server-side aPI keys.
+ * requires an active subscription - bYOK is a subscriber-only feature.
  */
 export async function POST(req: Request) {
-  // In self-hosting mode, BYOK is disabled
+  // in self-hosting mode, bYOK is disabled
   if (IS_SELF_HOSTING) {
     return NextResponse.json(
       { error: "API key management is not available in self-hosting mode" },
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { provider, apiKey } = body;
 
-    // Extract token from Authorization header (preferred) or body (fallback)
+    // extract token from authorization header (preferred) or body (fallback)
     const chatToken =
       extractChatToken(req) || (body.chatToken as string | undefined);
 
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
 
     const userId = result.userId;
 
-    // Verify user has an active subscription - BYOK is a subscriber-only feature
+    // verify user has an active subscription - bYOK is a subscriber-only feature
     const tierInfo = await convex.query(api.billing.getUserTierById, {
       userId,
     });
@@ -74,7 +74,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Validate inputs
+    // validate inputs
     if (!provider || !apiKey) {
       return NextResponse.json(
         { error: "Missing provider or apiKey" },
@@ -82,7 +82,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Validate key format
+    // validate key format
     if (!validateKeyFormat(provider, apiKey)) {
       return NextResponse.json(
         { error: "Invalid API key format for this provider" },
@@ -90,13 +90,13 @@ export async function POST(req: Request) {
       );
     }
 
-    // Encrypt the key server-side (where API_KEY_ENCRYPTION_SECRET is available)
+    // encrypt the key server-side (where aPI_kEY_eNCRYPTION_sECRET is available)
     const encryptedKey = await encryptApiKey(apiKey);
     const keyHint = getKeyHint(apiKey);
 
-    // Save to Convex via server-only mutation
-    // Note: We need to use a server-only endpoint since ConvexHttpClient can't use auth context
-    // Instead, we use a mutation that accepts userId and validates via serverSecret
+    // save to convex via server-only mutation
+    // note: we need to use a server-only endpoint since convexHttpClient can't use auth context
+    // instead, we use a mutation that accepts userId and validates via serverSecret
     await convex.mutation(api.apiKeys.saveApiKeyInternal, {
       userId,
       provider,

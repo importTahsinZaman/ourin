@@ -21,6 +21,6 @@ export function recordThemeUsage(themeId: string): void {
     timestamps[themeId] = Date.now();
     localStorage.setItem(STORAGE_KEY, JSON.stringify(timestamps));
   } catch {
-    // Ignore storage errors
+    // ignore storage errors
   }
 }

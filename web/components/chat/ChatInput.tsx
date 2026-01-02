@@ -39,7 +39,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/Tooltip";
 
-// MAX_FILE_SIZE and ALLOWED_TYPES imported from useFileUpload
+// mAX_fILE_sIZE and aLLOWED_tYPES imported from useFileUpload
 
 interface Attachment {
   id: string;
@@ -51,7 +51,7 @@ interface Attachment {
   url?: string;
   isDrawing?: boolean;
   contentHash?: string;
-  isDuplicate?: boolean; // True if reusing existing file
+  isDuplicate?: boolean; // true if reusing existing file
 }
 
 interface ChatInputProps {
@@ -85,9 +85,9 @@ interface ChatInputProps {
   canUseWebSearch?: boolean;
 }
 
-// ChatInputHandle for ref forwarding - exposes methods for external control
+// chatInputHandle for ref forwarding - exposes methods for external control
 export interface ChatInputHandle {
-  /** Add files programmatically (e.g., from drag-and-drop) */
+  /** add files programmatically (e.g., from drag-and-drop) */
   addFiles: (files: File[]) => Promise<void>;
 }
 
@@ -135,7 +135,7 @@ function saveDraft(
     }
     localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(drafts));
 
-    // Also save to cookie for new chat to prevent hydration flash
+    // also save to cookie for new chat to prevent hydration flash
     if (!conversationId) {
       const cookieValue = text.trim()
         ? encodeURIComponent(text.substring(0, 500))
@@ -143,7 +143,7 @@ function saveDraft(
       setCookie(NEW_CHAT_DRAFT_COOKIE, cookieValue, 60 * 60 * 24 * 7); // 7 days
     }
   } catch {
-    // Ignore storage errors
+    // ignore storage errors
   }
 }
 
@@ -152,7 +152,7 @@ function isFirstVisit(): boolean {
   return !localStorage.getItem(FIRST_VISIT_KEY);
 }
 
-// Re-export utility functions from hooks
+// re-export utility functions from hooks
 export const clearNewChatDraft = clearDraftUtil;
 
 const AUTO_SEND_KEY = "ourin-auto-send-pending";
@@ -165,7 +165,7 @@ function markFirstVisitComplete(): void {
   localStorage.setItem(FIRST_VISIT_KEY, "true");
 }
 
-// Attachment draft persistence functions
+// attachment draft persistence functions
 function loadAttachmentsDraft(
   conversationId: string | null | undefined
 ): PersistedAttachment[] {
@@ -191,7 +191,7 @@ function saveAttachmentsDraft(
     );
     const key = getDraftKey(conversationId);
 
-    // Only persist ready attachments with storageId
+    // only persist ready attachments with storageId
     const toPersist: PersistedAttachment[] = attachments
       .filter((a) => a.status === "ready" && a.storageId && a.url)
       .map((a) => ({
@@ -211,7 +211,7 @@ function saveAttachmentsDraft(
     }
     localStorage.setItem(ATTACHMENT_DRAFT_KEY, JSON.stringify(drafts));
   } catch {
-    // Ignore storage errors
+    // ignore storage errors
   }
 }
 
@@ -226,7 +226,7 @@ function clearAttachmentsDraft(
     delete drafts[getDraftKey(conversationId)];
     localStorage.setItem(ATTACHMENT_DRAFT_KEY, JSON.stringify(drafts));
   } catch {
-    // Ignore storage errors
+    // ignore storage errors
   }
 }
 
@@ -253,7 +253,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
     },
     ref
   ) {
-    // Use initialDraft for new chat to prevent hydration flash
+    // use initialDraft for new chat to prevent hydration flash
     const [text, setText] = useState(!conversationId ? initialDraft : "");
     const [attachments, setAttachments] = useState<Attachment[]>([]);
     const [showDrawingEditor, setShowDrawingEditor] = useState(false);
@@ -266,8 +266,8 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       conversationId
     );
 
-    // Capture auto-send flag synchronously on mount (before paint)
-    // Note: We just READ the flag here, don't clear it yet (StrictMode double-invokes effects)
+    // capture auto-send flag synchronously on mount (before paint)
+    // note: we just rEAD the flag here, don't clear it yet (strictMode double-invokes effects)
     useLayoutEffect(() => {
       if (!conversationId) {
         const hasAutoSendFlag = localStorage.getItem(AUTO_SEND_KEY) === "true";
@@ -277,10 +277,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       }
     }, [conversationId]);
 
-    // File upload functionality from hook
+    // file upload functionality from hook
     const { processFile, deleteFile: deleteFileFromStorage } = useFileUpload();
 
-    // Core file processing logic - shared between file input and drag-drop
+    // core file processing logic - shared between file input and drag-drop
     const processFiles = useCallback(
       async (files: File[]) => {
         const newAttachments: Attachment[] = [];
@@ -289,7 +289,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
           const validation = validateFile(file);
           const id = crypto.randomUUID();
 
-          // Create preview for images
+          // create preview for images
           let preview: string | undefined;
           if (isImageFile(file.type)) {
             preview = URL.createObjectURL(file);
@@ -303,12 +303,12 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
               status: "error",
               error: validation.error,
             });
-            // Show toast for invalid files
+            // show toast for invalid files
             toast.error(`Cannot attach ${file.name}`, {
               description: validation.error,
             });
           } else {
-            // Start with "checking" status while we compute hash and check for duplicates
+            // start with "checking" status while we compute hash and check for duplicates
             newAttachments.push({
               id,
               file,
@@ -322,7 +322,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
 
         setAttachments((prev) => [...prev, ...newAttachments]);
 
-        // Process files (hash, dedup check, upload if needed)
+        // process files (hash, dedup check, upload if needed)
         for (const attachment of newAttachments) {
           if (attachment.status === "checking") {
             const updated = await processFile(attachment);
@@ -330,7 +330,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
               const newList = prev.map((a) =>
                 a.id === attachment.id ? updated : a
               );
-              // Save to draft after successful processing
+              // save to draft after successful processing
               saveAttachmentsDraft(currentConversationRef.current, newList);
               return newList;
             });
@@ -340,7 +340,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       [processFile]
     );
 
-    // Expose addFiles method for external control (e.g., drag-and-drop from ChatArea)
+    // expose addFiles method for external control (e.g., drag-and-drop from chatArea)
     useImperativeHandle(
       ref,
       () => ({
@@ -349,38 +349,38 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       [processFiles]
     );
 
-    // Handle text changes - save draft immediately
+    // handle text changes - save draft immediately
     const handleTextChange = useCallback((newText: string) => {
       setText(newText);
       saveDraft(currentConversationRef.current, newText);
     }, []);
 
-    // Load draft or first-visit message on mount/conversation change
+    // load draft or first-visit message on mount/conversation change
     useEffect(() => {
-      // Update current conversation ref
+      // update current conversation ref
       currentConversationRef.current = conversationId;
 
-      // Check for first visit on new chat
+      // check for first visit on new chat
       if (!conversationId && isFirstVisit() && !initializedRef.current) {
         setText("Hi, tell me about Ourin");
         saveDraft(conversationId, "Hi, tell me about Ourin");
         markFirstVisitComplete();
         initializedRef.current = true;
       } else if (!conversationId && !initializedRef.current) {
-        // New chat - cookie already set initial state via useState
-        // If no cookie, fall back to localStorage
+        // new chat - cookie already set initial state via useState
+        // if no cookie, fall back to localStorage
         if (!initialDraft) {
           const draft = loadDraft(conversationId);
           setText(draft);
         }
         initializedRef.current = true;
       } else if (conversationId || initializedRef.current) {
-        // Load saved draft for existing conversation, or when navigating back to new chat
+        // load saved draft for existing conversation, or when navigating back to new chat
         const draft = loadDraft(conversationId);
         setText(draft);
       }
 
-      // Load attachment drafts
+      // load attachment drafts
       const savedAttachments = loadAttachmentsDraft(conversationId);
       if (savedAttachments.length > 0) {
         const restored: Attachment[] = savedAttachments.map((a) => ({
@@ -397,37 +397,37 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
         setAttachments([]);
       }
 
-      // Resize textarea after setting text
+      // resize textarea after setting text
       requestAnimationFrame(() => {
         const textarea = textareaRef.current;
         if (textarea) {
           textarea.style.height = "auto";
           textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
           textarea.focus();
-          // Move cursor to end of text
+          // move cursor to end of text
           const len = textarea.value.length;
           textarea.setSelectionRange(len, len);
         }
       });
     }, [conversationId]);
 
-    // Trigger auto-send when text is loaded and shouldAutoSend is true
+    // trigger auto-send when text is loaded and shouldAutoSend is true
     useEffect(() => {
       if (shouldAutoSend && text.trim() && !isLoading) {
-        // Clear the localStorage flag NOW (after state has propagated)
+        // clear the localStorage flag nOW (after state has propagated)
         localStorage.removeItem(AUTO_SEND_KEY);
         setShouldAutoSend(false);
         setAutoSendPending(true);
       }
     }, [shouldAutoSend, text, isLoading]);
 
-    // Handle file selection from file input
+    // handle file selection from file input
     const handleFileSelect = useCallback(
       async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files || files.length === 0) return;
 
-        // Reset input first to allow re-selecting same file
+        // reset input first to allow re-selecting same file
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
@@ -437,20 +437,20 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       [processFiles]
     );
 
-    // Remove attachment
+    // remove attachment
     const removeAttachment = useCallback(
       async (id: string) => {
         const attachment = attachments.find((a) => a.id === id);
         if (!attachment) return;
 
-        // Delete from storage if appropriate (checks for duplicates, etc.)
+        // delete from storage if appropriate (checks for duplicates, etc.)
         if (shouldDeleteFromStorage(attachment, attachments)) {
           await deleteFileFromStorage(attachment.storageId!);
         }
 
-        // Clean up preview URL only if:
-        // - Not a duplicate (preview URL is from Convex, not an object URL we created)
-        // - No other attachments share the same preview
+        // clean up preview uRL only if:
+        // - not a duplicate (preview uRL is from convex, not an object uRL we created)
+        // - no other attachments share the same preview
         if (attachment.preview && !attachment.isDuplicate) {
           const othersWithSamePreview = attachments.filter(
             (a) => a.id !== id && a.preview === attachment.preview
@@ -460,7 +460,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
           }
         }
 
-        // Remove from state and update persisted drafts
+        // remove from state and update persisted drafts
         setAttachments((prev) => {
           const updated = prev.filter((a) => a.id !== id);
           saveAttachmentsDraft(conversationId, updated);
@@ -470,10 +470,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       [attachments, deleteFileFromStorage, conversationId]
     );
 
-    // Handle send
+    // handle send
     const handleSend = useCallback(
       async (options?: { stayInPlace?: boolean }) => {
-        // Check if sending is blocked
+        // check if sending is blocked
         if (!canSend) {
           if (sendBlockedReason) {
             toast.error("Cannot send message", {
@@ -490,7 +490,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
 
         if (!trimmedText && readyAttachments.length === 0) return;
 
-        // Build attachment data
+        // build attachment data
         const attachmentData = readyAttachments.map((a) => ({
           type: "file" as const,
           mediaType: a.file.type,
@@ -500,18 +500,18 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
           fileSize: a.file.size,
         }));
 
-        // Clear input and draft
+        // clear input and draft
         setText("");
         saveDraft(conversationId, "");
         clearAttachmentsDraft(conversationId);
         setAttachments([]);
 
-        // Reset textarea height immediately
+        // reset textarea height immediately
         if (textareaRef.current) {
           textareaRef.current.style.height = "auto";
         }
 
-        // Send (pass stayInPlace to prevent auto-scroll)
+        // send (pass stayInPlace to prevent auto-scroll)
         await onSend(trimmedText, attachmentData, {
           webSearchEnabled,
           stayInPlace: options?.stayInPlace,
@@ -528,13 +528,13 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       ]
     );
 
-    // Handle key press
+    // handle key press
     const handleKeyDown = useCallback(
       (e: React.KeyboardEvent) => {
         if (e.key === "Enter" && !e.shiftKey) {
           e.preventDefault();
           if (!isLoading) {
-            // Ctrl/Cmd+Enter = send without scrolling (stay in place)
+            // ctrl/cmd+enter = send without scrolling (stay in place)
             const stayInPlace = e.ctrlKey || e.metaKey;
             handleSend({ stayInPlace });
           }
@@ -543,7 +543,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       [isLoading, handleSend]
     );
 
-    // Handle auto-send from command palette
+    // handle auto-send from command palette
     useEffect(() => {
       if (autoSendPending && text.trim() && !isLoading) {
         setAutoSendPending(false);
@@ -551,7 +551,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       }
     }, [autoSendPending, text, isLoading, handleSend]);
 
-    // Auto-resize textarea
+    // auto-resize textarea
     const handleInput = useCallback(() => {
       const textarea = textareaRef.current;
       if (textarea) {
@@ -560,7 +560,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       }
     }, []);
 
-    // Handle paste - extract images from clipboard
+    // handle paste - extract images from clipboard
     const handlePaste = useCallback(
       async (e: React.ClipboardEvent) => {
         const items = e.clipboardData?.items;
@@ -569,7 +569,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
         const imageFiles: File[] = [];
 
         for (const item of Array.from(items)) {
-          // Check if the item is an image
+          // check if the item is an image
           if (item.type.startsWith("image/")) {
             const file = item.getAsFile();
             if (file) {
@@ -578,20 +578,20 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
           }
         }
 
-        // If no images found, let default paste behavior handle it (text)
+        // if no images found, let default paste behavior handle it (text)
         if (imageFiles.length === 0) return;
 
-        // Prevent default paste behavior for images
+        // prevent default paste behavior for images
         e.preventDefault();
 
-        // Process each image file
+        // process each image file
         const newAttachments: Attachment[] = [];
 
         for (const file of imageFiles) {
           const validation = validateFile(file);
           const id = crypto.randomUUID();
 
-          // Generate a filename for pasted images
+          // generate a filename for pasted images
           const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
           const extension = file.type.split("/")[1] || "png";
           const namedFile = new File(
@@ -600,7 +600,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
             { type: file.type }
           );
 
-          // Create preview
+          // create preview
           const preview = URL.createObjectURL(file);
 
           if (!validation.valid) {
@@ -623,7 +623,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
 
         setAttachments((prev) => [...prev, ...newAttachments]);
 
-        // Process files (hash, dedup check, upload if needed)
+        // process files (hash, dedup check, upload if needed)
         for (const attachment of newAttachments) {
           if (attachment.status === "checking") {
             const updated = await processFile(attachment, "image");
@@ -652,7 +652,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       [attachments]
     );
 
-    // Clean up object URLs on unmount to prevent memory leaks
+    // clean up object uRLs on unmount to prevent memory leaks
     useEffect(() => {
       return () => {
         attachments.forEach((a) => {
@@ -662,24 +662,24 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
         });
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // Only run cleanup on unmount
+    }, []); // only run cleanup on unmount
 
-    // Handle file upload from menu
+    // handle file upload from menu
     const handleUploadFile = useCallback(() => {
       fileInputRef.current?.click();
     }, []);
 
-    // Take screenshot using Screen Capture API
+    // take screenshot using screen capture aPI
     const handleTakeScreenshot = useCallback(async () => {
       try {
-        // Create CaptureController to prevent focus switching (Conditional Focus API)
+        // create captureController to prevent focus switching (conditional focus aPI)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const CaptureControllerCtor = (globalThis as any).CaptureController;
         const controller = CaptureControllerCtor
           ? new CaptureControllerCtor()
           : null;
 
-        // Build options
+        // build options
         const displayMediaOptions: DisplayMediaStreamOptions &
           Record<string, unknown> = {
           video: {
@@ -693,33 +693,33 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
           monitorTypeSurfaces: "include",
         };
 
-        // Add controller if supported
+        // add controller if supported
         if (controller) {
           displayMediaOptions.controller = controller;
         }
 
-        // Request screen share
+        // request screen share
         const stream =
           await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
 
-        // Prevent focus change - must be called synchronously after getDisplayMedia resolves
+        // prevent focus change - must be called synchronously after getDisplayMedia resolves
         if (controller) {
           try {
             controller.setFocusBehavior("no-focus-change");
           } catch {
-            // Ignore if not supported
+            // ignore if not supported
           }
         }
 
-        // Get the video track
+        // get the video track
         const videoTrack = stream.getVideoTracks()[0];
 
-        // Create a video element to capture a frame
+        // create a video element to capture a frame
         const video = document.createElement("video");
         video.srcObject = stream;
         video.autoplay = true;
 
-        // Wait for video to be ready
+        // wait for video to be ready
         await new Promise<void>((resolve) => {
           video.onloadedmetadata = () => {
             video.play();
@@ -727,10 +727,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
           };
         });
 
-        // Small delay to ensure frame is rendered
+        // small delay to ensure frame is rendered
         await new Promise((resolve) => setTimeout(resolve, 100));
 
-        // Create canvas and capture frame
+        // create canvas and capture frame
         const canvas = document.createElement("canvas");
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
@@ -740,11 +740,11 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
         }
         ctx.drawImage(video, 0, 0);
 
-        // Stop the stream immediately
+        // stop the stream immediately
         videoTrack.stop();
         stream.getTracks().forEach((track) => track.stop());
 
-        // Convert to blob
+        // convert to blob
         const blob = await new Promise<Blob>((resolve, reject) => {
           canvas.toBlob(
             (blob) => {
@@ -759,13 +759,13 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
           );
         });
 
-        // Create file from blob
+        // create file from blob
         const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
         const file = new File([blob], `screenshot-${timestamp}.png`, {
           type: "image/png",
         });
 
-        // Create attachment
+        // create attachment
         const id = crypto.randomUUID();
         const preview = URL.createObjectURL(blob);
 
@@ -778,7 +778,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
 
         setAttachments((prev) => [...prev, newAttachment]);
 
-        // Process the file (hash, dedup check, upload if needed)
+        // process the file (hash, dedup check, upload if needed)
         const processed = await processFile(newAttachment, "screenshot");
         setAttachments((prev) => {
           const newList = prev.map((a) => (a.id === id ? processed : a));
@@ -786,7 +786,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
           return newList;
         });
       } catch (error) {
-        // User cancelled or error occurred
+        // user cancelled or error occurred
         if (error instanceof Error && error.name !== "NotAllowedError") {
           toast.error("Screenshot failed", {
             description: "Could not capture screenshot. Please try again.",
@@ -799,26 +799,26 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       setShowDrawingEditor(true);
     }, []);
 
-    // State for editing existing drawing
+    // state for editing existing drawing
     const [editingDrawing, setEditingDrawing] = useState<{
       id: string;
       preview: string;
     } | null>(null);
 
-    // Handle drawing save (new or edit)
+    // handle drawing save (new or edit)
     const handleDrawingSave = useCallback(
       async (file: File, preview: string) => {
         if (editingDrawing) {
-          // Editing existing drawing - update the attachment
+          // editing existing drawing - update the attachment
           const attachmentId = editingDrawing.id;
 
-          // Revoke old preview URL
+          // revoke old preview uRL
           const oldAttachment = attachments.find((a) => a.id === attachmentId);
           if (oldAttachment?.preview) {
             URL.revokeObjectURL(oldAttachment.preview);
           }
 
-          // Update to checking state with new preview
+          // update to checking state with new preview
           setAttachments((prev) =>
             prev.map((a) =>
               a.id === attachmentId
@@ -827,7 +827,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
             )
           );
 
-          // Process the new file (hash, dedup check, upload if needed)
+          // process the new file (hash, dedup check, upload if needed)
           const processed = await processFile(
             {
               id: attachmentId,
@@ -849,7 +849,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
 
           setEditingDrawing(null);
         } else {
-          // Creating new drawing
+          // creating new drawing
           const id = crypto.randomUUID();
 
           const newAttachment: Attachment = {
@@ -862,7 +862,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
 
           setAttachments((prev) => [...prev, newAttachment]);
 
-          // Process the file (hash, dedup check, upload if needed)
+          // process the file (hash, dedup check, upload if needed)
           const processed = await processFile(newAttachment, "drawing");
           setAttachments((prev) => {
             const newList = prev.map((a) =>
@@ -876,7 +876,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       [editingDrawing, attachments, conversationId, processFile]
     );
 
-    // Handle edit drawing request from attachment chip
+    // handle edit drawing request from attachment chip
     const handleEditDrawing = useCallback((id: string, preview: string) => {
       setEditingDrawing({ id, preview });
       setShowDrawingEditor(true);
@@ -896,7 +896,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
             border: "1px solid var(--color-border-default)",
           }}
         >
-          {/* Attachment previews */}
+          {/* attachment previews */}
           {attachments.length > 0 && (
             <div className="flex flex-wrap gap-2 px-4 pt-3">
               {attachments.map((attachment) => (
@@ -920,7 +920,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
             </div>
           )}
 
-          {/* Text input area */}
+          {/* text input area */}
           <div className="relative px-4 pt-4 pb-2">
             <textarea
               ref={textareaRef}
@@ -942,24 +942,24 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
             />
           </div>
 
-          {/* Bottom bar */}
+          {/* bottom bar */}
           <div className="flex justify-between items-center px-3 pb-3">
             <div className="flex items-center gap-1">
-              {/* Model & Cores dropdown */}
+              {/* model & cores dropdown */}
               <ModelCoresDropdown
                 selectedModel={selectedModel}
                 onModelChange={onModelChange}
                 isAuthenticated={isAuthenticated}
               />
 
-              {/* Reasoning level dropdown (only for reasoning models) */}
+              {/* reasoning level dropdown (only for reasoning models) */}
               <ReasoningDropdown
                 selectedModel={selectedModel}
                 reasoningLevel={reasoningLevel}
                 onReasoningLevelChange={onReasoningLevelChange}
               />
 
-              {/* Web Search toggle - show when model supports it, disable for non-subscribers */}
+              {/* web search toggle - show when model supports it, disable for non-subscribers */}
               {modelSupportsWebSearch && onWebSearchToggle && (
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -997,7 +997,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                 </Tooltip>
               )}
 
-              {/* Attachment menu */}
+              {/* attachment menu */}
               <AttachmentMenu
                 onUploadFile={handleUploadFile}
                 onTakeScreenshot={handleTakeScreenshot}
@@ -1014,7 +1014,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
               />
             </div>
 
-            {/* Send/Stop button */}
+            {/* send/stop button */}
             {isLoading ? (
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -1082,7 +1082,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
           </div>
         </div>
 
-        {/* Drawing Editor Modal */}
+        {/* drawing editor modal */}
         <DrawingEditor
           isOpen={showDrawingEditor}
           onClose={() => {

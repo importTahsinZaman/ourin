@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 /**
- * Tests for Chat component logic.
- * These tests verify helper functions, state management,
- * and business logic without rendering React components.
+ * tests for chat component logic.
+ * these tests verify helper functions, state management,
+ * and business logic without rendering react components.
  */
 
 describe("Chat Component Logic", () => {
@@ -84,7 +84,7 @@ describe("Chat Component Logic", () => {
       it("truncates long filenames", () => {
         const longName = "this-is-a-very-long-filename-that-exceeds-limit.pdf";
         const truncated = truncateFileName(longName, 25);
-        expect(truncated.length).toBeLessThanOrEqual(26); // Allow for extension
+        expect(truncated.length).toBeLessThanOrEqual(26); // allow for extension
         expect(truncated).toContain("...");
         expect(truncated.endsWith(".pdf")).toBe(true);
       });
@@ -310,7 +310,7 @@ describe("Chat Component Logic", () => {
           }
           localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(drafts));
         } catch {
-          // Ignore
+          // ignore
         }
       };
 
@@ -364,7 +364,7 @@ describe("Chat Component Logic", () => {
     });
 
     describe("File Validation", () => {
-      const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
+      const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25mB
       const ALLOWED_TYPES = [
         "image/jpeg",
         "image/png",
@@ -524,7 +524,7 @@ describe("Chat Component Logic", () => {
           }
           localStorage.setItem(ATTACHMENT_DRAFT_KEY, JSON.stringify(drafts));
         } catch {
-          // Ignore
+          // ignore
         }
       };
 

@@ -1,13 +1,13 @@
 import { describe, it, expect } from "vitest";
 
 /**
- * Tests for file attachment handling logic.
- * These tests verify image/PDF processing, resizing, and conversion.
+ * tests for file attachment handling logic.
+ * these tests verify image/pDF processing, resizing, and conversion.
  */
 
 describe("File Attachment Logic", () => {
   describe("File Validation", () => {
-    const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
+    const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25mB
     const ALLOWED_TYPES = [
       "image/jpeg",
       "image/png",
@@ -22,13 +22,13 @@ describe("File Attachment Logic", () => {
     ];
 
     it("accepts files under size limit", () => {
-      const fileSize = 10 * 1024 * 1024; // 10MB
+      const fileSize = 10 * 1024 * 1024; // 10mB
       const isValidSize = fileSize <= MAX_FILE_SIZE;
       expect(isValidSize).toBe(true);
     });
 
     it("rejects files over size limit", () => {
-      const fileSize = 30 * 1024 * 1024; // 30MB
+      const fileSize = 30 * 1024 * 1024; // 30mB
       const isValidSize = fileSize <= MAX_FILE_SIZE;
       expect(isValidSize).toBe(false);
     });
@@ -183,7 +183,7 @@ describe("File Attachment Logic", () => {
 
       let ext = fileName.split(".").pop()?.toUpperCase();
       if (ext === fileName.toUpperCase()) {
-        // No extension found, use mime type
+        // no extension found, use mime type
         if (mimeType.includes("pdf")) ext = "PDF";
         else if (mimeType.includes("json")) ext = "JSON";
         else ext = "FILE";
@@ -196,7 +196,7 @@ describe("File Attachment Logic", () => {
       const fileName = "file.verylongextension";
       const ext = fileName.split(".").pop()?.toUpperCase();
 
-      // For display, we might truncate very long extensions
+      // for display, we might truncate very long extensions
       const displayExt = ext && ext.length <= 4 ? ext : "FILE";
       expect(displayExt).toBe("FILE");
     });
@@ -242,10 +242,10 @@ describe("File Attachment Logic", () => {
 
   describe("Content Hash Deduplication", () => {
     it("computes hash for file deduplication", async () => {
-      // Simulating hash computation logic
+      // simulating hash computation logic
       const fileContent = new Uint8Array([1, 2, 3, 4, 5]);
 
-      // Simple mock hash (real implementation uses SHA-256)
+      // simple mock hash (real implementation uses sHA-256)
       const mockHash = Array.from(fileContent)
         .map((b) => b.toString(16).padStart(2, "0"))
         .join("");
@@ -284,7 +284,7 @@ describe("File Attachment Logic", () => {
       expect(isDuplicate).toBe(true);
 
       if (isDuplicate) {
-        // Reuse existing file - isDuplicate prevents deletion on remove
+        // reuse existing file - isDuplicate prevents deletion on remove
         const attachment = {
           storageId: existingFile.storageId,
           url: existingFile.url,
@@ -336,13 +336,13 @@ describe("File Attachment Logic", () => {
 
   describe("Image Preview URLs", () => {
     it("creates object URL for preview", () => {
-      // In browser: URL.createObjectURL(file)
+      // in browser: uRL.createObjectURL(file)
       const previewUrl = "blob:http://localhost:3000/abc123";
       expect(previewUrl.startsWith("blob:")).toBe(true);
     });
 
     it("revokes object URL on cleanup", () => {
-      // In browser: URL.revokeObjectURL(previewUrl)
+      // in browser: uRL.revokeObjectURL(previewUrl)
       const revokedUrls: string[] = [];
       const revokeUrl = (url: string) => revokedUrls.push(url);
 

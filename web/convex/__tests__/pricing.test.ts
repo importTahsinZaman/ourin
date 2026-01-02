@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-// We need to test the pricing module which uses process.env
-// Set up environment before importing the module
+// we need to test the pricing module which uses process.env
+// set up environment before importing the module
 process.env.COST_MARKUP = "1.0";
 process.env.SUBSCRIPTION_CREDITS = "10000";
 process.env.CREDIT_PACK_AMOUNT = "20000";
@@ -24,9 +24,9 @@ describe("calculateCredits", () => {
 
   describe("known models", () => {
     it("calculates correctly for Gemini Flash Lite (cheapest model)", () => {
-      // Pricing: input: 75, output: 300 per 1M tokens
+      // pricing: input: 75, output: 300 per 1m tokens
       // 1000 input + 500 output = (1000 * 75 + 500 * 300) / 1_000_000 = 0.225
-      // Ceiling = 1 credit
+      // ceiling = 1 credit
       const credits = calculateCredits(
         "google:gemini-2.5-flash-lite",
         1000,
@@ -36,7 +36,7 @@ describe("calculateCredits", () => {
     });
 
     it("calculates correctly for Claude Opus 4.5 (expensive model)", () => {
-      // Pricing: input: 5000, output: 25000 per 1M tokens
+      // pricing: input: 5000, output: 25000 per 1m tokens
       // 10000 input + 5000 output = (10000 * 5000 + 5000 * 25000) / 1_000_000 = 175
       const credits = calculateCredits(
         "anthropic:claude-opus-4-5-20251101",
@@ -47,15 +47,15 @@ describe("calculateCredits", () => {
     });
 
     it("calculates correctly for GPT-5.1", () => {
-      // Pricing: input: 1250, output: 10000 per 1M tokens
+      // pricing: input: 1250, output: 10000 per 1m tokens
       // 50000 input + 10000 output = (50000 * 1250 + 10000 * 10000) / 1_000_000 = 162.5
-      // Ceiling = 163 credits
+      // ceiling = 163 credits
       const credits = calculateCredits("openai:gpt-5.1", 50000, 10000);
       expect(credits).toBe(163);
     });
 
     it("calculates correctly for Claude Sonnet 4", () => {
-      // Pricing: input: 3000, output: 15000 per 1M tokens
+      // pricing: input: 3000, output: 15000 per 1m tokens
       // 100000 input + 50000 output = (100000 * 3000 + 50000 * 15000) / 1_000_000 = 1050
       const credits = calculateCredits(
         "anthropic:claude-sonnet-4",
@@ -73,19 +73,19 @@ describe("calculateCredits", () => {
     });
 
     it("handles zero input tokens", () => {
-      // 0 input + 1000 output at 300 per 1M = 0.3 credits -> ceiling = 1
+      // 0 input + 1000 output at 300 per 1m = 0.3 credits -> ceiling = 1
       const credits = calculateCredits("google:gemini-2.5-flash-lite", 0, 1000);
       expect(credits).toBe(1);
     });
 
     it("handles zero output tokens", () => {
-      // 1000 input + 0 output at 75 per 1M = 0.075 credits -> ceiling = 1
+      // 1000 input + 0 output at 75 per 1m = 0.075 credits -> ceiling = 1
       const credits = calculateCredits("google:gemini-2.5-flash-lite", 1000, 0);
       expect(credits).toBe(1);
     });
 
     it("handles very large token counts without overflow", () => {
-      // 10M input + 1M output on expensive model
+      // 10m input + 1m output on expensive model
       // (10_000_000 * 5000 + 1_000_000 * 25000) / 1_000_000 = 50000 + 25000 = 75000
       const credits = calculateCredits(
         "anthropic:claude-opus-4-5-20251101",
@@ -96,7 +96,7 @@ describe("calculateCredits", () => {
     });
 
     it("rounds up to nearest credit (never undercharges)", () => {
-      // Smallest possible charge: 1 input token at cheapest rate
+      // smallest possible charge: 1 input token at cheapest rate
       // 1 * 75 / 1_000_000 = 0.000075 -> ceiling = 1
       const credits = calculateCredits("google:gemini-2.5-flash-lite", 1, 0);
       expect(credits).toBe(1);
@@ -105,7 +105,7 @@ describe("calculateCredits", () => {
 
   describe("unknown models", () => {
     it("uses conservative default pricing for unknown models", () => {
-      // Default pricing: input: 15000, output: 75000 (Claude Opus rates)
+      // default pricing: input: 15000, output: 75000 (claude opus rates)
       // 1000 input + 1000 output = (1000 * 15000 + 1000 * 75000) / 1_000_000 = 90
       const credits = calculateCredits("unknown:model", 1000, 1000);
       expect(credits).toBe(90);
@@ -125,9 +125,9 @@ describe("calculateCredits", () => {
     it("applies COST_MARKUP multiplier", () => {
       process.env.COST_MARKUP = "1.5";
 
-      // Gemini 2.5 Flash Lite pricing: input: 100, output: 400
+      // gemini 2.5 flash lite pricing: input: 100, output: 400
       // 10000 * 100 + 5000 * 400 = 3000000 = 3 credits
-      // With 1.5x markup: 4.5 -> ceiling = 5
+      // with 1.5x markup: 4.5 -> ceiling = 5
       const credits = calculateCredits(
         "google:gemini-2.5-flash-lite",
         10000,
@@ -139,8 +139,8 @@ describe("calculateCredits", () => {
     it("handles invalid COST_MARKUP (falls back to 1.0)", () => {
       process.env.COST_MARKUP = "invalid";
 
-      // Should use 1.0 markup (no change)
-      // Gemini 2.5 Flash Lite: 10000 * 100 + 5000 * 400 = 3000000 = 3 credits
+      // should use 1.0 markup (no change)
+      // gemini 2.5 flash lite: 10000 * 100 + 5000 * 400 = 3000000 = 3 credits
       const credits = calculateCredits(
         "google:gemini-2.5-flash-lite",
         10000,

@@ -41,7 +41,7 @@ export default async function ConversationPage({
   const selectedModel =
     cookieStore.get(SELECTED_MODEL_COOKIE)?.value || DEFAULT_MODEL;
   const reasoningLevelStr = cookieStore.get(REASONING_LEVEL_COOKIE)?.value;
-  // Parse as number if it looks like a number (for budget-based models like Claude)
+  // parse as number if it looks like a number (for budget-based models like claude)
   const reasoningLevel = reasoningLevelStr
     ? /^\d+$/.test(reasoningLevelStr)
       ? parseInt(reasoningLevelStr, 10)

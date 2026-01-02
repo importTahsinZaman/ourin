@@ -19,7 +19,7 @@ export function DraggableCoreEditor() {
 
   const isNew = !editingCore;
 
-  // Reset form when editor opens with new values
+  // reset form when editor opens with new values
   useEffect(() => {
     if (isOpen) {
       setName(editingCore?.name ?? "");
@@ -27,7 +27,7 @@ export function DraggableCoreEditor() {
     }
   }, [isOpen, editingCore]);
 
-  // Center position on first open
+  // center position on first open
   useEffect(() => {
     if (isOpen && position.x === -1 && position.y === -1 && panelRef.current) {
       const rect = panelRef.current.getBoundingClientRect();
@@ -37,7 +37,7 @@ export function DraggableCoreEditor() {
     }
   }, [isOpen, position, setPosition]);
 
-  // Keyboard shortcuts
+  // keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return;
@@ -66,7 +66,7 @@ export function DraggableCoreEditor() {
     closeEditor();
   }, [name, content, editingCore, createCore, updateCore, closeEditor]);
 
-  // Drag handlers
+  // drag handlers
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!panelRef.current) return;
     e.preventDefault();
@@ -111,7 +111,7 @@ export function DraggableCoreEditor() {
 
   if (!isOpen) return null;
 
-  // Calculate position - use centered if not set
+  // calculate position - use centered if not set
   const left = position.x >= 0 ? position.x : undefined;
   const top = position.y >= 0 ? position.y : undefined;
 
@@ -127,7 +127,7 @@ export function DraggableCoreEditor() {
         transform: left === undefined ? "translate(-50%, -50%)" : undefined,
       }}
     >
-      {/* Draggable Header */}
+      {/* draggable header */}
       <div
         onMouseDown={handleMouseDown}
         className="flex flex-shrink-0 justify-between items-center px-3 py-2 cursor-move select-none"
@@ -156,9 +156,9 @@ export function DraggableCoreEditor() {
         </button>
       </div>
 
-      {/* Content */}
+      {/* content */}
       <div className="flex flex-col flex-1 gap-2 p-2.5 overflow-y-auto">
-        {/* Name input */}
+        {/* name input */}
         <div>
           <label
             className="block mb-1 font-medium text-xs"
@@ -181,7 +181,7 @@ export function DraggableCoreEditor() {
           />
         </div>
 
-        {/* Content textarea */}
+        {/* content textarea */}
         <div className="flex flex-col flex-1 min-h-0">
           <div className="flex justify-between items-center mb-1">
             <label
@@ -211,7 +211,7 @@ export function DraggableCoreEditor() {
         </div>
       </div>
 
-      {/* Footer */}
+      {/* footer */}
       <div
         className="flex flex-shrink-0 justify-end items-center gap-1.5 px-2.5 py-2"
         style={{ borderTop: "1px solid var(--color-border-muted)" }}

@@ -5,8 +5,8 @@ import type { Id } from "./_generated/dataModel";
 import { isSelfHosting } from "./config";
 
 /**
- * Helper to check if a user has an active subscription.
- * Used to gate BYOK features to subscribers only.
+ * helper to check if a user has an active subscription.
+ * used to gate bYOK features to subscribers only.
  */
 async function hasActiveSubscription(
   ctx: QueryCtx,
@@ -20,20 +20,20 @@ async function hasActiveSubscription(
 }
 
 /**
- * Save or update an API key for a provider.
- * The key should already be encrypted client-side before calling this mutation.
+ * save or update an aPI key for a provider.
+ * the key should already be encrypted client-side before calling this mutation.
  *
- * Disabled in self-hosting mode - all requests use server-side API keys.
- * Requires an active subscription - BYOK is a subscriber-only feature.
+ * disabled in self-hosting mode - all requests use server-side aPI keys.
+ * requires an active subscription - bYOK is a subscriber-only feature.
  */
 export const saveApiKey = mutation({
   args: {
     provider: v.string(), // "openai" | "anthropic" | "google"
     encryptedKey: v.string(),
-    keyHint: v.string(), // Last 4 chars for display
+    keyHint: v.string(), // last 4 chars for display
   },
   handler: async (ctx, { provider, encryptedKey, keyHint }) => {
-    // Disabled in self-hosting mode
+    // disabled in self-hosting mode
     if (isSelfHosting()) {
       throw new Error(
         "API key management is not available in self-hosting mode"
@@ -43,7 +43,7 @@ export const saveApiKey = mutation({
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
-    // BYOK is a subscriber-only feature
+    // bYOK is a subscriber-only feature
     const isSubscriber = await hasActiveSubscription(ctx, userId);
     if (!isSubscriber) {
       throw new Error(
@@ -51,7 +51,7 @@ export const saveApiKey = mutation({
       );
     }
 
-    // Check if key exists for this provider
+    // check if key exists for this provider
     const existing = await ctx.db
       .query("apiKeys")
       .withIndex("by_user_provider", (q) =>
@@ -62,7 +62,7 @@ export const saveApiKey = mutation({
     const now = Date.now();
 
     if (existing) {
-      // Update existing key
+      // update existing key
       await ctx.db.patch(existing._id, {
         encryptedKey,
         keyHint,
@@ -70,7 +70,7 @@ export const saveApiKey = mutation({
       });
       return { updated: true };
     } else {
-      // Insert new key
+      // insert new key
       await ctx.db.insert("apiKeys", {
         userId,
         provider,
@@ -85,15 +85,15 @@ export const saveApiKey = mutation({
 });
 
 /**
- * Get all API keys for the current user.
- * Returns only hints and metadata, not the encrypted keys.
+ * get all aPI keys for the current user.
+ * returns only hints and metadata, not the encrypted keys.
  *
- * Returns empty in self-hosting mode.
+ * returns empty in self-hosting mode.
  */
 export const getApiKeys = query({
   args: {},
   handler: async (ctx) => {
-    // No user keys in self-hosting mode
+    // no user keys in self-hosting mode
     if (isSelfHosting()) return [];
 
     const userId = await getAuthUserId(ctx);
@@ -104,7 +104,7 @@ export const getApiKeys = query({
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
 
-    // Return hints only, not encrypted values
+    // return hints only, not encrypted values
     return keys.map((k) => ({
       provider: k.provider,
       keyHint: k.keyHint,
@@ -115,16 +115,16 @@ export const getApiKeys = query({
 });
 
 /**
- * Delete an API key for a provider.
+ * delete an aPI key for a provider.
  *
- * Disabled in self-hosting mode.
+ * disabled in self-hosting mode.
  */
 export const deleteApiKey = mutation({
   args: {
     provider: v.string(),
   },
   handler: async (ctx, { provider }) => {
-    // Disabled in self-hosting mode
+    // disabled in self-hosting mode
     if (isSelfHosting()) {
       throw new Error(
         "API key management is not available in self-hosting mode"
@@ -151,12 +151,12 @@ export const deleteApiKey = mutation({
 });
 
 /**
- * Save or update an API key (server-only - called from API route with userId).
- * Used when encryption happens server-side in Next.js.
- * Requires serverSecret to prevent client-side abuse.
+ * save or update an aPI key (server-only - called from aPI route with userId).
+ * used when encryption happens server-side in next.js.
+ * requires serverSecret to prevent client-side abuse.
  *
- * Disabled in self-hosting mode.
- * Requires an active subscription - BYOK is a subscriber-only feature.
+ * disabled in self-hosting mode.
+ * requires an active subscription - bYOK is a subscriber-only feature.
  */
 export const saveApiKeyInternal = mutation({
   args: {
@@ -170,23 +170,23 @@ export const saveApiKeyInternal = mutation({
     ctx,
     { userId, provider, encryptedKey, keyHint, serverSecret }
   ) => {
-    // Disabled in self-hosting mode
+    // disabled in self-hosting mode
     if (isSelfHosting()) {
       throw new Error(
         "API key management is not available in self-hosting mode"
       );
     }
 
-    // Verify server secret to prevent client-side calls
+    // verify server secret to prevent client-side calls
     const expectedSecret = process.env.CHAT_AUTH_SECRET;
     if (!expectedSecret || serverSecret !== expectedSecret) {
       throw new Error("Unauthorized");
     }
 
-    // Cast string userId to Id<"users"> for database queries
+    // cast string userId to id<"users"> for database queries
     const userIdTyped = userId as Id<"users">;
 
-    // BYOK is a subscriber-only feature
+    // bYOK is a subscriber-only feature
     const isSubscriber = await hasActiveSubscription(ctx, userIdTyped);
     if (!isSubscriber) {
       throw new Error(
@@ -194,7 +194,7 @@ export const saveApiKeyInternal = mutation({
       );
     }
 
-    // Check if key exists for this provider
+    // check if key exists for this provider
     const existing = await ctx.db
       .query("apiKeys")
       .withIndex("by_user_provider", (q) =>
@@ -226,24 +226,24 @@ export const saveApiKeyInternal = mutation({
 });
 
 /**
- * Get the encrypted API key for a specific provider.
- * Used internally by the chat route to decrypt and use the key.
+ * get the encrypted aPI key for a specific provider.
+ * used internally by the chat route to decrypt and use the key.
  *
- * Returns null in self-hosting mode.
- * Returns null for non-subscribers - BYOK is a subscriber-only feature.
+ * returns null in self-hosting mode.
+ * returns null for non-subscribers - bYOK is a subscriber-only feature.
  */
 export const getEncryptedKey = query({
   args: {
     provider: v.string(),
   },
   handler: async (ctx, { provider }) => {
-    // No user keys in self-hosting mode
+    // no user keys in self-hosting mode
     if (isSelfHosting()) return null;
 
     const userId = await getAuthUserId(ctx);
     if (!userId) return null;
 
-    // BYOK is a subscriber-only feature - don't return keys for non-subscribers
+    // bYOK is a subscriber-only feature - don't return keys for non-subscribers
     const isSubscriber = await hasActiveSubscription(ctx, userId);
     if (!isSubscriber) return null;
 
@@ -259,16 +259,16 @@ export const getEncryptedKey = query({
 });
 
 /**
- * Check if the user has an API key for a specific provider.
+ * check if the user has an aPI key for a specific provider.
  *
- * Returns false in self-hosting mode.
+ * returns false in self-hosting mode.
  */
 export const hasApiKey = query({
   args: {
     provider: v.string(),
   },
   handler: async (ctx, { provider }) => {
-    // No user keys in self-hosting mode
+    // no user keys in self-hosting mode
     if (isSelfHosting()) return false;
 
     const userId = await getAuthUserId(ctx);
@@ -286,14 +286,14 @@ export const hasApiKey = query({
 });
 
 /**
- * Get all providers the user has API keys for.
+ * get all providers the user has aPI keys for.
  *
- * Returns empty in self-hosting mode.
+ * returns empty in self-hosting mode.
  */
 export const getProviders = query({
   args: {},
   handler: async (ctx) => {
-    // No user keys in self-hosting mode
+    // no user keys in self-hosting mode
     if (isSelfHosting()) return [];
 
     const userId = await getAuthUserId(ctx);

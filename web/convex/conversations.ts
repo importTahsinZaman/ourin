@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
-// Create a new conversation
+// create a new conversation
 export const create = mutation({
   args: {
     title: v.optional(v.string()),
@@ -30,7 +30,7 @@ export const create = mutation({
   },
 });
 
-// Get all conversations for the current user (excludes deleted)
+// get all conversations for the current user (excludes deleted)
 export const list = query({
   args: {},
   handler: async (ctx) => {
@@ -48,7 +48,7 @@ export const list = query({
   },
 });
 
-// Get a single conversation (returns null if deleted)
+// get a single conversation (returns null if deleted)
 export const get = query({
   args: { id: v.id("conversations") },
   handler: async (ctx, { id }) => {
@@ -57,13 +57,13 @@ export const get = query({
 
     const conversation = await ctx.db.get(id);
     if (!conversation || conversation.userId !== userId) return null;
-    if (conversation.deletedAt) return null; // Exclude deleted conversations
+    if (conversation.deletedAt) return null; // exclude deleted conversations
 
     return conversation;
   },
 });
 
-// Update conversation title
+// update conversation title
 export const updateTitle = mutation({
   args: {
     id: v.id("conversations"),
@@ -85,7 +85,7 @@ export const updateTitle = mutation({
   },
 });
 
-// Toggle conversation favorite status
+// toggle conversation favorite status
 export const toggleFavorite = mutation({
   args: {
     id: v.id("conversations"),
@@ -107,7 +107,7 @@ export const toggleFavorite = mutation({
   },
 });
 
-// Soft-delete a conversation (preserves messages for accurate billing)
+// soft-delete a conversation (preserves messages for accurate billing)
 export const remove = mutation({
   args: { id: v.id("conversations") },
   handler: async (ctx, { id }) => {
@@ -121,7 +121,7 @@ export const remove = mutation({
 
     const now = Date.now();
 
-    // Soft-delete all messages in the conversation (mark as discarded)
+    // soft-delete all messages in the conversation (mark as discarded)
     const messages = await ctx.db
       .query("messages")
       .withIndex("by_conversation", (q) => q.eq("conversationId", id))
@@ -131,12 +131,12 @@ export const remove = mutation({
       await ctx.db.patch(message._id, { discardedAt: now });
     }
 
-    // Soft-delete the conversation
+    // soft-delete the conversation
     await ctx.db.patch(id, { deletedAt: now });
   },
 });
 
-// Update conversation metadata (called after messages are saved)
+// update conversation metadata (called after messages are saved)
 export const updateMetadata = mutation({
   args: {
     id: v.id("conversations"),
@@ -160,8 +160,8 @@ export const updateMetadata = mutation({
   },
 });
 
-// Fork a conversation at a specific message
-// Queries source messages directly from DB to get complete data including tokens
+// fork a conversation at a specific message
+// queries source messages directly from dB to get complete data including tokens
 export const fork = mutation({
   args: {
     sourceConversationId: v.id("conversations"),
@@ -171,13 +171,13 @@ export const fork = mutation({
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
-    // Verify source conversation belongs to user
+    // verify source conversation belongs to user
     const sourceConversation = await ctx.db.get(sourceConversationId);
     if (!sourceConversation || sourceConversation.userId !== userId) {
       throw new Error("Source conversation not found");
     }
 
-    // Get source messages up to and including the fork point
+    // get source messages up to and including the fork point
     const sourceMessages = await ctx.db
       .query("messages")
       .withIndex("by_conversation_created", (q) =>
@@ -187,7 +187,7 @@ export const fork = mutation({
       .order("asc")
       .collect();
 
-    // Find the fork point
+    // find the fork point
     const forkIndex = sourceMessages.findIndex(
       (m) => m.messageId === forkedAtMessageId
     );
@@ -195,25 +195,25 @@ export const fork = mutation({
       throw new Error("Fork point message not found");
     }
 
-    // Get messages up to and including the fork point
+    // get messages up to and including the fork point
     const messagesToFork = sourceMessages.slice(0, forkIndex + 1);
 
     const now = Date.now();
 
-    // Generate fork title with numbered prefix like "(1)", "(2)", etc.
+    // generate fork title with numbered prefix like "(1)", "(2)", etc.
     let forkTitle: string | undefined;
     if (sourceConversation.title) {
-      // Strip any existing "(N) " prefix to get the base title
+      // strip any existing "(n) " prefix to get the base title
       const baseTitle = sourceConversation.title.replace(/^\(\d+\)\s*/, "");
 
-      // Find all conversations with this base title pattern to determine next number
+      // find all conversations with this base title pattern to determine next number
       const userConversations = await ctx.db
         .query("conversations")
         .withIndex("by_user_updated", (q) => q.eq("userId", userId))
         .filter((q) => q.eq(q.field("deletedAt"), undefined))
         .collect();
 
-      // Find the highest existing number for this base title
+      // find the highest existing number for this base title
       let maxNumber = 0;
       const pattern = new RegExp(
         `^\\((\\d+)\\)\\s*${baseTitle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`
@@ -231,7 +231,7 @@ export const fork = mutation({
       forkTitle = `(${maxNumber + 1}) ${baseTitle}`;
     }
 
-    // Create the forked conversation
+    // create the forked conversation
     const newConversationId = await ctx.db.insert("conversations", {
       userId,
       title: forkTitle,
@@ -243,7 +243,7 @@ export const fork = mutation({
       forkedAtMessageId,
     });
 
-    // Insert the forked messages (marked as wasForked to exclude from billing)
+    // insert the forked messages (marked as wasForked to exclude from billing)
     for (let i = 0; i < messagesToFork.length; i++) {
       const msg = messagesToFork[i];
       await ctx.db.insert("messages", {
@@ -257,7 +257,7 @@ export const fork = mutation({
         outputTokens: msg.outputTokens,
         createdAt: msg.createdAt,
         metadata: msg.metadata,
-        wasForked: true, // Mark as forked to exclude from billing
+        wasForked: true, // mark as forked to exclude from billing
       });
     }
 

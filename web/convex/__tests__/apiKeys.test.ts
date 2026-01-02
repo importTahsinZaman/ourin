@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 
 /**
- * Tests for API Key management logic.
- * These tests verify encryption, validation, and CRUD operations.
+ * tests for aPI key management logic.
+ * these tests verify encryption, validation, and cRUD operations.
  */
 
 describe("API Key Management Logic", () => {
@@ -102,9 +102,9 @@ describe("API Key Management Logic", () => {
 
     it("stores encrypted key, not plaintext", () => {
       const plainKey = "sk-ant-api03-secret";
-      const encryptedKey = "base64-encrypted-data"; // Would be actual encryption
+      const encryptedKey = "base64-encrypted-data"; // would be actual encryption
 
-      // The mutation receives already-encrypted key
+      // the mutation receives already-encrypted key
       expect(encryptedKey).not.toBe(plainKey);
     });
 
@@ -297,7 +297,7 @@ describe("API Key Management Logic", () => {
     });
 
     it("handles unknown providers gracefully", () => {
-      // Unknown providers should still work, just with generic validation
+      // unknown providers should still work, just with generic validation
       const minLength = 20;
       const key = "some-key-for-unknown-provider";
       const isValid = key.length >= minLength;
@@ -367,8 +367,8 @@ describe("Encryption Logic", () => {
 
   describe("Encryption Format", () => {
     it("combines IV and encrypted data", () => {
-      const iv = new Uint8Array(12); // 12-byte IV for GCM
-      const encrypted = new Uint8Array(50); // Example encrypted data
+      const iv = new Uint8Array(12); // 12-byte iV for gCM
+      const encrypted = new Uint8Array(50); // example encrypted data
 
       const combined = new Uint8Array(iv.length + encrypted.length);
       combined.set(iv);
@@ -408,12 +408,12 @@ describe("Encryption Logic", () => {
       const secret = process.env.API_KEY_ENCRYPTION_SECRET;
       const hasSecret = !!secret;
 
-      // In tests, this might be undefined
+      // in tests, this might be undefined
       expect(typeof hasSecret).toBe("boolean");
     });
 
     it("handles decryption failure gracefully", () => {
-      // Invalid base64 should fail
+      // invalid base64 should fail
       const invalidData = "not-valid-base64!!!";
 
       let error: Error | null = null;
@@ -427,9 +427,9 @@ describe("Encryption Logic", () => {
     });
 
     it("handles corrupted encrypted data", () => {
-      // Too short to contain IV + data
+      // too short to contain iV + data
       const tooShort = new Uint8Array(5);
-      const isValid = tooShort.length >= 12 + 1; // At least IV + 1 byte
+      const isValid = tooShort.length >= 12 + 1; // at least iV + 1 byte
       expect(isValid).toBe(false);
     });
   });
@@ -448,7 +448,7 @@ describe("Encryption Logic", () => {
       crypto.getRandomValues(iv1);
       crypto.getRandomValues(iv2);
 
-      // Extremely unlikely to be equal
+      // extremely unlikely to be equal
       const areEqual = iv1.every((v, i) => v === iv2[i]);
       expect(areEqual).toBe(false);
     });

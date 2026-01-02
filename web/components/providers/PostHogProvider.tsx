@@ -10,17 +10,17 @@ const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const POSTHOG_HOST =
   process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com";
 
-// PostHog is enabled if and only if the API key is configured
+// postHog is enabled if and only if the aPI key is configured
 const isPostHogEnabled = !!POSTHOG_KEY;
 
-// Initialize PostHog once on client
+// initialize postHog once on client
 if (typeof window !== "undefined" && isPostHogEnabled && POSTHOG_KEY) {
   posthog.init(POSTHOG_KEY, {
     api_host: POSTHOG_HOST,
-    capture_pageview: false, // Handled manually for SPA routing
+    capture_pageview: false, // handled manually for sPA routing
     capture_pageleave: true,
     persistence: "localStorage+cookie",
-    autocapture: false, // Manual tracking for precision
+    autocapture: false, // manual tracking for precision
     session_recording: {
       maskAllInputs: true,
       maskTextSelector: "[data-ph-mask]",
@@ -43,7 +43,7 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
     isAuthenticated ? {} : "skip"
   );
 
-  // Identify user when authenticated
+  // identify user when authenticated
   useEffect(() => {
     if (!isPostHogEnabled || isLoading) return;
 
@@ -60,7 +60,7 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
     }
   }, [isAuthenticated, isLoading, currentUser, userTier]);
 
-  // Skip provider if PostHog is not configured
+  // skip provider if postHog is not configured
   if (!isPostHogEnabled) {
     return <>{children}</>;
   }
