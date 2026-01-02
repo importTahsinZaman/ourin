@@ -18,7 +18,6 @@ export { getModelInfo, MODELS_BY_DATE };
 interface ModelCoresDropdownProps {
   selectedModel: string;
   onModelChange: (modelId: string) => void;
-  isAuthenticated: boolean;
 }
 
 export function ModelCoresDropdown({
@@ -219,7 +218,6 @@ export function ModelCoresDropdown({
                   onSelect={handleModelSelect}
                   search={search}
                   canAccessModel={canAccessModel}
-                  getLockReason={getLockReason}
                   canAccessAllModels={canAccessAllModels}
                 />
               </div>

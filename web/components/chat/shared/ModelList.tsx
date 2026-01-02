@@ -10,7 +10,6 @@ interface ModelListProps {
   onSelect: (modelId: string) => void;
   search: string;
   canAccessModel: (modelId: string) => boolean;
-  getLockReason: () => string;
   canAccessAllModels: boolean;
   /** Show checkmark on selected model */
   showCheckmark?: boolean;
@@ -21,7 +20,6 @@ export function ModelList({
   onSelect,
   search,
   canAccessModel,
-  getLockReason,
   canAccessAllModels,
   showCheckmark = false,
 }: ModelListProps) {

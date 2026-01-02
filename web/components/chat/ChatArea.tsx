@@ -654,7 +654,6 @@ export function ChatArea({
       onModelChange={handleModelChange}
       reasoningLevel={reasoningLevel}
       onReasoningLevelChange={onReasoningLevelChange}
-      isAuthenticated={isAuthenticated}
       initialDraft={initialNewChatDraft}
       canSend={sendRestriction.canSend}
       sendBlockedReason={sendRestriction.reason}
@@ -710,7 +709,6 @@ export function ChatArea({
             onRegenerate={handleRegenerate}
             onFork={handleFork}
             currentModel={selectedModel}
-            isAuthenticated={isAuthenticated}
           />
         </div>
       </div>

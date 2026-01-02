@@ -260,7 +260,6 @@ interface MessageListProps {
   ) => void;
   onFork: (messageId: string) => void;
   currentModel: string; // used as fallback if message has no model
-  isAuthenticated: boolean;
 }
 
 export interface MessageListHandle {
@@ -283,7 +282,6 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
       onRegenerate,
       onFork,
       currentModel,
-      isAuthenticated,
     }: MessageListProps,
     ref
   ) {
@@ -306,7 +304,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
     const [isUploadingEditFile, setIsUploadingEditFile] = useState(false);
 
     // use the shared file upload hook
-    const { processFile, checkDuplicate } = useFileUpload();
+    const { processFile } = useFileUpload();
 
     // expose edit mode methods via ref
     useImperativeHandle(
@@ -800,7 +798,6 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
                             getDefaultReasoningLevel(modelId)
                           );
                         }}
-                        isAuthenticated={isAuthenticated}
                       />
 
                       {/* reasoning selector */}
@@ -1183,7 +1180,6 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
                           getDefaultReasoningLevel(modelId)
                         );
                       }}
-                      isAuthenticated={isAuthenticated}
                     />
 
                     {/* reasoning selector */}

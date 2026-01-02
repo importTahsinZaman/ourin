@@ -75,7 +75,6 @@ interface ChatInputProps {
   onModelChange: (model: string) => void;
   reasoningLevel: string | number;
   onReasoningLevelChange: (level: string | number) => void;
-  isAuthenticated: boolean;
   initialDraft?: string;
   canSend?: boolean;
   sendBlockedReason?: string | null;
@@ -242,7 +241,6 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       onModelChange,
       reasoningLevel,
       onReasoningLevelChange,
-      isAuthenticated,
       initialDraft = "",
       canSend = true,
       sendBlockedReason = null,
@@ -949,7 +947,6 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
               <ModelCoresDropdown
                 selectedModel={selectedModel}
                 onModelChange={onModelChange}
-                isAuthenticated={isAuthenticated}
               />
 
               {/* reasoning level dropdown (only for reasoning models) */}
