@@ -106,10 +106,14 @@ export function ConversationList({
     };
   }, []);
 
+  // Check if hover preview is enabled via env variable (defaults to true)
+  const isHoverPreviewEnabled =
+    process.env.NEXT_PUBLIC_HOVER_PREVIEW_ENABLED !== "false";
+
   // Handle hover enter - preview conversation
   const handleHoverEnter = (convId: string) => {
-    // Don't preview if menu is open or editing
-    if (menuOpenId || editingId) return;
+    // Don't preview if feature is disabled, menu is open, or editing
+    if (!isHoverPreviewEnabled || menuOpenId || editingId) return;
 
     // Cancel any pending leave - we're entering a new conversation
     if (hoverLeaveTimeoutRef.current) {
