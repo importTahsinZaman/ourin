@@ -309,13 +309,11 @@ export function ThemeEditorPanel({
       <aside
         className={cn(
           "relative h-full overflow-hidden",
-          isOpen && (side === "right" ? "border-l" : "border-r"),
           "transition-all duration-300 ease-out",
           isOpen ? "w-[320px]" : "w-0"
         )}
         style={{
           backgroundColor: "var(--color-background-secondary)",
-          borderColor: "var(--color-border-default)",
         }}
       >
         <div className="flex flex-col w-[320px] h-full">

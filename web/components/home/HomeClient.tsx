@@ -29,6 +29,7 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 import { CoresProvider } from "@/contexts/CoresContext";
 import { FREE_MODEL_ID, getModelInfo } from "@/lib/models";
 import { setCookie } from "@/lib/cookies";
+import { cn } from "@/lib/utils";
 
 const SIDEBAR_COLLAPSED_COOKIE = "ourin-sidebar-collapsed";
 const SIDEBAR_WIDTH_COOKIE = "ourin-sidebar-width";
@@ -349,7 +350,13 @@ export function HomeClient({
   );
 
   const mainContent = (
-    <main className="flex flex-col flex-1 w-full min-w-0 transition-all duration-300">
+    <main
+      className="flex flex-col flex-1 w-full min-w-0 border rounded-sm overflow-hidden transition-all duration-300"
+      style={{
+        backgroundColor: "var(--color-background-primary)",
+        borderColor: "var(--color-border-default)",
+      }}
+    >
       <ChatArea
         conversationId={currentConversationId}
         onConversationCreate={handleConversationCreate}
@@ -371,39 +378,38 @@ export function HomeClient({
 
   return (
     <CoresProvider initialActiveCoresCount={initialActiveCoresCount}>
-      <div
-        className="flex h-screen overflow-hidden"
-        style={{ backgroundColor: "var(--color-background-primary)" }}
-      >
-        {sidebarSide === "left" ? (
-          <>
-            {sidebarElement}
-            {mainContent}
-            {themeEditorElement}
-          </>
-        ) : (
-          <>
-            {themeEditorElement}
-            {mainContent}
-            {sidebarElement}
-          </>
-        )}
+      <div className="h-screen p-2 overflow-hidden">
+        <div className="flex h-full overflow-hidden">
+          {sidebarSide === "left" ? (
+            <>
+              {sidebarElement}
+              {mainContent}
+              {themeEditorElement}
+            </>
+          ) : (
+            <>
+              {themeEditorElement}
+              {mainContent}
+              {sidebarElement}
+            </>
+          )}
 
-        {/* Settings modal */}
-        <SettingsModal isOpen={showSettings} onClose={closeSettings} />
+          {/* Settings modal */}
+          <SettingsModal isOpen={showSettings} onClose={closeSettings} />
 
-        {/* Command palette */}
-        <CommandPalette
-          isOpen={showCommandPalette}
-          onClose={closeCommandPalette}
-          onNewChatWithMessage={handleNewChatWithMessage}
-          onConversationSelect={handleConversationSelect}
-          onOpenSettings={openSettingsFromPalette}
-          onToggleSidebar={toggleSidebar}
-          onOpenAppearance={toggleThemeEditor}
-          currentConversationId={currentConversationId}
-          sidebarSide={sidebarSide}
-        />
+          {/* Command palette */}
+          <CommandPalette
+            isOpen={showCommandPalette}
+            onClose={closeCommandPalette}
+            onNewChatWithMessage={handleNewChatWithMessage}
+            onConversationSelect={handleConversationSelect}
+            onOpenSettings={openSettingsFromPalette}
+            onToggleSidebar={toggleSidebar}
+            onOpenAppearance={toggleThemeEditor}
+            currentConversationId={currentConversationId}
+            sidebarSide={sidebarSide}
+          />
+        </div>
       </div>
     </CoresProvider>
   );

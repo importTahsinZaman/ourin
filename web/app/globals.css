@@ -105,7 +105,7 @@ html {
 body {
   height: 100%;
   line-height: 1.5;
-  background: var(--color-background-primary);
+  background: var(--color-background-secondary);
   color: var(--color-text-primary);
   overflow: hidden;
   font-family: var(--font-family);

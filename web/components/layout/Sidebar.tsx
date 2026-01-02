@@ -345,13 +345,11 @@ export function Sidebar({
         ref={sidebarRef}
         className={cn(
           "relative h-full overflow-hidden",
-          side === "left" ? "border-r" : "border-l",
           collapsed ? "w-0 opacity-0" : "opacity-100",
           !isResizing && "transition-all duration-300 ease-out"
         )}
         style={{
           backgroundColor: "var(--color-background-secondary)",
-          borderColor: "var(--color-border-default)",
           width: collapsed ? 0 : width,
         }}
       >
