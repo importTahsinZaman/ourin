@@ -341,9 +341,14 @@ export function ConversationList({
     const showSelectedStyle =
       isHovering || isExitingHover ? isCommitted : isActive;
 
-    // Disable tooltips during editing, preview mode, exiting preview, or modifier held
+    // Disable tooltips during editing, preview mode, exiting preview, modifier held,
+    // or when hovering over the currently selected conversation (no need to preview what you're viewing)
     const tooltipsDisabled =
-      isEditing || isHovering || isExitingHover || isModifierHeld;
+      isEditing ||
+      isHovering ||
+      isExitingHover ||
+      isModifierHeld ||
+      isCommitted;
 
     return (
       <Tooltip key={`${conv._id}-${tooltipResetKey}`}>
