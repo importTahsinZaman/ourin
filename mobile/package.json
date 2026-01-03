@@ -12,7 +12,9 @@
     "lint": "eslint . && tsc --noEmit",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test": "vitest",
+    "test:run": "vitest run"
   },
   "dependencies": {
     "@convex-dev/auth": "^0.0.90",
@@ -40,6 +42,7 @@
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@eslint/js": "^9.39.2",
+    "@testing-library/react-native": "^13.3.3",
     "@types/react": "~19.1.10",
     "babel-preset-expo": "^54.0.9",
     "eslint": "^9.39.2",
@@ -47,6 +50,7 @@
     "globals": "^16.5.0",
     "prettier": "^3.7.4",
     "typescript": "~5.9.2",
-    "typescript-eslint": "^8.50.1"
+    "typescript-eslint": "^8.50.1",
+    "vitest": "^4.0.16"
   }
 }

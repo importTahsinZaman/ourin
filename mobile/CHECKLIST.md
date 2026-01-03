@@ -39,6 +39,12 @@
   - [x] URL replacement for OAuth flows
   - [x] `useAnonymousAuth` hook for auto sign-in
 
+- [x] **Tests**
+  - [x] Vitest setup with path aliases
+  - [x] Storage tests (35 tests)
+  - [x] SecureStorage tests (18 tests)
+  - [x] API/SSE parser tests (19 tests)
+
 ---
 
 ## Phase 3: Auth Flow
