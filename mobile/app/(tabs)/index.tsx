@@ -7,11 +7,12 @@ import {
   Platform,
   Pressable,
 } from "react-native";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
 import type { Id } from "convex/_generated/dataModel";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   FREE_MODEL_ID,
   MODELS_BY_DATE,
@@ -25,9 +26,11 @@ import { MessageList, ChatInput } from "@/components/chat";
 import { ModelPickerModal } from "@/components/ModelPickerModal";
 import { CorePickerModal } from "@/components/CorePickerModal";
 import { ReasoningPickerModal } from "@/components/ReasoningPickerModal";
+import { Sidebar } from "@/components/Sidebar";
 
 export default function ChatScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { conversationId: paramConversationId } = useLocalSearchParams<{
     conversationId?: string;
   }>();
@@ -36,6 +39,7 @@ export default function ChatScreen() {
     paramConversationId ?? null
   );
   const [selectedModel, setSelectedModel] = useState(FREE_MODEL_ID);
+  const [sidebarVisible, setSidebarVisible] = useState(false);
 
   // Load conversation details if we have an ID
   const conversation = useQuery(
@@ -207,40 +211,40 @@ export default function ChatScreen() {
     return "evening";
   };
 
-  // Show conversation title if we have one
-  const headerTitle = conversation?.title || "Chat";
-
   return (
-    <>
-      <Stack.Screen
-        options={{
-          title: headerTitle,
-          headerRight: () =>
-            hasMessages ? (
-              <Pressable
-                onPress={handleNewChat}
-                style={styles.newChatButton}
-                disabled={isStreaming}
-              >
-                <Ionicons
-                  name="add-circle-outline"
-                  size={26}
-                  color={isStreaming ? "#666" : "#d97756"}
-                />
-              </Pressable>
-            ) : null,
-        }}
-      />
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      {/* Custom Header */}
+      <View style={styles.header}>
+        <Pressable
+          style={styles.headerButton}
+          onPress={() => setSidebarVisible(true)}
+        >
+          <Ionicons name="menu-outline" size={26} color="#f5f5f4" />
+        </Pressable>
+
+        <Pressable
+          style={styles.headerButton}
+          onPress={handleNewChat}
+          disabled={isStreaming}
+        >
+          <Ionicons
+            name="create-outline"
+            size={24}
+            color={isStreaming ? "#666" : "#f5f5f4"}
+          />
+        </Pressable>
+      </View>
+
+      {/* Main Content */}
       <KeyboardAvoidingView
-        style={styles.container}
+        style={styles.content}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
       >
         {hasMessages ? (
           <MessageList messages={displayMessages} isStreaming={isStreaming} />
         ) : (
           <View style={styles.welcomeContainer}>
-            <Text style={styles.welcomeEmoji}>✨</Text>
             <Text style={styles.welcomeText}>
               How can I help you{"\n"}this {getGreeting()}?
             </Text>
@@ -266,31 +270,40 @@ export default function ChatScreen() {
           modelSupportsReasoning={modelSupportsReasoning}
           reasoningLabel={reasoningLabel}
         />
-
-        <ModelPickerModal
-          visible={modelPickerVisible}
-          selectedModel={selectedModel}
-          onSelectModel={handleSelectModel}
-          onClose={() => setModelPickerVisible(false)}
-        />
-
-        <CorePickerModal
-          visible={corePickerVisible}
-          cores={cores}
-          activeCoresCount={activeCoresCount}
-          onToggleCore={toggleActive}
-          onClose={() => setCorePickerVisible(false)}
-        />
-
-        <ReasoningPickerModal
-          visible={reasoningPickerVisible}
-          selectedModel={selectedModel}
-          reasoningLevel={reasoningLevel}
-          onSelectReasoningLevel={setReasoningLevel}
-          onClose={() => setReasoningPickerVisible(false)}
-        />
       </KeyboardAvoidingView>
-    </>
+
+      {/* Sidebar */}
+      <Sidebar
+        visible={sidebarVisible}
+        onClose={() => setSidebarVisible(false)}
+        currentConversationId={conversationId}
+        onNewChat={handleNewChat}
+      />
+
+      {/* Modals */}
+      <ModelPickerModal
+        visible={modelPickerVisible}
+        selectedModel={selectedModel}
+        onSelectModel={handleSelectModel}
+        onClose={() => setModelPickerVisible(false)}
+      />
+
+      <CorePickerModal
+        visible={corePickerVisible}
+        cores={cores}
+        activeCoresCount={activeCoresCount}
+        onToggleCore={toggleActive}
+        onClose={() => setCorePickerVisible(false)}
+      />
+
+      <ReasoningPickerModal
+        visible={reasoningPickerVisible}
+        selectedModel={selectedModel}
+        reasoningLevel={reasoningLevel}
+        onSelectReasoningLevel={setReasoningLevel}
+        onClose={() => setReasoningPickerVisible(false)}
+      />
+    </View>
   );
 }
 
@@ -299,19 +312,29 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#1a1a1a",
   },
-  newChatButton: {
-    padding: 4,
-    marginRight: 8,
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#333",
+  },
+  headerButton: {
+    width: 44,
+    height: 44,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  content: {
+    flex: 1,
   },
   welcomeContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 40,
-  },
-  welcomeEmoji: {
-    fontSize: 32,
-    marginBottom: 16,
   },
   welcomeText: {
     fontSize: 28,

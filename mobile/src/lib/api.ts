@@ -203,8 +203,7 @@ export async function generateTitle(
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
-      conversationId,
-      firstMessage,
+      userMessage: firstMessage,
     }),
   });
 
