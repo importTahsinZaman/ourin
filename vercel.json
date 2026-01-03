@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "bun install --filter=@ourin/web --filter=@ourin/shared --filter=@ourin/core",
-  "buildCommand": "bun run build --filter=@ourin/web",
+  "buildCommand": "turbo build --filter=@ourin/web",
   "outputDirectory": "web/.next"
 }
