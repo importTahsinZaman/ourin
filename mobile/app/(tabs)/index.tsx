@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import {
   View,
   Text,
@@ -134,14 +134,17 @@ export default function ChatScreen() {
     },
   });
 
-  // Update conversationId when param changes (navigating from history)
+  // Update conversationId when URL param changes (navigating from history)
+  // Only react to paramConversationId changes, not internal conversationId updates
+  const prevParamRef = useRef(paramConversationId);
   useEffect(() => {
-    if (paramConversationId !== conversationId) {
-      // Clear messages when switching conversations
+    if (paramConversationId !== prevParamRef.current) {
+      // Clear messages when navigating to a different conversation
       setMessages([]);
       setConversationId(paramConversationId ?? null);
+      prevParamRef.current = paramConversationId;
     }
-  }, [paramConversationId, conversationId, setMessages]);
+  }, [paramConversationId, setMessages]);
 
   // Sync initial messages when loading an existing conversation
   useEffect(() => {
