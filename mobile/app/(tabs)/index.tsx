@@ -6,18 +6,32 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { useRouter } from "expo-router";
-import { FREE_MODEL_ID } from "@ourin/shared/models";
+import { FREE_MODEL_ID, MODELS_BY_DATE } from "@ourin/shared/models";
 import { useOurinChat } from "@/hooks/useOurinChat";
+import { useCores } from "@/hooks/useCores";
 import { MessageList, ChatInput } from "@/components/chat";
+import { ModelPickerModal } from "@/components/ModelPickerModal";
+import { CorePickerModal } from "@/components/CorePickerModal";
 
 export default function ChatScreen() {
-  const router = useRouter();
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [selectedModel, setSelectedModel] = useState(FREE_MODEL_ID);
+  const [modelPickerVisible, setModelPickerVisible] = useState(false);
+  const [corePickerVisible, setCorePickerVisible] = useState(false);
+
+  const {
+    cores,
+    activeCoresCount,
+    getActivePrompt,
+    getActiveCoreNames,
+    toggleActive,
+  } = useCores();
 
   const { messages, status, sendMessage, stop } = useOurinChat({
     conversationId,
-    model: FREE_MODEL_ID,
+    model: selectedModel,
+    getActivePrompt,
+    getActiveCoreNames,
     onConversationCreate: (id) => {
       // Just update the conversation ID, don't navigate
       // This keeps the streaming alive on this screen
@@ -31,6 +45,13 @@ export default function ChatScreen() {
     },
     [sendMessage]
   );
+
+  const handleSelectModel = useCallback((modelId: string) => {
+    setSelectedModel(modelId);
+  }, []);
+
+  const selectedModelName =
+    MODELS_BY_DATE.find((m) => m.id === selectedModel)?.name || "Model";
 
   const isStreaming = status === "streaming" || status === "submitted";
   const hasMessages = messages.length > 0;
@@ -65,6 +86,25 @@ export default function ChatScreen() {
         onStop={stop}
         isStreaming={isStreaming}
         placeholder="Chat with Ourin"
+        modelName={selectedModelName}
+        activeCoresCount={activeCoresCount}
+        onOpenModelPicker={() => setModelPickerVisible(true)}
+        onOpenCorePicker={() => setCorePickerVisible(true)}
+      />
+
+      <ModelPickerModal
+        visible={modelPickerVisible}
+        selectedModel={selectedModel}
+        onSelectModel={handleSelectModel}
+        onClose={() => setModelPickerVisible(false)}
+      />
+
+      <CorePickerModal
+        visible={corePickerVisible}
+        cores={cores}
+        activeCoresCount={activeCoresCount}
+        onToggleCore={toggleActive}
+        onClose={() => setCorePickerVisible(false)}
       />
     </KeyboardAvoidingView>
   );

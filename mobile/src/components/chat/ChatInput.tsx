@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import {
   View,
+  Text,
   TextInput,
   Pressable,
   StyleSheet,
@@ -14,6 +15,10 @@ interface ChatInputProps {
   onStop?: () => void;
   isStreaming?: boolean;
   placeholder?: string;
+  modelName?: string;
+  activeCoresCount?: number;
+  onOpenModelPicker?: () => void;
+  onOpenCorePicker?: () => void;
 }
 
 export function ChatInput({
@@ -21,6 +26,10 @@ export function ChatInput({
   onStop,
   isStreaming,
   placeholder = "Message",
+  modelName,
+  activeCoresCount = 0,
+  onOpenModelPicker,
+  onOpenCorePicker,
 }: ChatInputProps) {
   const [text, setText] = useState("");
   const inputRef = useRef<TextInputType>(null);
@@ -42,6 +51,25 @@ export function ChatInput({
 
   return (
     <View style={styles.container}>
+      {/* Model and Cores toolbar */}
+      <View style={styles.toolbar}>
+        <Pressable style={styles.toolbarButton} onPress={onOpenModelPicker}>
+          <Ionicons name="cube-outline" size={16} color="#9ca3af" />
+          <Text style={styles.toolbarButtonText} numberOfLines={1}>
+            {modelName || "Model"}
+          </Text>
+          <Ionicons name="chevron-down" size={14} color="#6b7280" />
+        </Pressable>
+
+        <Pressable style={styles.toolbarButton} onPress={onOpenCorePicker}>
+          <Ionicons name="layers-outline" size={16} color="#9ca3af" />
+          <Text style={styles.toolbarButtonText}>
+            {activeCoresCount} Core{activeCoresCount !== 1 ? "s" : ""}
+          </Text>
+          <Ionicons name="chevron-down" size={14} color="#6b7280" />
+        </Pressable>
+      </View>
+
       <View style={styles.inputWrapper}>
         <TextInput
           ref={inputRef}
@@ -98,6 +126,25 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 32,
     backgroundColor: "#1a1a1a",
+  },
+  toolbar: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 8,
+  },
+  toolbarButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#262626",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  toolbarButtonText: {
+    fontSize: 13,
+    color: "#9ca3af",
+    maxWidth: 100,
   },
   inputWrapper: {
     backgroundColor: "#262626",
