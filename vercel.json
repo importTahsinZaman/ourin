@@ -2,5 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "bun install --filter=@ourin/web --filter=@ourin/shared --filter=@ourin/core",
   "buildCommand": "turbo build --filter=@ourin/web",
-  "outputDirectory": "web/.next"
+  "outputDirectory": ".next"
 }
