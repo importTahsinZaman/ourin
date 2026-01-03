@@ -65,7 +65,9 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
     return <>{children}</>;
   }
 
-  return <PHProvider client={posthog}>{children}</PHProvider>;
+  return (
+    <PHProvider client={posthog}>{children as React.ReactNode}</PHProvider>
+  );
 }
 
 export { isPostHogEnabled };

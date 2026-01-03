@@ -21,7 +21,7 @@
     "@ai-sdk/openai": "^3.0.0",
     "@ai-sdk/react": "^2.0.0",
     "@auth/core": "^0.37.0",
-    "@convex-dev/auth": "^0.0.80",
+    "@convex-dev/auth": "^0.0.90",
     "@langfuse/otel": "^4.5.0",
     "@langfuse/tracing": "^4.5.0",
     "@opentelemetry/sdk-trace-node": "^2.2.0",

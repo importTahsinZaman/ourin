@@ -1,0 +1,3 @@
+[install]
+# prevent hoisting react packages to avoid version conflicts between web (React 19) and mobile (React 18)
+isolate = ["react", "react-dom", "react-native", "@types/react", "@types/react-dom"]
