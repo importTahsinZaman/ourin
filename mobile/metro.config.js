@@ -6,16 +6,13 @@ const workspaceRoot = path.resolve(projectRoot, "..");
 
 const config = getDefaultConfig(projectRoot);
 
-// watch all workspace packages
-config.watchFolders = [workspaceRoot];
+// Add workspace root to watch folders (keep defaults)
+config.watchFolders = [...(config.watchFolders || []), workspaceRoot];
 
-// resolve modules from project root first, then workspace root
+// Add workspace node_modules to resolution paths
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, "node_modules"),
   path.resolve(workspaceRoot, "node_modules"),
 ];
-
-// ensure workspace packages are resolved correctly
-config.resolver.disableHierarchicalLookup = true;
 
 module.exports = config;
