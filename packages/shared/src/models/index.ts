@@ -260,7 +260,7 @@ export const MODELS: Model[] = [
     apiModelId: "gpt-5.1",
     name: "GPT 5.1",
     provider: "openai",
-    description: "Flagship for everday advanced reasoning",
+    description: "Flagship for everyday advanced reasoning",
     supportsWebSearch: true,
     releaseDate: 1762905600,
     pricing: { input: 1250, output: 10000 },
