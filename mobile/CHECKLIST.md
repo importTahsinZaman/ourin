@@ -37,7 +37,6 @@
   - [x] Switch to `ConvexAuthProvider` from `@convex-dev/auth/react`
   - [x] Token storage with expo-secure-store
   - [x] URL replacement for OAuth flows
-  - [x] `useAnonymousAuth` hook for auto sign-in
 
 - [x] **Tests**
   - [x] Vitest setup with path aliases
@@ -50,16 +49,28 @@
 ## Phase 3: Auth Flow ✅
 
 - [x] **Auth gating**
-  - [x] All screens gated behind authentication
+  - [x] All screens gated behind authentication (no anonymous auth)
   - [x] Root layout redirects to login if not authenticated
   - [x] Automatic redirect to main app after login
 
-- [x] **Email OTP login**
-  - [x] Login screen - email + password inputs, dark theme
-  - [x] Verify screen - 8-digit OTP input, dark theme
-  - [x] Resend code functionality with 60s cooldown
+- [x] **Sign In flow**
+  - [x] Email + password inputs
   - [x] Error handling + loading states
-  - [x] Sign in / Sign up toggle
+  - [x] Toggle to sign up mode
+
+- [x] **Multi-step Sign Up flow** (matches web)
+  - [x] Step 1: First Name + Last Name + Email
+  - [x] Step 2: Password + Confirm Password with validation
+    - [x] 8+ characters
+    - [x] Lowercase letter
+    - [x] Uppercase letter
+    - [x] Number
+    - [x] Symbol
+    - [x] Passwords match
+    - [x] Dynamic validation colors (green/red)
+  - [x] Step 3: 8-digit OTP verification
+    - [x] Resend code with 60s cooldown
+    - [x] Error handling
 
 - [x] **Auth infrastructure**
   - [x] `useAuth` hook for auth state
