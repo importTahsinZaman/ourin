@@ -84,7 +84,7 @@
 
 ---
 
-## Phase 4: Chat Feature (In Progress)
+## Phase 4: Chat Feature ✅
 
 - [x] **Chat hook**
   - [x] Port `useOurinChat.ts` for React Native
@@ -106,28 +106,29 @@
   - [x] Streaming cursor indicator
   - [x] Markdown rendering (react-native-markdown-display)
 
-- [ ] **Model selection**
-  - [ ] Model picker (bottom sheet)
-  - [ ] Model info display
-  - [ ] Persist selection
+- [x] **Model selection**
+  - [x] Model picker (modal)
+  - [x] Model info display
+  - [x] Core picker (modal)
 
 ---
 
-## Phase 5: Conversations
+## Phase 5: Conversations ✅
 
-- [ ] **History screen**
-  - [ ] Conversation list from Convex
-  - [ ] Pull to refresh
-  - [ ] Empty state
+- [x] **History screen**
+  - [x] Conversation list from Convex
+  - [x] Pull to refresh
+  - [x] Empty state
+  - [x] Search filtering
 
-- [ ] **Conversation actions**
-  - [ ] Navigate to conversation detail
-  - [ ] Swipe to delete
-  - [ ] Rename conversation
+- [x] **Conversation actions**
+  - [x] Navigate to conversation detail
+  - [x] Long-press to delete (with iOS ActionSheet)
+  - [x] Favorite indicator
 
-- [ ] **New chat**
-  - [ ] Create new conversation
-  - [ ] Auto-generate title
+- [x] **New chat**
+  - [x] New chat button in header
+  - [x] Auto-generate title (existing)
 
 ---
 
@@ -245,6 +246,5 @@
 
 ## Current Status
 
-**Completed:** Phase 1 (Infrastructure), Phase 2 (Core Infrastructure), Phase 3 (Auth Flow)
-**In Progress:** Phase 4 (Chat Feature) - Core chat UI complete, model picker pending
-**Next:** Phase 5 (Conversations)
+**Completed:** Phase 1-5 (Infrastructure, Core Infrastructure, Auth Flow, Chat Feature, Conversations)
+**Next:** Phase 6 (File Attachments)

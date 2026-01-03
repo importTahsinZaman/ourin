@@ -1,12 +1,19 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
 } from "react-native";
+import { Stack, useLocalSearchParams } from "expo-router";
+import { useQuery } from "convex/react";
+import { api } from "convex/_generated/api";
+import type { Id } from "convex/_generated/dataModel";
+import { Ionicons } from "@expo/vector-icons";
 import { FREE_MODEL_ID, MODELS_BY_DATE } from "@ourin/shared/models";
+import type { UIMessage, MessagePart } from "@ourin/shared/types";
 import { useOurinChat } from "@/hooks/useOurinChat";
 import { useCores } from "@/hooks/useCores";
 import { MessageList, ChatInput } from "@/components/chat";
@@ -14,8 +21,42 @@ import { ModelPickerModal } from "@/components/ModelPickerModal";
 import { CorePickerModal } from "@/components/CorePickerModal";
 
 export default function ChatScreen() {
-  const [conversationId, setConversationId] = useState<string | null>(null);
+  const { conversationId: paramConversationId } = useLocalSearchParams<{
+    conversationId?: string;
+  }>();
+
+  const [conversationId, setConversationId] = useState<string | null>(
+    paramConversationId ?? null
+  );
   const [selectedModel, setSelectedModel] = useState(FREE_MODEL_ID);
+
+  // Load conversation details if we have an ID
+  const conversation = useQuery(
+    api.conversations.get,
+    conversationId ? { id: conversationId as Id<"conversations"> } : "skip"
+  );
+
+  // Load messages for the conversation
+  const messagesData = useQuery(
+    api.messages.getByConversation,
+    conversationId
+      ? { conversationId: conversationId as Id<"conversations"> }
+      : "skip"
+  );
+
+  // Update conversationId when param changes (navigating from history)
+  useEffect(() => {
+    if (paramConversationId && paramConversationId !== conversationId) {
+      setConversationId(paramConversationId);
+    }
+  }, [paramConversationId, conversationId]);
+
+  // Update model when conversation loads
+  useEffect(() => {
+    if (conversation?.model) {
+      setSelectedModel(conversation.model);
+    }
+  }, [conversation?.model]);
   const [modelPickerVisible, setModelPickerVisible] = useState(false);
   const [corePickerVisible, setCorePickerVisible] = useState(false);
 
@@ -27,7 +68,17 @@ export default function ChatScreen() {
     toggleActive,
   } = useCores();
 
-  const { messages, status, sendMessage, stop } = useOurinChat({
+  // Transform DB messages to UIMessage format
+  const initialMessages: UIMessage[] = (messagesData ?? []).map((msg) => ({
+    id: msg.id,
+    role: msg.role as "user" | "assistant" | "system",
+    parts: msg.parts as MessagePart[],
+    model: msg.model,
+    createdAt: msg.createdAt ? new Date(msg.createdAt) : undefined,
+    metadata: msg.metadata as UIMessage["metadata"],
+  }));
+
+  const { messages, status, sendMessage, stop, setMessages } = useOurinChat({
     conversationId,
     model: selectedModel,
     getActivePrompt,
@@ -38,6 +89,13 @@ export default function ChatScreen() {
       setConversationId(id);
     },
   });
+
+  // Sync initial messages when loading an existing conversation
+  useEffect(() => {
+    if (initialMessages.length > 0 && messages.length === 0) {
+      setMessages(initialMessages);
+    }
+  }, [initialMessages.length, messages.length, setMessages]);
 
   const handleSend = useCallback(
     (text: string) => {
@@ -50,11 +108,19 @@ export default function ChatScreen() {
     setSelectedModel(modelId);
   }, []);
 
+  const handleNewChat = useCallback(() => {
+    setConversationId(null);
+    setMessages([]);
+  }, [setMessages]);
+
   const selectedModelName =
     MODELS_BY_DATE.find((m) => m.id === selectedModel)?.name || "Model";
 
   const isStreaming = status === "streaming" || status === "submitted";
-  const hasMessages = messages.length > 0;
+
+  // Use local messages if we have them, otherwise use loaded messages
+  const displayMessages = messages.length > 0 ? messages : initialMessages;
+  const hasMessages = displayMessages.length > 0;
 
   // Get time-based greeting
   const getGreeting = () => {
@@ -64,49 +130,73 @@ export default function ChatScreen() {
     return "evening";
   };
 
+  // Show conversation title if we have one
+  const headerTitle = conversation?.title || "Chat";
+
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
-    >
-      {hasMessages ? (
-        <MessageList messages={messages} isStreaming={isStreaming} />
-      ) : (
-        <View style={styles.welcomeContainer}>
-          <Text style={styles.welcomeEmoji}>✨</Text>
-          <Text style={styles.welcomeText}>
-            How can I help you{"\n"}this {getGreeting()}?
-          </Text>
-        </View>
-      )}
-
-      <ChatInput
-        onSend={handleSend}
-        onStop={stop}
-        isStreaming={isStreaming}
-        placeholder="Chat with Ourin"
-        modelName={selectedModelName}
-        activeCoresCount={activeCoresCount}
-        onOpenModelPicker={() => setModelPickerVisible(true)}
-        onOpenCorePicker={() => setCorePickerVisible(true)}
+    <>
+      <Stack.Screen
+        options={{
+          title: headerTitle,
+          headerRight: () =>
+            hasMessages ? (
+              <Pressable
+                onPress={handleNewChat}
+                style={styles.newChatButton}
+                disabled={isStreaming}
+              >
+                <Ionicons
+                  name="add-circle-outline"
+                  size={26}
+                  color={isStreaming ? "#666" : "#d97756"}
+                />
+              </Pressable>
+            ) : null,
+        }}
       />
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+      >
+        {hasMessages ? (
+          <MessageList messages={displayMessages} isStreaming={isStreaming} />
+        ) : (
+          <View style={styles.welcomeContainer}>
+            <Text style={styles.welcomeEmoji}>✨</Text>
+            <Text style={styles.welcomeText}>
+              How can I help you{"\n"}this {getGreeting()}?
+            </Text>
+          </View>
+        )}
 
-      <ModelPickerModal
-        visible={modelPickerVisible}
-        selectedModel={selectedModel}
-        onSelectModel={handleSelectModel}
-        onClose={() => setModelPickerVisible(false)}
-      />
+        <ChatInput
+          onSend={handleSend}
+          onStop={stop}
+          isStreaming={isStreaming}
+          placeholder="Chat with Ourin"
+          modelName={selectedModelName}
+          activeCoresCount={activeCoresCount}
+          onOpenModelPicker={() => setModelPickerVisible(true)}
+          onOpenCorePicker={() => setCorePickerVisible(true)}
+        />
 
-      <CorePickerModal
-        visible={corePickerVisible}
-        cores={cores}
-        activeCoresCount={activeCoresCount}
-        onToggleCore={toggleActive}
-        onClose={() => setCorePickerVisible(false)}
-      />
-    </KeyboardAvoidingView>
+        <ModelPickerModal
+          visible={modelPickerVisible}
+          selectedModel={selectedModel}
+          onSelectModel={handleSelectModel}
+          onClose={() => setModelPickerVisible(false)}
+        />
+
+        <CorePickerModal
+          visible={corePickerVisible}
+          cores={cores}
+          activeCoresCount={activeCoresCount}
+          onToggleCore={toggleActive}
+          onClose={() => setCorePickerVisible(false)}
+        />
+      </KeyboardAvoidingView>
+    </>
   );
 }
 
@@ -114,6 +204,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#1a1a1a",
+  },
+  newChatButton: {
+    padding: 4,
+    marginRight: 8,
   },
   welcomeContainer: {
     flex: 1,
