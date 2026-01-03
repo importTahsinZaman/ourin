@@ -128,91 +128,56 @@ export async function streamChat(
     throw new ApiError(errorDetails, response.status, errorCode, errorDetails);
   }
 
-  if (!response.body) {
-    throw new ApiError("No response body", 500);
-  }
-
-  // Parse SSE stream
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
+  // React Native doesn't fully support ReadableStream
+  // Fall back to reading the full response as text and parsing SSE format
+  const text = await response.text();
   let fullText = "";
-  let buffer = "";
 
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+  // Parse SSE format from full response
+  const lines = text.split("\n");
 
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() || "";
+  for (const line of lines) {
+    if (!line.trim()) continue;
 
-      for (const line of lines) {
-        if (!line.trim()) continue;
+    const colonIndex = line.indexOf(":");
+    if (colonIndex === -1) continue;
 
-        const colonIndex = line.indexOf(":");
-        if (colonIndex === -1) continue;
+    const eventType = line.slice(0, colonIndex);
+    const eventData = line.slice(colonIndex + 1);
 
-        const eventType = line.slice(0, colonIndex);
-        const eventData = line.slice(colonIndex + 1);
+    try {
+      if (eventType === "data") {
+        const parsed = JSON.parse(eventData);
 
-        try {
-          if (eventType === "data") {
-            const parsed = JSON.parse(eventData);
-
-            if (parsed.type === "text-delta" && parsed.delta) {
-              fullText += parsed.delta;
-              onEvent({ type: "text-delta", data: parsed.delta });
-            } else if (parsed.type === "reasoning-start") {
-              onEvent({ type: "reasoning-start", data: parsed });
-            } else if (parsed.type === "reasoning-delta" && parsed.delta) {
-              onEvent({ type: "reasoning-delta", data: parsed.delta });
-            } else if (parsed.type === "reasoning-end") {
-              onEvent({ type: "reasoning-end", data: parsed });
-            } else if (parsed.type === "tool-input-start") {
-              onEvent({ type: "tool-input-start", data: parsed });
-            } else if (parsed.type === "tool-input-delta") {
-              onEvent({ type: "tool-input-delta", data: parsed });
-            } else if (parsed.type === "tool-result") {
-              onEvent({ type: "tool-result", data: parsed });
-            } else if (parsed.type === "sources") {
-              onEvent({ type: "sources", data: parsed.sources });
-            }
-          } else if (eventType === "error") {
-            const parsed = JSON.parse(eventData);
-            onEvent({ type: "error", data: parsed });
-          }
-        } catch {
-          // Skip malformed lines
+        if (parsed.type === "text-delta" && parsed.delta) {
+          fullText += parsed.delta;
+          onEvent({ type: "text-delta", data: parsed.delta });
+        } else if (parsed.type === "reasoning-start") {
+          onEvent({ type: "reasoning-start", data: parsed });
+        } else if (parsed.type === "reasoning-delta" && parsed.delta) {
+          onEvent({ type: "reasoning-delta", data: parsed.delta });
+        } else if (parsed.type === "reasoning-end") {
+          onEvent({ type: "reasoning-end", data: parsed });
+        } else if (parsed.type === "tool-input-start") {
+          onEvent({ type: "tool-input-start", data: parsed });
+        } else if (parsed.type === "tool-input-delta") {
+          onEvent({ type: "tool-input-delta", data: parsed });
+        } else if (parsed.type === "tool-result") {
+          onEvent({ type: "tool-result", data: parsed });
+        } else if (parsed.type === "sources") {
+          onEvent({ type: "sources", data: parsed.sources });
         }
+      } else if (eventType === "error") {
+        const parsed = JSON.parse(eventData);
+        onEvent({ type: "error", data: parsed });
       }
+    } catch {
+      // Skip malformed lines
     }
-
-    // Process any remaining buffer
-    if (buffer.trim()) {
-      const colonIndex = buffer.indexOf(":");
-      if (colonIndex !== -1) {
-        const eventType = buffer.slice(0, colonIndex);
-        const eventData = buffer.slice(colonIndex + 1);
-        try {
-          if (eventType === "data") {
-            const parsed = JSON.parse(eventData);
-            if (parsed.type === "text-delta" && parsed.delta) {
-              fullText += parsed.delta;
-              onEvent({ type: "text-delta", data: parsed.delta });
-            }
-          }
-        } catch {
-          // Ignore
-        }
-      }
-    }
-
-    onEvent({ type: "done", data: null });
-    return fullText;
-  } finally {
-    reader.releaseLock();
   }
+
+  onEvent({ type: "done", data: null });
+  return fullText;
 }
 
 /**

@@ -1,8 +1,39 @@
-import { View, Text, StyleSheet, TextInput, Pressable } from "react-native";
-import { FREE_MODEL_ID, getModelInfo } from "@ourin/shared/models";
+import { useState, useCallback } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { FREE_MODEL_ID } from "@ourin/shared/models";
+import { useOurinChat } from "@/hooks/useOurinChat";
+import { MessageList, ChatInput } from "@/components/chat";
 
 export default function ChatScreen() {
-  const defaultModel = getModelInfo(FREE_MODEL_ID);
+  const router = useRouter();
+  const [conversationId, setConversationId] = useState<string | null>(null);
+
+  const { messages, status, sendMessage, stop } = useOurinChat({
+    conversationId,
+    model: FREE_MODEL_ID,
+    onConversationCreate: (id) => {
+      // Just update the conversation ID, don't navigate
+      // This keeps the streaming alive on this screen
+      setConversationId(id);
+    },
+  });
+
+  const handleSend = useCallback(
+    (text: string) => {
+      sendMessage(text);
+    },
+    [sendMessage]
+  );
+
+  const isStreaming = status === "streaming" || status === "submitted";
+  const hasMessages = messages.length > 0;
 
   // Get time-based greeting
   const getGreeting = () => {
@@ -13,32 +44,29 @@ export default function ChatScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Empty State / Welcome */}
-      <View style={styles.welcomeContainer}>
-        <Text style={styles.welcomeEmoji}>✨</Text>
-        <Text style={styles.welcomeText}>
-          How can I help you{"\n"}this {getGreeting()}?
-        </Text>
-      </View>
-
-      {/* Input Area */}
-      <View style={styles.inputContainer}>
-        <View style={styles.inputWrapper}>
-          <TextInput
-            style={styles.input}
-            placeholder="Chat with Ourin"
-            placeholderTextColor="#666"
-            multiline
-          />
-          <View style={styles.inputButtons}>
-            <Pressable style={styles.iconButton}>
-              <Text style={styles.iconText}>+</Text>
-            </Pressable>
-          </View>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+    >
+      {hasMessages ? (
+        <MessageList messages={messages} isStreaming={isStreaming} />
+      ) : (
+        <View style={styles.welcomeContainer}>
+          <Text style={styles.welcomeEmoji}>✨</Text>
+          <Text style={styles.welcomeText}>
+            How can I help you{"\n"}this {getGreeting()}?
+          </Text>
         </View>
-      </View>
-    </View>
+      )}
+
+      <ChatInput
+        onSend={handleSend}
+        onStop={stop}
+        isStreaming={isStreaming}
+        placeholder="Chat with Ourin"
+      />
+    </KeyboardAvoidingView>
   );
 }
 
@@ -63,40 +91,5 @@ const styles = StyleSheet.create({
     color: "#d4c4b0",
     textAlign: "center",
     lineHeight: 38,
-  },
-  inputContainer: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-  inputWrapper: {
-    backgroundColor: "#262626",
-    borderRadius: 24,
-    padding: 12,
-    minHeight: 56,
-  },
-  input: {
-    fontSize: 16,
-    color: "#f5f5f4",
-    paddingHorizontal: 8,
-    maxHeight: 120,
-  },
-  inputButtons: {
-    flexDirection: "row",
-    justifyContent: "flex-start",
-    marginTop: 8,
-    gap: 8,
-  },
-  iconButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#404040",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  iconText: {
-    color: "#a3a3a3",
-    fontSize: 20,
-    fontWeight: "300",
   },
 });

@@ -84,20 +84,27 @@
 
 ---
 
-## Phase 4: Chat Feature
+## Phase 4: Chat Feature (In Progress)
 
-- [ ] **Chat hook**
-  - [ ] Port `useOurinChat.ts` for React Native
-  - [ ] Streaming with fetch + ReadableStream
-  - [ ] Message state management
-  - [ ] Error handling + retry
+- [x] **Chat hook**
+  - [x] Port `useOurinChat.ts` for React Native
+  - [x] Streaming with SSE via existing api.ts streamChat
+  - [x] Message state management
+  - [x] Error handling with Alert
+  - [x] sendMessage, stop, regenerate functions
+  - [x] 250ms DB persistence for crash recovery
 
-- [ ] **Chat UI components**
-  - [ ] `MessageList.tsx` - FlatList (inverted)
-  - [ ] `MessageBubble.tsx` - render message parts
-  - [ ] `ChatInput.tsx` - TextInput + send button
-  - [ ] Loading/streaming indicators
-  - [ ] Markdown rendering
+- [x] **Chat UI components**
+  - [x] `MessageList.tsx` - FlatList with auto-scroll
+  - [x] `MessageBubble.tsx` - render message parts
+    - [x] TextPart with markdown
+    - [x] ReasoningPart (collapsible thinking blocks)
+    - [x] FilePart (images and documents)
+    - [x] ToolInvocationPart
+    - [x] SourcesPart (web search results)
+  - [x] `ChatInput.tsx` - TextInput + send/stop button
+  - [x] Streaming cursor indicator
+  - [x] Markdown rendering (react-native-markdown-display)
 
 - [ ] **Model selection**
   - [ ] Model picker (bottom sheet)
@@ -239,4 +246,5 @@
 ## Current Status
 
 **Completed:** Phase 1 (Infrastructure), Phase 2 (Core Infrastructure), Phase 3 (Auth Flow)
-**Next:** Phase 4 (Chat Feature)
+**In Progress:** Phase 4 (Chat Feature) - Core chat UI complete, model picker pending
+**Next:** Phase 5 (Conversations)
