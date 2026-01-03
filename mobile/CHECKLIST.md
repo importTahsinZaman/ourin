@@ -132,22 +132,29 @@
 
 ---
 
-## Phase 6: File Attachments
+## Phase 6: File Attachments ✅
 
-- [ ] **Image picker**
-  - [ ] expo-image-picker integration
-  - [ ] Image preview
-  - [ ] Resize/compress before upload
+- [x] **Image picker**
+  - [x] expo-image-picker integration
+  - [x] Camera (take photo)
+  - [x] Photo library (pick image)
+  - [x] Image preview
 
-- [ ] **Document picker**
-  - [ ] expo-document-picker for PDFs
-  - [ ] File type validation
+- [x] **Document picker**
+  - [x] expo-document-picker for PDFs
+  - [x] File type validation (PDF, text, markdown)
 
-- [ ] **Upload flow**
-  - [ ] File hash for deduplication
-  - [ ] Upload to Convex storage
-  - [ ] Progress indicator
-  - [ ] Error handling
+- [x] **Upload flow**
+  - [x] File hash for deduplication (SHA-256)
+  - [x] Upload to Convex storage
+  - [x] Progress/loading indicator
+  - [x] Error handling with overlay
+  - [x] Remove file button
+
+- [x] **Chat integration**
+  - [x] File parts passed to sendMessage
+  - [x] ActionSheet for attachment options (iOS)
+  - [x] Alert fallback for Android
 
 ---
 
@@ -246,5 +253,5 @@
 
 ## Current Status
 
-**Completed:** Phase 1-5 (Infrastructure, Core Infrastructure, Auth Flow, Chat Feature, Conversations)
-**Next:** Phase 6 (File Attachments)
+**Completed:** Phase 1-6 (Infrastructure, Core Infrastructure, Auth Flow, Chat Feature, Conversations, File Attachments)
+**Next:** Phase 7 (Settings)

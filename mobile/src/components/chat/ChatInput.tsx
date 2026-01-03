@@ -6,12 +6,20 @@ import {
   Pressable,
   StyleSheet,
   Keyboard,
+  Image,
+  ScrollView,
+  ActionSheetIOS,
+  Platform,
+  Alert,
+  ActivityIndicator,
   type TextInput as TextInputType,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useFileAttachment, type PendingFile } from "@/hooks/useFileAttachment";
+import type { FilePart } from "@ourin/shared/types";
 
 interface ChatInputProps {
-  onSend: (text: string) => void;
+  onSend: (text: string, files?: FilePart[]) => void;
   onStop?: () => void;
   isStreaming?: boolean;
   placeholder?: string;
@@ -34,12 +42,27 @@ export function ChatInput({
   const [text, setText] = useState("");
   const inputRef = useRef<TextInputType>(null);
 
+  const {
+    pendingFiles,
+    isUploading,
+    hasFiles,
+    takePhoto,
+    pickImage,
+    pickDocument,
+    removeFile,
+    clearFiles,
+    getFileParts,
+  } = useFileAttachment();
+
   const handleSend = () => {
     const trimmed = text.trim();
-    if (!trimmed) return;
+    const fileParts = getFileParts();
 
-    onSend(trimmed);
+    if (!trimmed && fileParts.length === 0) return;
+
+    onSend(trimmed, fileParts.length > 0 ? fileParts : undefined);
     setText("");
+    clearFiles();
     Keyboard.dismiss();
   };
 
@@ -47,7 +70,45 @@ export function ChatInput({
     onStop?.();
   };
 
-  const canSend = text.trim().length > 0 && !isStreaming;
+  const showAttachmentOptions = () => {
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: [
+            "Cancel",
+            "Take Photo",
+            "Choose from Library",
+            "Choose Document",
+          ],
+          cancelButtonIndex: 0,
+        },
+        (buttonIndex) => {
+          switch (buttonIndex) {
+            case 1:
+              takePhoto();
+              break;
+            case 2:
+              pickImage();
+              break;
+            case 3:
+              pickDocument();
+              break;
+          }
+        }
+      );
+    } else {
+      // Android fallback
+      Alert.alert("Add Attachment", "Choose an option", [
+        { text: "Cancel", style: "cancel" },
+        { text: "Take Photo", onPress: takePhoto },
+        { text: "Choose from Library", onPress: pickImage },
+        { text: "Choose Document", onPress: pickDocument },
+      ]);
+    }
+  };
+
+  const canSend =
+    (text.trim().length > 0 || hasFiles) && !isStreaming && !isUploading;
 
   return (
     <View style={styles.container}>
@@ -70,6 +131,24 @@ export function ChatInput({
         </Pressable>
       </View>
 
+      {/* File previews */}
+      {pendingFiles.length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.filePreviewContainer}
+          contentContainerStyle={styles.filePreviewContent}
+        >
+          {pendingFiles.map((file) => (
+            <FilePreview
+              key={file.id}
+              file={file}
+              onRemove={() => removeFile(file.id)}
+            />
+          ))}
+        </ScrollView>
+      )}
+
       <View style={styles.inputWrapper}>
         <TextInput
           ref={inputRef}
@@ -83,14 +162,17 @@ export function ChatInput({
           editable={!isStreaming}
         />
         <View style={styles.buttonRow}>
-          {/* Attachment button - placeholder for now */}
+          {/* Attachment button */}
           <Pressable
             style={styles.iconButton}
-            onPress={() => {
-              // TODO: Implement file picker
-            }}
+            onPress={showAttachmentOptions}
+            disabled={isStreaming}
           >
-            <Ionicons name="add" size={22} color="#a3a3a3" />
+            <Ionicons
+              name="add"
+              size={22}
+              color={isStreaming ? "#555" : "#a3a3a3"}
+            />
           </Pressable>
 
           {/* Send/Stop button */}
@@ -101,6 +183,10 @@ export function ChatInput({
             >
               <Ionicons name="stop" size={18} color="#fff" />
             </Pressable>
+          ) : isUploading ? (
+            <View style={[styles.sendButton, styles.sendButtonDisabled]}>
+              <ActivityIndicator size="small" color="#666" />
+            </View>
           ) : (
             <Pressable
               style={[styles.sendButton, !canSend && styles.sendButtonDisabled]}
@@ -116,6 +202,51 @@ export function ChatInput({
           )}
         </View>
       </View>
+    </View>
+  );
+}
+
+interface FilePreviewProps {
+  file: PendingFile;
+  onRemove: () => void;
+}
+
+function FilePreview({ file, onRemove }: FilePreviewProps) {
+  const isImage = file.mimeType.startsWith("image/");
+
+  return (
+    <View style={styles.filePreview}>
+      {isImage ? (
+        <Image source={{ uri: file.uri }} style={styles.filePreviewImage} />
+      ) : (
+        <View style={styles.filePreviewDoc}>
+          <Ionicons name="document-outline" size={24} color="#9ca3af" />
+        </View>
+      )}
+
+      {/* Uploading overlay */}
+      {file.isUploading && (
+        <View style={styles.filePreviewOverlay}>
+          <ActivityIndicator size="small" color="#fff" />
+        </View>
+      )}
+
+      {/* Error overlay */}
+      {file.error && (
+        <View style={[styles.filePreviewOverlay, styles.filePreviewError]}>
+          <Ionicons name="alert-circle" size={20} color="#fff" />
+        </View>
+      )}
+
+      {/* Remove button */}
+      <Pressable style={styles.fileRemoveButton} onPress={onRemove}>
+        <Ionicons name="close" size={14} color="#fff" />
+      </Pressable>
+
+      {/* File name */}
+      <Text style={styles.fileName} numberOfLines={1}>
+        {file.fileName}
+      </Text>
     </View>
   );
 }
@@ -145,6 +276,64 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#9ca3af",
     maxWidth: 100,
+  },
+  filePreviewContainer: {
+    marginBottom: 8,
+    maxHeight: 100,
+  },
+  filePreviewContent: {
+    gap: 8,
+    paddingVertical: 4,
+  },
+  filePreview: {
+    width: 72,
+    alignItems: "center",
+  },
+  filePreviewImage: {
+    width: 64,
+    height: 64,
+    borderRadius: 8,
+    backgroundColor: "#333",
+  },
+  filePreviewDoc: {
+    width: 64,
+    height: 64,
+    borderRadius: 8,
+    backgroundColor: "#333",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  filePreviewOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 4,
+    width: 64,
+    height: 64,
+    borderRadius: 8,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  filePreviewError: {
+    backgroundColor: "rgba(239, 68, 68, 0.7)",
+  },
+  fileRemoveButton: {
+    position: "absolute",
+    top: -4,
+    right: 0,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "#666",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  fileName: {
+    fontSize: 10,
+    color: "#9ca3af",
+    marginTop: 4,
+    textAlign: "center",
+    width: 64,
   },
   inputWrapper: {
     backgroundColor: "#262626",

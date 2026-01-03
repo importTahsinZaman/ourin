@@ -13,7 +13,7 @@ import { api } from "convex/_generated/api";
 import type { Id } from "convex/_generated/dataModel";
 import { Ionicons } from "@expo/vector-icons";
 import { FREE_MODEL_ID, MODELS_BY_DATE } from "@ourin/shared/models";
-import type { UIMessage, MessagePart } from "@ourin/shared/types";
+import type { UIMessage, MessagePart, FilePart } from "@ourin/shared/types";
 import { useOurinChat } from "@/hooks/useOurinChat";
 import { useCores } from "@/hooks/useCores";
 import { MessageList, ChatInput } from "@/components/chat";
@@ -101,8 +101,18 @@ export default function ChatScreen() {
   }, [initialMessages.length, messages.length, setMessages]);
 
   const handleSend = useCallback(
-    (text: string) => {
-      sendMessage(text);
+    (text: string, files?: FilePart[]) => {
+      if (files && files.length > 0) {
+        // Create message with both text and file parts
+        const parts: MessagePart[] = [];
+        if (text) {
+          parts.push({ type: "text", text });
+        }
+        parts.push(...files);
+        sendMessage({ role: "user", parts });
+      } else {
+        sendMessage(text);
+      }
     },
     [sendMessage]
   );
