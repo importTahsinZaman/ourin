@@ -3,6 +3,7 @@
   "private": true,
   "workspaces": [
     "web",
+    "mobile",
     "packages/*"
   ],
   "scripts": {
@@ -13,7 +14,10 @@
     "format": "turbo format",
     "format:check": "turbo format:check",
     "dev:web": "turbo dev --filter=@ourin/web",
+    "dev:mobile": "turbo dev --filter=@ourin/mobile",
     "dev:convex": "cd web && npx convex dev",
+    "build:ios": "turbo build:ios --filter=@ourin/mobile",
+    "build:android": "turbo build:android --filter=@ourin/mobile",
     "prepare": "husky"
   },
   "devDependencies": {
@@ -35,8 +39,16 @@
       "prettier --write",
       "bash -c 'cd web && tsc --noEmit --skipLibCheck'"
     ],
+    "mobile/**/*.{ts,tsx}": [
+      "eslint --fix --config mobile/eslint.config.mjs",
+      "prettier --write"
+    ],
     "packages/core/**/*.ts": [
       "eslint --fix --config packages/core/eslint.config.mjs",
+      "prettier --write"
+    ],
+    "packages/shared/**/*.ts": [
+      "eslint --fix --config packages/shared/eslint.config.mjs",
       "prettier --write"
     ],
     "*.{json,md}": [

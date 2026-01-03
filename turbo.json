@@ -3,7 +3,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**", ".expo/**"]
     },
     "dev": {
       "cache": false,
@@ -19,6 +19,14 @@
     "format": {
       "cache": false
     },
-    "format:check": {}
+    "format:check": {},
+    "build:ios": {
+      "dependsOn": ["^build"],
+      "cache": false
+    },
+    "build:android": {
+      "dependsOn": ["^build"],
+      "cache": false
+    }
   }
 }
