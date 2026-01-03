@@ -47,21 +47,27 @@
 
 ---
 
-## Phase 3: Auth Flow
+## Phase 3: Auth Flow ✅
 
-- [ ] **Anonymous auth**
-  - [ ] Auto-create anonymous user on first launch
-  - [ ] Store anonymous session
+- [x] **Anonymous auth**
+  - [x] Auto-create anonymous user on first launch
+  - [x] Store anonymous session via expo-secure-store
 
-- [ ] **Email OTP login**
-  - [ ] Login screen - email input + validation
-  - [ ] Verify screen - OTP input + validation
-  - [ ] Resend code functionality
-  - [ ] Error handling
+- [x] **Email OTP login**
+  - [x] Login screen - email + password inputs, dark theme
+  - [x] Verify screen - 8-digit OTP input, dark theme
+  - [x] Resend code functionality with 60s cooldown
+  - [x] Error handling + loading states
 
-- [ ] **Account upgrade**
-  - [ ] Link anonymous account to email
-  - [ ] Preserve conversation history
+- [x] **Account upgrade**
+  - [x] `useAccountUpgrade` hook with pending link flow
+  - [x] `useAuth` hook for auth state
+  - [x] Convex API path aliases for mobile
+
+- [x] **UI Updates**
+  - [x] Dark theme for all screens (matching Claude app)
+  - [x] Settings screen with sign in option
+  - [x] Chat/History screens with dark theme
 
 ---
 
@@ -219,5 +225,5 @@
 
 ## Current Status
 
-**Completed:** Phase 1 (Infrastructure), Phase 2 (Core Infrastructure)
-**Next:** Phase 3 (Auth Flow)
+**Completed:** Phase 1 (Infrastructure), Phase 2 (Core Infrastructure), Phase 3 (Auth Flow)
+**Next:** Phase 4 (Chat Feature)

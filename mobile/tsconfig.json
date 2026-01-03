@@ -5,7 +5,8 @@
     "paths": {
       "@/*": ["./src/*"],
       "@ourin/shared": ["../packages/shared/src"],
-      "@ourin/shared/*": ["../packages/shared/src/*"]
+      "@ourin/shared/*": ["../packages/shared/src/*"],
+      "convex/_generated/*": ["../web/convex/_generated/*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]

@@ -12,6 +12,7 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src"),
       "@ourin/shared": path.resolve(__dirname, "../packages/shared/src"),
+      "convex/_generated": path.resolve(__dirname, "../web/convex/_generated"),
     },
   },
 });

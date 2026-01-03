@@ -15,4 +15,11 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, "node_modules"),
 ];
 
+// Add extra modules that need to be resolved from workspace
+config.resolver.extraNodeModules = {
+  ...config.resolver.extraNodeModules,
+  // Resolve convex/_generated from web app
+  "convex/_generated": path.resolve(workspaceRoot, "web/convex/_generated"),
+};
+
 module.exports = config;

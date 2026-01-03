@@ -1,46 +1,102 @@
-import { View, Text, StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { View, Text, StyleSheet, TextInput, Pressable } from "react-native";
 import { FREE_MODEL_ID, getModelInfo } from "@ourin/shared/models";
 
 export default function ChatScreen() {
   const defaultModel = getModelInfo(FREE_MODEL_ID);
 
+  // Get time-based greeting
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "morning";
+    if (hour < 17) return "afternoon";
+    return "evening";
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Welcome to Ourin</Text>
-        <Text style={styles.subtitle}>
-          Start a conversation with {defaultModel.name}
+    <View style={styles.container}>
+      {/* Empty State / Welcome */}
+      <View style={styles.welcomeContainer}>
+        <Text style={styles.welcomeEmoji}>✨</Text>
+        <Text style={styles.welcomeText}>
+          How can I help you{"\n"}this {getGreeting()}?
         </Text>
-        <Text style={styles.hint}>Chat input coming soon...</Text>
       </View>
-    </SafeAreaView>
+
+      {/* Input Area */}
+      <View style={styles.inputContainer}>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            style={styles.input}
+            placeholder="Chat with Ourin"
+            placeholderTextColor="#666"
+            multiline
+          />
+          <View style={styles.inputButtons}>
+            <Pressable style={styles.iconButton}>
+              <Text style={styles.iconText}>+</Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#1a1a1a",
   },
-  content: {
+  welcomeContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
+    paddingHorizontal: 40,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 8,
+  welcomeEmoji: {
+    fontSize: 32,
+    marginBottom: 16,
   },
-  subtitle: {
+  welcomeText: {
+    fontSize: 28,
+    fontWeight: "500",
+    color: "#d4c4b0",
+    textAlign: "center",
+    lineHeight: 38,
+  },
+  inputContainer: {
+    padding: 16,
+    paddingBottom: 32,
+  },
+  inputWrapper: {
+    backgroundColor: "#262626",
+    borderRadius: 24,
+    padding: 12,
+    minHeight: 56,
+  },
+  input: {
     fontSize: 16,
-    color: "#666",
-    marginBottom: 20,
+    color: "#f5f5f4",
+    paddingHorizontal: 8,
+    maxHeight: 120,
   },
-  hint: {
-    fontSize: 14,
-    color: "#999",
+  inputButtons: {
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    marginTop: 8,
+    gap: 8,
+  },
+  iconButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#404040",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  iconText: {
+    color: "#a3a3a3",
+    fontSize: 20,
+    fontWeight: "300",
   },
 });
