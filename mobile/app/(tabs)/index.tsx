@@ -7,7 +7,7 @@ import {
   Platform,
   Pressable,
 } from "react-native";
-import { Stack, useLocalSearchParams } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
 import type { Id } from "convex/_generated/dataModel";
@@ -21,6 +21,7 @@ import { ModelPickerModal } from "@/components/ModelPickerModal";
 import { CorePickerModal } from "@/components/CorePickerModal";
 
 export default function ChatScreen() {
+  const router = useRouter();
   const { conversationId: paramConversationId } = useLocalSearchParams<{
     conversationId?: string;
   }>();
@@ -43,13 +44,6 @@ export default function ChatScreen() {
       ? { conversationId: conversationId as Id<"conversations"> }
       : "skip"
   );
-
-  // Update conversationId when param changes (navigating from history)
-  useEffect(() => {
-    if (paramConversationId && paramConversationId !== conversationId) {
-      setConversationId(paramConversationId);
-    }
-  }, [paramConversationId, conversationId]);
 
   // Update model when conversation loads
   useEffect(() => {
@@ -90,6 +84,15 @@ export default function ChatScreen() {
     },
   });
 
+  // Update conversationId when param changes (navigating from history)
+  useEffect(() => {
+    if (paramConversationId !== conversationId) {
+      // Clear messages when switching conversations
+      setMessages([]);
+      setConversationId(paramConversationId ?? null);
+    }
+  }, [paramConversationId, conversationId, setMessages]);
+
   // Sync initial messages when loading an existing conversation
   useEffect(() => {
     if (initialMessages.length > 0 && messages.length === 0) {
@@ -109,9 +112,12 @@ export default function ChatScreen() {
   }, []);
 
   const handleNewChat = useCallback(() => {
+    // Clear the URL params by navigating to the tab without params
+    router.replace("/(tabs)");
     setConversationId(null);
     setMessages([]);
-  }, [setMessages]);
+    setSelectedModel(FREE_MODEL_ID);
+  }, [router, setMessages]);
 
   const selectedModelName =
     MODELS_BY_DATE.find((m) => m.id === selectedModel)?.name || "Model";
