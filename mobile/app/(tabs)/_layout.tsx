@@ -1,25 +1,7 @@
-import { useEffect } from "react";
 import { Tabs } from "expo-router";
-import { Text, View, ActivityIndicator, StyleSheet } from "react-native";
-import { useAnonymousAuth } from "@/hooks";
+import { Text } from "react-native";
 
 export default function TabLayout() {
-  const { ensureAuthenticated, isLoading } = useAnonymousAuth();
-
-  // Auto sign-in with anonymous auth on mount
-  useEffect(() => {
-    ensureAuthenticated();
-  }, [ensureAuthenticated]);
-
-  // Show loading state while auth is initializing
-  if (isLoading) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#d97756" />
-      </View>
-    );
-  }
-
   return (
     <Tabs
       screenOptions={{
@@ -66,12 +48,3 @@ export default function TabLayout() {
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#1a1a1a",
-  },
-});

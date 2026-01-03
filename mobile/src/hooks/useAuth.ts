@@ -8,7 +8,6 @@ import { api } from "convex/_generated/api";
  * - isAuthenticated: Whether the user is logged in
  * - isLoading: Whether auth state is still being determined
  * - user: The current user object (if authenticated)
- * - isAnonymous: Whether the user is anonymous
  */
 export function useAuth() {
   const { isAuthenticated, isLoading } = useConvexAuth();
@@ -21,6 +20,5 @@ export function useAuth() {
     isAuthenticated,
     isLoading,
     user: user ?? null,
-    isAnonymous: user?.isAnonymous ?? false,
   };
 }

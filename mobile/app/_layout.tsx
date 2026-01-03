@@ -1,12 +1,42 @@
 import "react-native-get-random-values";
-import { Stack } from "expo-router";
+import { useEffect } from "react";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { View, ActivityIndicator, StyleSheet } from "react-native";
+import { useConvexAuth } from "convex/react";
 import { ConvexProvider } from "@/providers/ConvexProvider";
 
-export default function RootLayout() {
+function RootLayoutNav() {
+  const { isAuthenticated, isLoading } = useConvexAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    const inAuthGroup = segments[0] === "(auth)";
+
+    if (!isAuthenticated && !inAuthGroup) {
+      // Not authenticated, redirect to login
+      router.replace("/(auth)/login");
+    } else if (isAuthenticated && inAuthGroup) {
+      // Authenticated but on auth screen, redirect to main app
+      router.replace("/(tabs)");
+    }
+  }, [isAuthenticated, isLoading, segments, router]);
+
+  // Show loading while checking auth
+  if (isLoading) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" color="#d97756" />
+      </View>
+    );
+  }
+
   return (
-    <ConvexProvider>
-      <StatusBar style="auto" />
+    <>
+      <StatusBar style="light" />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen
@@ -15,6 +45,8 @@ export default function RootLayout() {
             presentation: "modal",
             headerShown: true,
             headerTitle: "Chat",
+            headerStyle: { backgroundColor: "#1a1a1a" },
+            headerTintColor: "#f5f5f4",
           }}
         />
         <Stack.Screen
@@ -24,6 +56,23 @@ export default function RootLayout() {
           }}
         />
       </Stack>
+    </>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ConvexProvider>
+      <RootLayoutNav />
     </ConvexProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  loading: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#1a1a1a",
+  },
+});

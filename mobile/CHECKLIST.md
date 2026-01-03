@@ -49,24 +49,26 @@
 
 ## Phase 3: Auth Flow ✅
 
-- [x] **Anonymous auth**
-  - [x] Auto-create anonymous user on first launch
-  - [x] Store anonymous session via expo-secure-store
+- [x] **Auth gating**
+  - [x] All screens gated behind authentication
+  - [x] Root layout redirects to login if not authenticated
+  - [x] Automatic redirect to main app after login
 
 - [x] **Email OTP login**
   - [x] Login screen - email + password inputs, dark theme
   - [x] Verify screen - 8-digit OTP input, dark theme
   - [x] Resend code functionality with 60s cooldown
   - [x] Error handling + loading states
+  - [x] Sign in / Sign up toggle
 
-- [x] **Account upgrade**
-  - [x] `useAccountUpgrade` hook with pending link flow
+- [x] **Auth infrastructure**
   - [x] `useAuth` hook for auth state
   - [x] Convex API path aliases for mobile
+  - [x] Sign out functionality
 
 - [x] **UI Updates**
   - [x] Dark theme for all screens (matching Claude app)
-  - [x] Settings screen with sign in option
+  - [x] Settings screen with user email + sign out
   - [x] Chat/History screens with dark theme
 
 ---

@@ -6,44 +6,26 @@ import {
   Pressable,
   Switch,
 } from "react-native";
-import { router } from "expo-router";
+import { useAuthActions } from "@convex-dev/auth/react";
 import { useAuth } from "@/hooks";
 
 export default function SettingsScreen() {
-  const { user, isAnonymous } = useAuth();
+  const { user } = useAuth();
+  const { signOut } = useAuthActions();
 
-  const handleSignIn = () => {
-    router.push("/(auth)/login");
-  };
-
-  const handleSignOut = () => {
-    // TODO: implement sign out
-    console.log("Sign out");
+  const handleSignOut = async () => {
+    await signOut();
   };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Account Section */}
       <View style={styles.section}>
-        {isAnonymous ? (
-          <>
-            <Text style={styles.sectionLabel}>Anonymous User</Text>
-            <Pressable style={styles.signInButton} onPress={handleSignIn}>
-              <Text style={styles.signInText}>
-                Sign in to sync conversations
-              </Text>
-              <Text style={styles.chevron}>›</Text>
-            </Pressable>
-          </>
-        ) : (
-          <>
-            <View style={styles.emailContainer}>
-              <Text style={styles.email}>{user?.email}</Text>
-            </View>
-            <SettingsRow label="Profile" onPress={() => {}} />
-            <SettingsRow label="Billing" value="Free" onPress={() => {}} />
-          </>
-        )}
+        <View style={styles.emailContainer}>
+          <Text style={styles.email}>{user?.email}</Text>
+        </View>
+        <SettingsRow label="Profile" onPress={() => {}} />
+        <SettingsRow label="Billing" value="Free" onPress={() => {}} />
       </View>
 
       {/* Preferences Section */}
@@ -72,13 +54,11 @@ export default function SettingsScreen() {
       </View>
 
       {/* Sign Out */}
-      {!isAnonymous && (
-        <View style={styles.section}>
-          <Pressable style={styles.signOutButton} onPress={handleSignOut}>
-            <Text style={styles.signOutText}>Sign Out</Text>
-          </Pressable>
-        </View>
-      )}
+      <View style={styles.section}>
+        <Pressable style={styles.signOutButton} onPress={handleSignOut}>
+          <Text style={styles.signOutText}>Sign Out</Text>
+        </Pressable>
+      </View>
 
       {/* Version */}
       <Text style={styles.version}>Version 1.0.0</Text>
@@ -121,15 +101,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     overflow: "hidden",
   },
-  sectionLabel: {
-    fontSize: 12,
-    color: "#666",
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 4,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
   emailContainer: {
     padding: 16,
     borderBottomWidth: 1,
@@ -138,16 +109,6 @@ const styles = StyleSheet.create({
   email: {
     fontSize: 16,
     color: "#f5f5f4",
-  },
-  signInButton: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-  },
-  signInText: {
-    fontSize: 16,
-    color: "#d97756",
   },
   row: {
     flexDirection: "row",
