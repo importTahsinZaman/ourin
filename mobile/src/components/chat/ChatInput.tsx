@@ -19,7 +19,11 @@ import { useFileAttachment, type PendingFile } from "@/hooks/useFileAttachment";
 import type { FilePart } from "@ourin/shared/types";
 
 interface ChatInputProps {
-  onSend: (text: string, files?: FilePart[]) => void;
+  onSend: (
+    text: string,
+    files?: FilePart[],
+    options?: { webSearchEnabled?: boolean }
+  ) => void;
   onStop?: () => void;
   isStreaming?: boolean;
   placeholder?: string;
@@ -27,6 +31,15 @@ interface ChatInputProps {
   activeCoresCount?: number;
   onOpenModelPicker?: () => void;
   onOpenCorePicker?: () => void;
+  // Web search
+  webSearchEnabled?: boolean;
+  onWebSearchToggle?: (enabled: boolean) => void;
+  modelSupportsWebSearch?: boolean;
+  // Reasoning
+  reasoningLevel?: string | number;
+  onOpenReasoningPicker?: () => void;
+  modelSupportsReasoning?: boolean;
+  reasoningLabel?: string;
 }
 
 export function ChatInput({
@@ -38,6 +51,13 @@ export function ChatInput({
   activeCoresCount = 0,
   onOpenModelPicker,
   onOpenCorePicker,
+  webSearchEnabled = false,
+  onWebSearchToggle,
+  modelSupportsWebSearch = false,
+  reasoningLevel,
+  onOpenReasoningPicker,
+  modelSupportsReasoning = false,
+  reasoningLabel,
 }: ChatInputProps) {
   const [text, setText] = useState("");
   const inputRef = useRef<TextInputType>(null);
@@ -60,11 +80,17 @@ export function ChatInput({
 
     if (!trimmed && fileParts.length === 0) return;
 
-    onSend(trimmed, fileParts.length > 0 ? fileParts : undefined);
+    onSend(
+      trimmed,
+      fileParts.length > 0 ? fileParts : undefined,
+      webSearchEnabled ? { webSearchEnabled: true } : undefined
+    );
     setText("");
     clearFiles();
     Keyboard.dismiss();
   };
+
+  const isReasoningOff = reasoningLevel === "off";
 
   const handleStop = () => {
     onStop?.();
@@ -162,18 +188,49 @@ export function ChatInput({
           editable={!isStreaming}
         />
         <View style={styles.buttonRow}>
-          {/* Attachment button */}
-          <Pressable
-            style={styles.iconButton}
-            onPress={showAttachmentOptions}
-            disabled={isStreaming}
-          >
-            <Ionicons
-              name="add"
-              size={22}
-              color={isStreaming ? "#555" : "#a3a3a3"}
-            />
-          </Pressable>
+          {/* Left side buttons */}
+          <View style={styles.leftButtons}>
+            {/* Attachment button */}
+            <Pressable
+              style={styles.iconButton}
+              onPress={showAttachmentOptions}
+              disabled={isStreaming}
+            >
+              <Ionicons
+                name="add"
+                size={22}
+                color={isStreaming ? "#555" : "#6b7280"}
+              />
+            </Pressable>
+
+            {/* Reasoning button - only show for reasoning models */}
+            {modelSupportsReasoning && onOpenReasoningPicker && (
+              <Pressable
+                style={styles.iconButton}
+                onPress={onOpenReasoningPicker}
+              >
+                <Ionicons
+                  name="bulb-outline"
+                  size={20}
+                  color={isReasoningOff ? "#6b7280" : "#d97756"}
+                />
+              </Pressable>
+            )}
+
+            {/* Web search toggle - only show for models that support it */}
+            {modelSupportsWebSearch && onWebSearchToggle && (
+              <Pressable
+                style={styles.iconButton}
+                onPress={() => onWebSearchToggle(!webSearchEnabled)}
+              >
+                <Ionicons
+                  name="globe-outline"
+                  size={20}
+                  color={webSearchEnabled ? "#d97756" : "#6b7280"}
+                />
+              </Pressable>
+            )}
+          </View>
 
           {/* Send/Stop button */}
           {isStreaming ? (
@@ -355,11 +412,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 8,
   },
+  leftButtons: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   iconButton: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "#404040",
     justifyContent: "center",
     alignItems: "center",
   },

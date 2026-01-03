@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -12,13 +12,19 @@ import { useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
 import type { Id } from "convex/_generated/dataModel";
 import { Ionicons } from "@expo/vector-icons";
-import { FREE_MODEL_ID, MODELS_BY_DATE } from "@ourin/shared/models";
+import {
+  FREE_MODEL_ID,
+  MODELS_BY_DATE,
+  getModelInfo,
+  canDisableReasoning,
+} from "@ourin/shared/models";
 import type { UIMessage, MessagePart, FilePart } from "@ourin/shared/types";
 import { useOurinChat } from "@/hooks/useOurinChat";
 import { useCores } from "@/hooks/useCores";
 import { MessageList, ChatInput } from "@/components/chat";
 import { ModelPickerModal } from "@/components/ModelPickerModal";
 import { CorePickerModal } from "@/components/CorePickerModal";
+import { ReasoningPickerModal } from "@/components/ReasoningPickerModal";
 
 export default function ChatScreen() {
   const router = useRouter();
@@ -45,14 +51,54 @@ export default function ChatScreen() {
       : "skip"
   );
 
+  // Web search and reasoning state
+  const [webSearchEnabled, setWebSearchEnabled] = useState(false);
+  const [reasoningLevel, setReasoningLevel] = useState<string | number>(
+    "medium"
+  );
+
   // Update model when conversation loads
   useEffect(() => {
     if (conversation?.model) {
       setSelectedModel(conversation.model);
     }
   }, [conversation?.model]);
+
+  // Modal visibility states
   const [modelPickerVisible, setModelPickerVisible] = useState(false);
   const [corePickerVisible, setCorePickerVisible] = useState(false);
+  const [reasoningPickerVisible, setReasoningPickerVisible] = useState(false);
+
+  // Model capabilities
+  const modelInfo = useMemo(() => getModelInfo(selectedModel), [selectedModel]);
+  const modelSupportsWebSearch = modelInfo.supportsWebSearch;
+  const modelSupportsReasoning = !!modelInfo.reasoningParameter;
+
+  // Get the default reasoning level when model changes
+  useEffect(() => {
+    if (modelInfo.reasoningParameter?.defaultValue !== undefined) {
+      setReasoningLevel(modelInfo.reasoningParameter.defaultValue);
+    } else if (modelSupportsReasoning && canDisableReasoning(selectedModel)) {
+      setReasoningLevel("off");
+    }
+  }, [selectedModel, modelInfo, modelSupportsReasoning]);
+
+  // Get reasoning label for display
+  const reasoningLabel = useMemo(() => {
+    if (!modelSupportsReasoning) return undefined;
+    if (reasoningLevel === "off") return "Off";
+
+    const { kind, presets, allowedValues } = modelInfo.reasoningParameter!;
+    if (kind === "effort" && allowedValues) {
+      const value = reasoningLevel as string;
+      return value.charAt(0).toUpperCase() + value.slice(1);
+    }
+    if (kind === "budget" && presets) {
+      const preset = presets.find((p) => p.value === reasoningLevel);
+      return preset?.label;
+    }
+    return undefined;
+  }, [modelSupportsReasoning, reasoningLevel, modelInfo]);
 
   const {
     cores,
@@ -75,6 +121,10 @@ export default function ChatScreen() {
   const { messages, status, sendMessage, stop, setMessages } = useOurinChat({
     conversationId,
     model: selectedModel,
+    reasoningLevel:
+      modelSupportsReasoning && reasoningLevel !== "off"
+        ? reasoningLevel
+        : undefined,
     getActivePrompt,
     getActiveCoreNames,
     onConversationCreate: (id) => {
@@ -101,7 +151,15 @@ export default function ChatScreen() {
   }, [initialMessages.length, messages.length, setMessages]);
 
   const handleSend = useCallback(
-    (text: string, files?: FilePart[]) => {
+    (
+      text: string,
+      files?: FilePart[],
+      options?: { webSearchEnabled?: boolean }
+    ) => {
+      const sendOptions = options?.webSearchEnabled
+        ? { webSearchEnabled: true }
+        : undefined;
+
       if (files && files.length > 0) {
         // Create message with both text and file parts
         const parts: MessagePart[] = [];
@@ -109,9 +167,9 @@ export default function ChatScreen() {
           parts.push({ type: "text", text });
         }
         parts.push(...files);
-        sendMessage({ role: "user", parts });
+        sendMessage({ role: "user", parts }, sendOptions);
       } else {
-        sendMessage(text);
+        sendMessage(text, sendOptions);
       }
     },
     [sendMessage]
@@ -195,6 +253,15 @@ export default function ChatScreen() {
           activeCoresCount={activeCoresCount}
           onOpenModelPicker={() => setModelPickerVisible(true)}
           onOpenCorePicker={() => setCorePickerVisible(true)}
+          // Web search
+          webSearchEnabled={webSearchEnabled}
+          onWebSearchToggle={setWebSearchEnabled}
+          modelSupportsWebSearch={modelSupportsWebSearch}
+          // Reasoning
+          reasoningLevel={reasoningLevel}
+          onOpenReasoningPicker={() => setReasoningPickerVisible(true)}
+          modelSupportsReasoning={modelSupportsReasoning}
+          reasoningLabel={reasoningLabel}
         />
 
         <ModelPickerModal
@@ -210,6 +277,14 @@ export default function ChatScreen() {
           activeCoresCount={activeCoresCount}
           onToggleCore={toggleActive}
           onClose={() => setCorePickerVisible(false)}
+        />
+
+        <ReasoningPickerModal
+          visible={reasoningPickerVisible}
+          selectedModel={selectedModel}
+          reasoningLevel={reasoningLevel}
+          onSelectReasoningLevel={setReasoningLevel}
+          onClose={() => setReasoningPickerVisible(false)}
         />
       </KeyboardAvoidingView>
     </>

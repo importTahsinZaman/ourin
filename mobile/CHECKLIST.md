@@ -111,6 +111,12 @@
   - [x] Model info display
   - [x] Core picker (modal)
 
+- [x] **Advanced features**
+  - [x] Web search toggle (for supported models)
+  - [x] Reasoning level picker (for reasoning models)
+  - [x] Effort-based reasoning (low/medium/high)
+  - [x] Budget-based reasoning (token presets)
+
 ---
 
 ## Phase 5: Conversations ✅
