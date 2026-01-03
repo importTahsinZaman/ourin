@@ -14,21 +14,30 @@
 
 ---
 
-## Phase 2: Core Infrastructure
+## Phase 2: Core Infrastructure ✅
 
-- [ ] **Storage adapter**
-  - [ ] Create `src/lib/storage.ts` (AsyncStorage wrapper)
-  - [ ] Migrate localStorage patterns to AsyncStorage
+- [x] **Storage adapter**
+  - [x] Create `src/lib/storage.ts` (AsyncStorage wrapper)
+  - [x] Draft storage utilities
+  - [x] Model/theme preferences storage
 
-- [ ] **API client**
-  - [ ] Create `src/lib/api.ts`
-  - [ ] Chat streaming endpoint
-  - [ ] Auth token handling
+- [x] **Secure storage**
+  - [x] Create `src/lib/secureStorage.ts` (expo-secure-store)
+  - [x] Token storage for Convex Auth
+  - [x] API key storage (BYOK)
 
-- [ ] **Convex Auth integration**
-  - [ ] Switch to `ConvexAuthProvider` from `@convex-dev/auth/react-native`
-  - [ ] Token storage with expo-secure-store
-  - [ ] Auth state management
+- [x] **API client**
+  - [x] Create `src/lib/api.ts`
+  - [x] Chat streaming with SSE parsing
+  - [x] Title generation endpoint
+  - [x] Billing config endpoint
+  - [x] Error handling with typed errors
+
+- [x] **Convex Auth integration**
+  - [x] Switch to `ConvexAuthProvider` from `@convex-dev/auth/react`
+  - [x] Token storage with expo-secure-store
+  - [x] URL replacement for OAuth flows
+  - [x] `useAnonymousAuth` hook for auto sign-in
 
 ---
 
@@ -204,5 +213,5 @@
 
 ## Current Status
 
-**Completed:** Phase 1 (Infrastructure)
-**Next:** Phase 2 (Core Infrastructure) → Phase 3 (Auth)
+**Completed:** Phase 1 (Infrastructure), Phase 2 (Core Infrastructure)
+**Next:** Phase 3 (Auth Flow)
