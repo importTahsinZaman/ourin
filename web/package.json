@@ -16,10 +16,10 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^2.0.56",
-    "@ai-sdk/google": "^2.0.46",
-    "@ai-sdk/openai": "^2.0.86",
-    "@ai-sdk/react": "^1.0.0",
+    "@ai-sdk/anthropic": "^3.0.0",
+    "@ai-sdk/google": "^3.0.0",
+    "@ai-sdk/openai": "^3.0.0",
+    "@ai-sdk/react": "^2.0.0",
     "@auth/core": "^0.37.0",
     "@convex-dev/auth": "^0.0.80",
     "@langfuse/otel": "^4.5.0",
@@ -28,7 +28,7 @@
     "@ourin/core": "workspace:*",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@vercel/speed-insights": "^1.3.1",
-    "ai": "^5.0.113",
+    "ai": "^6.0.0",
     "clsx": "^2.1.1",
     "convex": "^1.17.0",
     "convex-helpers": "^0.1.107",
