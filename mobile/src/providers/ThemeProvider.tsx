@@ -16,12 +16,18 @@ import {
   type FontOption,
 } from "@ourin/core";
 import { storage, STORAGE_KEYS } from "@/lib/storage";
+import { getDerivedColors } from "@/lib/colors";
+
+export type DerivedColors = ReturnType<typeof getDerivedColors>;
 
 interface ThemeContextValue {
   // Current theme
   theme: OurinTheme;
   themeId: string;
   setTheme: (id: string) => void;
+
+  // Derived colors (easy access to all color variants)
+  colors: DerivedColors;
 
   // Custom themes
   customThemes: OurinTheme[];
@@ -182,10 +188,23 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     );
   }, [fontId]);
 
+  // Derived colors from current theme
+  const colors = useMemo(
+    () =>
+      getDerivedColors({
+        background: theme.colors.background,
+        text: theme.colors.text,
+        accent: theme.colors.accent,
+        type: theme.type,
+      }),
+    [theme]
+  );
+
   const value: ThemeContextValue = {
     theme,
     themeId,
     setTheme: handleSetTheme,
+    colors,
     customThemes,
     addCustomTheme,
     updateCustomTheme,

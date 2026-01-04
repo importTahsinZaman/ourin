@@ -2,7 +2,6 @@ import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -22,6 +21,7 @@ import {
 import type { UIMessage, MessagePart, FilePart } from "@ourin/shared/types";
 import { useOurinChat } from "@/hooks/useOurinChat";
 import { useCores } from "@/hooks/useCores";
+import { useTheme } from "@/providers/ThemeProvider";
 import { MessageList, ChatInput } from "@/components/chat";
 import { ModelPickerModal } from "@/components/ModelPickerModal";
 import { CorePickerModal } from "@/components/CorePickerModal";
@@ -31,6 +31,7 @@ import { Sidebar } from "@/components/Sidebar";
 export default function ChatScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
   const { conversationId: paramConversationId } = useLocalSearchParams<{
     conversationId?: string;
   }>();
@@ -132,18 +133,14 @@ export default function ChatScreen() {
     getActivePrompt,
     getActiveCoreNames,
     onConversationCreate: (id) => {
-      // Just update the conversation ID, don't navigate
-      // This keeps the streaming alive on this screen
       setConversationId(id);
     },
   });
 
   // Update conversationId when URL param changes (navigating from history)
-  // Only react to paramConversationId changes, not internal conversationId updates
   const prevParamRef = useRef(paramConversationId);
   useEffect(() => {
     if (paramConversationId !== prevParamRef.current) {
-      // Clear messages when navigating to a different conversation
       setMessages([]);
       setConversationId(paramConversationId ?? null);
       prevParamRef.current = paramConversationId;
@@ -168,7 +165,6 @@ export default function ChatScreen() {
         : undefined;
 
       if (files && files.length > 0) {
-        // Create message with both text and file parts
         const parts: MessagePart[] = [];
         if (text) {
           parts.push({ type: "text", text });
@@ -187,7 +183,6 @@ export default function ChatScreen() {
   }, []);
 
   const handleNewChat = useCallback(() => {
-    // Clear the URL params by navigating to the tab without params
     router.replace("/(tabs)");
     setConversationId(null);
     setMessages([]);
@@ -199,11 +194,9 @@ export default function ChatScreen() {
 
   const isStreaming = status === "streaming" || status === "submitted";
 
-  // Use local messages if we have them, otherwise use loaded messages
   const displayMessages = messages.length > 0 ? messages : initialMessages;
   const hasMessages = displayMessages.length > 0;
 
-  // Get time-based greeting
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "morning";
@@ -212,40 +205,81 @@ export default function ChatScreen() {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: colors.background,
+        paddingTop: insets.top,
+      }}
+    >
       {/* Custom Header */}
-      <View style={styles.header}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: 8,
+          paddingVertical: 8,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+        }}
+      >
         <Pressable
-          style={styles.headerButton}
+          style={{
+            width: 44,
+            height: 44,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
           onPress={() => setSidebarVisible(true)}
         >
-          <Ionicons name="menu-outline" size={26} color="#f5f5f4" />
+          <Ionicons name="menu-outline" size={26} color={colors.text} />
         </Pressable>
 
         <Pressable
-          style={styles.headerButton}
+          style={{
+            width: 44,
+            height: 44,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
           onPress={handleNewChat}
           disabled={isStreaming}
         >
           <Ionicons
             name="create-outline"
             size={24}
-            color={isStreaming ? "#666" : "#f5f5f4"}
+            color={isStreaming ? colors.textMuted : colors.text}
           />
         </Pressable>
       </View>
 
       {/* Main Content */}
       <KeyboardAvoidingView
-        style={styles.content}
+        style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
       >
         {hasMessages ? (
           <MessageList messages={displayMessages} isStreaming={isStreaming} />
         ) : (
-          <View style={styles.welcomeContainer}>
-            <Text style={styles.welcomeText}>
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              paddingHorizontal: 40,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 28,
+                fontWeight: "500",
+                color: colors.textSecondary,
+                textAlign: "center",
+                lineHeight: 38,
+              }}
+            >
               How can I help you{"\n"}this {getGreeting()}?
             </Text>
           </View>
@@ -260,11 +294,9 @@ export default function ChatScreen() {
           activeCoresCount={activeCoresCount}
           onOpenModelPicker={() => setModelPickerVisible(true)}
           onOpenCorePicker={() => setCorePickerVisible(true)}
-          // Web search
           webSearchEnabled={webSearchEnabled}
           onWebSearchToggle={setWebSearchEnabled}
           modelSupportsWebSearch={modelSupportsWebSearch}
-          // Reasoning
           reasoningLevel={reasoningLevel}
           onOpenReasoningPicker={() => setReasoningPickerVisible(true)}
           modelSupportsReasoning={modelSupportsReasoning}
@@ -306,41 +338,3 @@ export default function ChatScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#1a1a1a",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 8,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#333",
-  },
-  headerButton: {
-    width: 44,
-    height: 44,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  content: {
-    flex: 1,
-  },
-  welcomeContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 40,
-  },
-  welcomeText: {
-    fontSize: 28,
-    fontWeight: "500",
-    color: "#d4c4b0",
-    textAlign: "center",
-    lineHeight: 38,
-  },
-});

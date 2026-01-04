@@ -2,7 +2,6 @@ import React, { useMemo } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   Pressable,
   ScrollView,
   Modal,
@@ -10,6 +9,7 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme, type DerivedColors } from "@/providers/ThemeProvider";
 import { type Core } from "@/hooks/useCores";
 
 interface CorePickerModalProps {
@@ -27,6 +27,7 @@ export function CorePickerModal({
   onToggleCore,
   onClose,
 }: CorePickerModalProps) {
+  const { colors } = useTheme();
   const sortedCores = useMemo(
     () => [...cores].sort((a, b) => a.order - b.order),
     [cores]
@@ -51,24 +52,48 @@ export function CorePickerModal({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            paddingHorizontal: 16,
+            paddingVertical: 16,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border,
+          }}
+        >
           <View>
-            <Text style={styles.title}>Cores</Text>
-            <Text style={styles.subtitle}>
+            <Text
+              style={{ fontSize: 18, fontWeight: "600", color: colors.text }}
+            >
+              Cores
+            </Text>
+            <Text
+              style={{ fontSize: 13, color: colors.textMuted, marginTop: 2 }}
+            >
               {activeCoresCount} active core{activeCoresCount !== 1 ? "s" : ""}
             </Text>
           </View>
-          <Pressable onPress={onClose} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color="#9ca3af" />
+          <Pressable onPress={onClose} style={{ padding: 4 }}>
+            <Ionicons name="close" size={24} color={colors.textMuted} />
           </Pressable>
         </View>
-        <Text style={styles.description}>
+        <Text
+          style={{
+            fontSize: 13,
+            color: colors.textTertiary,
+            paddingHorizontal: 16,
+            paddingTop: 12,
+            lineHeight: 18,
+          }}
+        >
           Cores are custom instructions that shape how the AI responds. Toggle
           cores on/off to customize your experience.
         </Text>
         <ScrollView
-          style={styles.scrollView}
+          style={{ flex: 1, paddingHorizontal: 16, paddingTop: 16 }}
           showsVerticalScrollIndicator={false}
         >
           {sortedCores.map((core) => (
@@ -76,6 +101,7 @@ export function CorePickerModal({
               key={core.id}
               core={core}
               onToggle={() => handleToggle(core)}
+              colors={colors}
             />
           ))}
         </ScrollView>
@@ -87,119 +113,59 @@ export function CorePickerModal({
 interface CoreRowProps {
   core: Core;
   onToggle: () => void;
+  colors: DerivedColors;
 }
 
-function CoreRow({ core, onToggle }: CoreRowProps) {
+function CoreRow({ core, onToggle, colors }: CoreRowProps) {
   return (
     <Pressable
-      style={[styles.coreRow, core.isActive && styles.coreRowActive]}
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingVertical: 14,
+        paddingHorizontal: 14,
+        borderRadius: 10,
+        marginBottom: 8,
+        backgroundColor: colors.backgroundSecondary,
+        borderWidth: 1,
+        borderColor: core.isActive ? colors.accent : "transparent",
+      }}
       onPress={onToggle}
     >
-      <View style={styles.coreInfo}>
-        <View style={styles.coreNameRow}>
-          <Text style={styles.coreName}>{core.name}</Text>
+      <View style={{ flex: 1, marginRight: 12 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            marginBottom: 4,
+          }}
+        >
+          <Text style={{ fontSize: 15, fontWeight: "600", color: colors.text }}>
+            {core.name}
+          </Text>
         </View>
-        <Text style={styles.coreContent} numberOfLines={2}>
+        <Text
+          style={{ fontSize: 13, color: colors.textMuted, lineHeight: 18 }}
+          numberOfLines={2}
+        >
           {core.content}
         </Text>
       </View>
       <View
-        style={[
-          styles.toggleCircle,
-          core.isActive && styles.toggleCircleActive,
-        ]}
+        style={{
+          width: 24,
+          height: 24,
+          borderRadius: 12,
+          borderWidth: 2,
+          borderColor: core.isActive ? colors.accent : colors.textTertiary,
+          backgroundColor: core.isActive ? colors.accent : "transparent",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
       >
         {core.isActive && <Ionicons name="checkmark" size={14} color="#fff" />}
       </View>
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#1f1f1f",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#2a2a2a",
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#f5f5f4",
-  },
-  subtitle: {
-    fontSize: 13,
-    color: "#9ca3af",
-    marginTop: 2,
-  },
-  closeButton: {
-    padding: 4,
-  },
-  description: {
-    fontSize: 13,
-    color: "#6b7280",
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    lineHeight: 18,
-  },
-  scrollView: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-  },
-  coreRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    borderRadius: 10,
-    marginBottom: 8,
-    backgroundColor: "#2a2a2a",
-    borderWidth: 1,
-    borderColor: "transparent",
-  },
-  coreRowActive: {
-    borderColor: "#d97756",
-    backgroundColor: "#2a2a2a",
-  },
-  coreInfo: {
-    flex: 1,
-    marginRight: 12,
-  },
-  coreNameRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 4,
-  },
-  coreName: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#f5f5f4",
-  },
-  coreContent: {
-    fontSize: 13,
-    color: "#9ca3af",
-    lineHeight: 18,
-  },
-  toggleCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#4b5563",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  toggleCircleActive: {
-    backgroundColor: "#d97756",
-    borderColor: "#d97756",
-  },
-});

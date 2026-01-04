@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   Pressable,
-  StyleSheet,
   Keyboard,
   Image,
   ScrollView,
@@ -16,6 +15,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useFileAttachment, type PendingFile } from "@/hooks/useFileAttachment";
+import { useTheme, type DerivedColors } from "@/providers/ThemeProvider";
 import type { FilePart } from "@ourin/shared/types";
 
 interface ChatInputProps {
@@ -59,6 +59,7 @@ export function ChatInput({
   modelSupportsReasoning = false,
   reasoningLabel,
 }: ChatInputProps) {
+  const { colors } = useTheme();
   const [text, setText] = useState("");
   const inputRef = useRef<TextInputType>(null);
 
@@ -137,23 +138,55 @@ export function ChatInput({
     (text.trim().length > 0 || hasFiles) && !isStreaming && !isUploading;
 
   return (
-    <View style={styles.container}>
+    <View
+      style={{
+        paddingHorizontal: 16,
+        paddingTop: 8,
+        paddingBottom: 32,
+        backgroundColor: colors.background,
+      }}
+    >
       {/* Model and Cores toolbar */}
-      <View style={styles.toolbar}>
-        <Pressable style={styles.toolbarButton} onPress={onOpenModelPicker}>
-          <Ionicons name="cube-outline" size={16} color="#9ca3af" />
-          <Text style={styles.toolbarButtonText} numberOfLines={1}>
+      <View style={{ flexDirection: "row", gap: 8, marginBottom: 8 }}>
+        <Pressable
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 4,
+            backgroundColor: colors.backgroundSecondary,
+            paddingHorizontal: 10,
+            paddingVertical: 6,
+            borderRadius: 16,
+          }}
+          onPress={onOpenModelPicker}
+        >
+          <Ionicons name="cube-outline" size={16} color={colors.textMuted} />
+          <Text
+            style={{ fontSize: 13, color: colors.textMuted, maxWidth: 100 }}
+            numberOfLines={1}
+          >
             {modelName || "Model"}
           </Text>
-          <Ionicons name="chevron-down" size={14} color="#6b7280" />
+          <Ionicons name="chevron-down" size={14} color={colors.textTertiary} />
         </Pressable>
 
-        <Pressable style={styles.toolbarButton} onPress={onOpenCorePicker}>
-          <Ionicons name="layers-outline" size={16} color="#9ca3af" />
-          <Text style={styles.toolbarButtonText}>
+        <Pressable
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 4,
+            backgroundColor: colors.backgroundSecondary,
+            paddingHorizontal: 10,
+            paddingVertical: 6,
+            borderRadius: 16,
+          }}
+          onPress={onOpenCorePicker}
+        >
+          <Ionicons name="layers-outline" size={16} color={colors.textMuted} />
+          <Text style={{ fontSize: 13, color: colors.textMuted }}>
             {activeCoresCount} Core{activeCoresCount !== 1 ? "s" : ""}
           </Text>
-          <Ionicons name="chevron-down" size={14} color="#6b7280" />
+          <Ionicons name="chevron-down" size={14} color={colors.textTertiary} />
         </Pressable>
       </View>
 
@@ -162,57 +195,91 @@ export function ChatInput({
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          style={styles.filePreviewContainer}
-          contentContainerStyle={styles.filePreviewContent}
+          style={{ marginBottom: 8, maxHeight: 100 }}
+          contentContainerStyle={{ gap: 8, paddingVertical: 4 }}
         >
           {pendingFiles.map((file) => (
             <FilePreview
               key={file.id}
               file={file}
               onRemove={() => removeFile(file.id)}
+              colors={colors}
             />
           ))}
         </ScrollView>
       )}
 
-      <View style={styles.inputWrapper}>
+      <View
+        style={{
+          backgroundColor: colors.backgroundSecondary,
+          borderRadius: 24,
+          paddingHorizontal: 14,
+          paddingTop: 12,
+          paddingBottom: 10,
+          minHeight: 56,
+        }}
+      >
         <TextInput
           ref={inputRef}
-          style={styles.input}
+          style={{
+            fontSize: 16,
+            color: colors.text,
+            maxHeight: 120,
+            paddingHorizontal: 2,
+          }}
           value={text}
           onChangeText={setText}
           placeholder={placeholder}
-          placeholderTextColor="#666"
+          placeholderTextColor={colors.textTertiary}
           multiline
           maxLength={32000}
           editable={!isStreaming}
         />
-        <View style={styles.buttonRow}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginTop: 8,
+          }}
+        >
           {/* Left side buttons */}
-          <View style={styles.leftButtons}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             {/* Attachment button */}
             <Pressable
-              style={styles.iconButton}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
               onPress={showAttachmentOptions}
               disabled={isStreaming}
             >
               <Ionicons
                 name="add"
                 size={22}
-                color={isStreaming ? "#555" : "#6b7280"}
+                color={isStreaming ? colors.textTertiary : colors.textMuted}
               />
             </Pressable>
 
             {/* Reasoning button - only show for reasoning models */}
             {modelSupportsReasoning && onOpenReasoningPicker && (
               <Pressable
-                style={styles.iconButton}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
                 onPress={onOpenReasoningPicker}
               >
                 <Ionicons
                   name="bulb-outline"
                   size={20}
-                  color={isReasoningOff ? "#6b7280" : "#d97756"}
+                  color={isReasoningOff ? colors.textMuted : colors.accent}
                 />
               </Pressable>
             )}
@@ -220,13 +287,19 @@ export function ChatInput({
             {/* Web search toggle - only show for models that support it */}
             {modelSupportsWebSearch && onWebSearchToggle && (
               <Pressable
-                style={styles.iconButton}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
                 onPress={() => onWebSearchToggle(!webSearchEnabled)}
               >
                 <Ionicons
                   name="globe-outline"
                   size={20}
-                  color={webSearchEnabled ? "#d97756" : "#6b7280"}
+                  color={webSearchEnabled ? colors.accent : colors.textMuted}
                 />
               </Pressable>
             )}
@@ -235,25 +308,50 @@ export function ChatInput({
           {/* Send/Stop button */}
           {isStreaming ? (
             <Pressable
-              style={[styles.sendButton, styles.stopButton]}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                backgroundColor: colors.error,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
               onPress={handleStop}
             >
               <Ionicons name="stop" size={18} color="#fff" />
             </Pressable>
           ) : isUploading ? (
-            <View style={[styles.sendButton, styles.sendButtonDisabled]}>
-              <ActivityIndicator size="small" color="#666" />
+            <View
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                backgroundColor: colors.backgroundTertiary,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <ActivityIndicator size="small" color={colors.textMuted} />
             </View>
           ) : (
             <Pressable
-              style={[styles.sendButton, !canSend && styles.sendButtonDisabled]}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                backgroundColor: canSend
+                  ? colors.accent
+                  : colors.backgroundTertiary,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
               onPress={handleSend}
               disabled={!canSend}
             >
               <Ionicons
                 name="arrow-up"
                 size={18}
-                color={canSend ? "#fff" : "#666"}
+                color={canSend ? "#fff" : colors.textMuted}
               />
             </Pressable>
           )}
@@ -266,176 +364,112 @@ export function ChatInput({
 interface FilePreviewProps {
   file: PendingFile;
   onRemove: () => void;
+  colors: DerivedColors;
 }
 
-function FilePreview({ file, onRemove }: FilePreviewProps) {
+function FilePreview({ file, onRemove, colors }: FilePreviewProps) {
   const isImage = file.mimeType.startsWith("image/");
 
   return (
-    <View style={styles.filePreview}>
+    <View style={{ width: 72, alignItems: "center" }}>
       {isImage ? (
-        <Image source={{ uri: file.uri }} style={styles.filePreviewImage} />
+        <Image
+          source={{ uri: file.uri }}
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: 8,
+            backgroundColor: colors.backgroundTertiary,
+          }}
+        />
       ) : (
-        <View style={styles.filePreviewDoc}>
-          <Ionicons name="document-outline" size={24} color="#9ca3af" />
+        <View
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: 8,
+            backgroundColor: colors.backgroundTertiary,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Ionicons
+            name="document-outline"
+            size={24}
+            color={colors.textMuted}
+          />
         </View>
       )}
 
       {/* Uploading overlay */}
       {file.isUploading && (
-        <View style={styles.filePreviewOverlay}>
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 4,
+            width: 64,
+            height: 64,
+            borderRadius: 8,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           <ActivityIndicator size="small" color="#fff" />
         </View>
       )}
 
       {/* Error overlay */}
       {file.error && (
-        <View style={[styles.filePreviewOverlay, styles.filePreviewError]}>
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 4,
+            width: 64,
+            height: 64,
+            borderRadius: 8,
+            backgroundColor: "rgba(239, 68, 68, 0.7)",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           <Ionicons name="alert-circle" size={20} color="#fff" />
         </View>
       )}
 
       {/* Remove button */}
-      <Pressable style={styles.fileRemoveButton} onPress={onRemove}>
+      <Pressable
+        style={{
+          position: "absolute",
+          top: -4,
+          right: 0,
+          width: 20,
+          height: 20,
+          borderRadius: 10,
+          backgroundColor: colors.textMuted,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+        onPress={onRemove}
+      >
         <Ionicons name="close" size={14} color="#fff" />
       </Pressable>
 
       {/* File name */}
-      <Text style={styles.fileName} numberOfLines={1}>
+      <Text
+        style={{
+          fontSize: 10,
+          color: colors.textMuted,
+          marginTop: 4,
+          textAlign: "center",
+          width: 64,
+        }}
+        numberOfLines={1}
+      >
         {file.fileName}
       </Text>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 32,
-    backgroundColor: "#1a1a1a",
-  },
-  toolbar: {
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 8,
-  },
-  toolbarButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: "#262626",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  toolbarButtonText: {
-    fontSize: 13,
-    color: "#9ca3af",
-    maxWidth: 100,
-  },
-  filePreviewContainer: {
-    marginBottom: 8,
-    maxHeight: 100,
-  },
-  filePreviewContent: {
-    gap: 8,
-    paddingVertical: 4,
-  },
-  filePreview: {
-    width: 72,
-    alignItems: "center",
-  },
-  filePreviewImage: {
-    width: 64,
-    height: 64,
-    borderRadius: 8,
-    backgroundColor: "#333",
-  },
-  filePreviewDoc: {
-    width: 64,
-    height: 64,
-    borderRadius: 8,
-    backgroundColor: "#333",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  filePreviewOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 4,
-    width: 64,
-    height: 64,
-    borderRadius: 8,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  filePreviewError: {
-    backgroundColor: "rgba(239, 68, 68, 0.7)",
-  },
-  fileRemoveButton: {
-    position: "absolute",
-    top: -4,
-    right: 0,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: "#666",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  fileName: {
-    fontSize: 10,
-    color: "#9ca3af",
-    marginTop: 4,
-    textAlign: "center",
-    width: 64,
-  },
-  inputWrapper: {
-    backgroundColor: "#262626",
-    borderRadius: 24,
-    paddingHorizontal: 14,
-    paddingTop: 12,
-    paddingBottom: 10,
-    minHeight: 56,
-  },
-  input: {
-    fontSize: 16,
-    color: "#f5f5f4",
-    maxHeight: 120,
-    paddingHorizontal: 2,
-  },
-  buttonRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 8,
-  },
-  leftButtons: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  iconButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  sendButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#d97756",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  sendButtonDisabled: {
-    backgroundColor: "#404040",
-  },
-  stopButton: {
-    backgroundColor: "#ef4444",
-  },
-});

@@ -2,13 +2,13 @@ import React, { useMemo } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   Pressable,
   ScrollView,
   Modal,
   SafeAreaView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme, type DerivedColors } from "@/providers/ThemeProvider";
 import {
   MODELS_BY_DATE,
   FREE_MODEL_ID,
@@ -28,6 +28,8 @@ export function ModelPickerModal({
   onSelectModel,
   onClose,
 }: ModelPickerModalProps) {
+  const { colors } = useTheme();
+
   // Group models by provider
   const modelsByProvider = useMemo(() => {
     const groups: Record<string, Model[]> = {
@@ -61,20 +63,44 @@ export function ModelPickerModal({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Select Model</Text>
-          <Pressable onPress={onClose} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color="#9ca3af" />
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingHorizontal: 16,
+            paddingVertical: 16,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border,
+          }}
+        >
+          <Text style={{ fontSize: 18, fontWeight: "600", color: colors.text }}>
+            Select Model
+          </Text>
+          <Pressable onPress={onClose} style={{ padding: 4 }}>
+            <Ionicons name="close" size={24} color={colors.textMuted} />
           </Pressable>
         </View>
         <ScrollView
-          style={styles.scrollView}
+          style={{ flex: 1, paddingHorizontal: 16, paddingTop: 16 }}
           showsVerticalScrollIndicator={false}
         >
           {providerOrder.map((provider) => (
-            <View key={provider} style={styles.providerSection}>
-              <Text style={styles.providerName}>{providerNames[provider]}</Text>
+            <View key={provider} style={{ marginBottom: 20 }}>
+              <Text
+                style={{
+                  fontSize: 12,
+                  fontWeight: "600",
+                  color: colors.textMuted,
+                  textTransform: "uppercase",
+                  letterSpacing: 0.5,
+                  marginBottom: 8,
+                  paddingLeft: 4,
+                }}
+              >
+                {providerNames[provider]}
+              </Text>
               {modelsByProvider[provider].map((model) => (
                 <ModelRow
                   key={model.id}
@@ -82,6 +108,7 @@ export function ModelPickerModal({
                   isSelected={selectedModel === model.id}
                   isFree={model.id === FREE_MODEL_ID}
                   onPress={() => handleSelect(model.id)}
+                  colors={colors}
                 />
               ))}
             </View>
@@ -97,124 +124,79 @@ interface ModelRowProps {
   isSelected: boolean;
   isFree: boolean;
   onPress: () => void;
+  colors: DerivedColors;
 }
 
-function ModelRow({ model, isSelected, isFree, onPress }: ModelRowProps) {
+function ModelRow({
+  model,
+  isSelected,
+  isFree,
+  onPress,
+  colors,
+}: ModelRowProps) {
   const hasReasoning = !!model.reasoningParameter;
 
   return (
     <Pressable
-      style={[styles.modelRow, isSelected && styles.modelRowSelected]}
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingVertical: 12,
+        paddingHorizontal: 12,
+        borderRadius: 10,
+        marginBottom: 4,
+        backgroundColor: isSelected
+          ? colors.backgroundSecondary
+          : "transparent",
+      }}
       onPress={onPress}
     >
-      <View style={styles.modelInfo}>
-        <View style={styles.modelNameRow}>
-          <Text style={styles.modelName}>{model.name}</Text>
+      <View style={{ flex: 1, marginRight: 12 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            marginBottom: 2,
+          }}
+        >
+          <Text style={{ fontSize: 15, fontWeight: "500", color: colors.text }}>
+            {model.name}
+          </Text>
           {hasReasoning && (
             <Ionicons
               name="bulb-outline"
               size={14}
-              color="#d97756"
-              style={styles.reasoningIcon}
+              color={colors.accent}
+              style={{ marginLeft: 6 }}
             />
           )}
           {isFree && (
-            <View style={styles.freeBadge}>
-              <Text style={styles.freeBadgeText}>FREE</Text>
+            <View
+              style={{
+                backgroundColor: colors.success,
+                paddingHorizontal: 6,
+                paddingVertical: 2,
+                borderRadius: 4,
+                marginLeft: 8,
+              }}
+            >
+              <Text style={{ fontSize: 10, fontWeight: "700", color: "#fff" }}>
+                FREE
+              </Text>
             </View>
           )}
         </View>
-        <Text style={styles.modelDescription} numberOfLines={1}>
+        <Text
+          style={{ fontSize: 13, color: colors.textMuted }}
+          numberOfLines={1}
+        >
           {model.description}
         </Text>
       </View>
-      {isSelected && <Ionicons name="checkmark" size={20} color="#d97756" />}
+      {isSelected && (
+        <Ionicons name="checkmark" size={20} color={colors.accent} />
+      )}
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#1f1f1f",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#2a2a2a",
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#f5f5f4",
-  },
-  closeButton: {
-    padding: 4,
-  },
-  scrollView: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-  },
-  providerSection: {
-    marginBottom: 20,
-  },
-  providerName: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#9ca3af",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 8,
-    paddingLeft: 4,
-  },
-  modelRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    marginBottom: 4,
-  },
-  modelRowSelected: {
-    backgroundColor: "#2a2a2a",
-  },
-  modelInfo: {
-    flex: 1,
-    marginRight: 12,
-  },
-  modelNameRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 2,
-  },
-  modelName: {
-    fontSize: 15,
-    fontWeight: "500",
-    color: "#f5f5f4",
-  },
-  reasoningIcon: {
-    marginLeft: 6,
-  },
-  freeBadge: {
-    backgroundColor: "#22c55e",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginLeft: 8,
-  },
-  freeBadgeText: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: "#fff",
-  },
-  modelDescription: {
-    fontSize: 13,
-    color: "#9ca3af",
-  },
-});

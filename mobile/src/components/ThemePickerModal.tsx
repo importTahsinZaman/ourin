@@ -2,7 +2,6 @@ import React, { useMemo } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   Pressable,
   ScrollView,
   Modal,
@@ -10,7 +9,7 @@ import {
   Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useTheme } from "@/providers/ThemeProvider";
+import { useTheme, type DerivedColors } from "@/providers/ThemeProvider";
 import type { OurinTheme } from "@ourin/core";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -23,7 +22,7 @@ interface ThemePickerModalProps {
 }
 
 export function ThemePickerModal({ visible, onClose }: ThemePickerModalProps) {
-  const { themeId, setTheme, lightThemes, darkThemes, customThemes } =
+  const { themeId, setTheme, lightThemes, darkThemes, customThemes, colors } =
     useTheme();
 
   const handleSelect = (id: string) => {
@@ -63,70 +62,139 @@ export function ThemePickerModal({ visible, onClose }: ThemePickerModalProps) {
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Choose Theme</Text>
-          <Pressable onPress={onClose} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color="#9ca3af" />
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingHorizontal: 16,
+            paddingVertical: 16,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border,
+          }}
+        >
+          <Text style={{ fontSize: 18, fontWeight: "600", color: colors.text }}>
+            Choose Theme
+          </Text>
+          <Pressable onPress={onClose} style={{ padding: 4 }}>
+            <Ionicons name="close" size={24} color={colors.textMuted} />
           </Pressable>
         </View>
         <ScrollView
-          style={styles.scrollView}
+          style={{ flex: 1 }}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
         >
           {/* Custom Themes */}
           {customThemes.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Custom Themes</Text>
+            <View style={{ marginBottom: 24 }}>
+              <Text
+                style={{
+                  fontSize: 12,
+                  fontWeight: "600",
+                  color: colors.textMuted,
+                  textTransform: "uppercase",
+                  letterSpacing: 0.5,
+                  marginBottom: 12,
+                }}
+              >
+                Custom Themes
+              </Text>
               {customThemeRows.map((row, rowIndex) => (
-                <View key={`custom-row-${rowIndex}`} style={styles.row}>
+                <View
+                  key={`custom-row-${rowIndex}`}
+                  style={{
+                    flexDirection: "row",
+                    gap: CARD_GAP,
+                    marginBottom: CARD_GAP,
+                  }}
+                >
                   {row.map((theme) => (
                     <ThemeCard
                       key={theme.id}
                       theme={theme}
                       isSelected={themeId === theme.id}
                       onPress={() => handleSelect(theme.id)}
+                      colors={colors}
                     />
                   ))}
-                  {row.length === 1 && <View style={styles.cardPlaceholder} />}
+                  {row.length === 1 && <View style={{ width: CARD_WIDTH }} />}
                 </View>
               ))}
             </View>
           )}
 
           {/* Light Themes */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Light Themes</Text>
+          <View style={{ marginBottom: 24 }}>
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: "600",
+                color: colors.textMuted,
+                textTransform: "uppercase",
+                letterSpacing: 0.5,
+                marginBottom: 12,
+              }}
+            >
+              Light Themes
+            </Text>
             {lightThemeRows.map((row, rowIndex) => (
-              <View key={`light-row-${rowIndex}`} style={styles.row}>
+              <View
+                key={`light-row-${rowIndex}`}
+                style={{
+                  flexDirection: "row",
+                  gap: CARD_GAP,
+                  marginBottom: CARD_GAP,
+                }}
+              >
                 {row.map((theme) => (
                   <ThemeCard
                     key={theme.id}
                     theme={theme}
                     isSelected={themeId === theme.id}
                     onPress={() => handleSelect(theme.id)}
+                    colors={colors}
                   />
                 ))}
-                {row.length === 1 && <View style={styles.cardPlaceholder} />}
+                {row.length === 1 && <View style={{ width: CARD_WIDTH }} />}
               </View>
             ))}
           </View>
 
           {/* Dark Themes */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Dark Themes</Text>
+          <View style={{ marginBottom: 24 }}>
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: "600",
+                color: colors.textMuted,
+                textTransform: "uppercase",
+                letterSpacing: 0.5,
+                marginBottom: 12,
+              }}
+            >
+              Dark Themes
+            </Text>
             {darkThemeRows.map((row, rowIndex) => (
-              <View key={`dark-row-${rowIndex}`} style={styles.row}>
+              <View
+                key={`dark-row-${rowIndex}`}
+                style={{
+                  flexDirection: "row",
+                  gap: CARD_GAP,
+                  marginBottom: CARD_GAP,
+                }}
+              >
                 {row.map((theme) => (
                   <ThemeCard
                     key={theme.id}
                     theme={theme}
                     isSelected={themeId === theme.id}
                     onPress={() => handleSelect(theme.id)}
+                    colors={colors}
                   />
                 ))}
-                {row.length === 1 && <View style={styles.cardPlaceholder} />}
+                {row.length === 1 && <View style={{ width: CARD_WIDTH }} />}
               </View>
             ))}
           </View>
@@ -140,46 +208,65 @@ interface ThemeCardProps {
   theme: OurinTheme;
   isSelected: boolean;
   onPress: () => void;
+  colors: DerivedColors;
 }
 
-function ThemeCard({ theme, isSelected, onPress }: ThemeCardProps) {
+function ThemeCard({ theme, isSelected, onPress, colors }: ThemeCardProps) {
   return (
     <Pressable
-      style={[
-        styles.card,
-        isSelected && styles.cardSelected,
-        { borderColor: isSelected ? theme.colors.accent : "#333" },
-      ]}
+      style={{
+        width: CARD_WIDTH,
+        backgroundColor: colors.backgroundSecondary,
+        borderRadius: 12,
+        borderWidth: 2,
+        borderColor: isSelected ? theme.colors.accent : colors.border,
+        overflow: "hidden",
+      }}
       onPress={onPress}
     >
       {/* Color swatches */}
-      <View style={styles.swatches}>
+      <View style={{ flexDirection: "row", height: 60 }}>
         <View
-          style={[
-            styles.swatch,
-            styles.swatchBackground,
-            { backgroundColor: theme.colors.background },
-          ]}
+          style={{
+            flex: 1,
+            backgroundColor: theme.colors.background,
+            borderTopLeftRadius: 10,
+          }}
         />
         <View
-          style={[
-            styles.swatch,
-            styles.swatchText,
-            { backgroundColor: theme.colors.text },
-          ]}
+          style={{
+            flex: 1,
+            backgroundColor: theme.colors.text,
+          }}
         />
         <View
-          style={[
-            styles.swatch,
-            styles.swatchAccent,
-            { backgroundColor: theme.colors.accent },
-          ]}
+          style={{
+            flex: 1,
+            backgroundColor: theme.colors.accent,
+            borderTopRightRadius: 10,
+          }}
         />
       </View>
 
       {/* Theme name and check */}
-      <View style={styles.cardFooter}>
-        <Text style={styles.themeName} numberOfLines={1}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: 10,
+          paddingVertical: 8,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 13,
+            fontWeight: "500",
+            color: colors.text,
+            flex: 1,
+          }}
+          numberOfLines={1}
+        >
           {theme.name}
         </Text>
         {isSelected && (
@@ -193,91 +280,3 @@ function ThemeCard({ theme, isSelected, onPress }: ThemeCardProps) {
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#1f1f1f",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#2a2a2a",
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#f5f5f4",
-  },
-  closeButton: {
-    padding: 4,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#9ca3af",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 12,
-  },
-  row: {
-    flexDirection: "row",
-    gap: CARD_GAP,
-    marginBottom: CARD_GAP,
-  },
-  card: {
-    width: CARD_WIDTH,
-    backgroundColor: "#262626",
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#333",
-    overflow: "hidden",
-  },
-  cardSelected: {
-    backgroundColor: "#2a2a2a",
-  },
-  cardPlaceholder: {
-    width: CARD_WIDTH,
-  },
-  swatches: {
-    flexDirection: "row",
-    height: 60,
-  },
-  swatch: {
-    flex: 1,
-  },
-  swatchBackground: {
-    borderTopLeftRadius: 10,
-  },
-  swatchText: {},
-  swatchAccent: {
-    borderTopRightRadius: 10,
-  },
-  cardFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  themeName: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: "#f5f5f4",
-    flex: 1,
-  },
-});

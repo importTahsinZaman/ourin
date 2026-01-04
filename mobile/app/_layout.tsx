@@ -2,43 +2,56 @@ import "react-native-get-random-values";
 import { useEffect } from "react";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { View, ActivityIndicator, StyleSheet } from "react-native";
+import { View, ActivityIndicator } from "react-native";
 import { useConvexAuth } from "convex/react";
 import { ConvexProvider } from "@/providers/ConvexProvider";
-import { ThemeProvider } from "@/providers/ThemeProvider";
+import { ThemeProvider, useTheme } from "@/providers/ThemeProvider";
 
 function RootLayoutNav() {
-  const { isAuthenticated, isLoading } = useConvexAuth();
+  const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
+  const { colors, theme, isLoading: themeLoading } = useTheme();
   const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
-    if (isLoading) return;
+    if (authLoading) return;
 
     const inAuthGroup = segments[0] === "(auth)";
 
     if (!isAuthenticated && !inAuthGroup) {
-      // Not authenticated, redirect to login
       router.replace("/(auth)/login");
     } else if (isAuthenticated && inAuthGroup) {
-      // Authenticated but on auth screen, redirect to main app
       router.replace("/(tabs)");
     }
-  }, [isAuthenticated, isLoading, segments, router]);
+  }, [isAuthenticated, authLoading, segments, router]);
 
-  // Show loading while checking auth
-  if (isLoading) {
+  // Show loading while checking auth or loading theme
+  if (authLoading || themeLoading) {
     return (
-      <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#d97756" />
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: colors.background,
+        }}
+      >
+        <ActivityIndicator size="large" color={colors.accent} />
       </View>
     );
   }
 
+  const statusBarStyle = theme.type === "dark" ? "light" : "dark";
+
   return (
     <>
-      <StatusBar style="light" />
-      <Stack screenOptions={{ headerShown: false }}>
+      <StatusBar style={statusBarStyle} />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.background },
+        }}
+      >
         <Stack.Screen name="(tabs)" />
         <Stack.Screen
           name="c/[id]"
@@ -46,8 +59,8 @@ function RootLayoutNav() {
             presentation: "modal",
             headerShown: true,
             headerTitle: "Chat",
-            headerStyle: { backgroundColor: "#1a1a1a" },
-            headerTintColor: "#f5f5f4",
+            headerStyle: { backgroundColor: colors.background },
+            headerTintColor: colors.text,
           }}
         />
         <Stack.Screen
@@ -70,12 +83,3 @@ export default function RootLayout() {
     </ConvexProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#1a1a1a",
-  },
-});

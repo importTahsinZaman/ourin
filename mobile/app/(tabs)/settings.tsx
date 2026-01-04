@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
+import { View, Text, ScrollView, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useAuth } from "@/hooks";
-import { useTheme } from "@/providers/ThemeProvider";
+import { useTheme, type DerivedColors } from "@/providers/ThemeProvider";
 import { ThemePickerModal } from "@/components/ThemePickerModal";
 import { FontPickerModal } from "@/components/FontPickerModal";
 import { UsageCard } from "@/components/settings/UsageCard";
@@ -15,7 +15,7 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const { signOut } = useAuthActions();
-  const { theme, currentFont } = useTheme();
+  const { theme, currentFont, colors } = useTheme();
 
   const [themePickerVisible, setThemePickerVisible] = useState(false);
   const [fontPickerVisible, setFontPickerVisible] = useState(false);
@@ -29,60 +29,191 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: colors.background,
+        paddingTop: insets.top,
+      }}
+    >
       {/* Header */}
-      <View style={styles.header}>
-        <Pressable style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="chevron-back" size={24} color="#f5f5f4" />
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: 8,
+          paddingVertical: 8,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+        }}
+      >
+        <Pressable
+          style={{
+            width: 44,
+            height: 44,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+          onPress={handleBack}
+        >
+          <Ionicons name="chevron-back" size={24} color={colors.text} />
         </Pressable>
-        <Text style={styles.headerTitle}>Settings</Text>
-        <View style={styles.headerSpacer} />
+        <Text style={{ fontSize: 17, fontWeight: "600", color: colors.text }}>
+          Settings
+        </Text>
+        <View style={{ width: 44 }} />
       </View>
 
       <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.content}
+        style={{ flex: 1 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Account Section */}
-        <Text style={styles.sectionTitle}>Account</Text>
-        <View style={styles.section}>
-          <View style={styles.emailRow}>
-            <Ionicons name="person-circle-outline" size={24} color="#9ca3af" />
-            <Text style={styles.email}>{user?.email || "Not signed in"}</Text>
+        <Text
+          style={{
+            fontSize: 12,
+            fontWeight: "600",
+            color: colors.textMuted,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            marginBottom: 8,
+            marginTop: 8,
+            paddingLeft: 4,
+          }}
+        >
+          Account
+        </Text>
+        <View
+          style={{
+            backgroundColor: colors.backgroundSecondary,
+            borderRadius: 12,
+            marginBottom: 16,
+            overflow: "hidden",
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 12,
+              padding: 16,
+              borderBottomWidth: 1,
+              borderBottomColor: colors.border,
+            }}
+          >
+            <Ionicons
+              name="person-circle-outline"
+              size={24}
+              color={colors.textMuted}
+            />
+            <Text style={{ fontSize: 16, color: colors.text }}>
+              {user?.email || "Not signed in"}
+            </Text>
           </View>
-          <Pressable style={styles.signOutRow} onPress={handleSignOut}>
-            <Ionicons name="log-out-outline" size={20} color="#ef4444" />
-            <Text style={styles.signOutText}>Sign Out</Text>
+          <Pressable
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 12,
+              padding: 16,
+            }}
+            onPress={handleSignOut}
+          >
+            <Ionicons name="log-out-outline" size={20} color={colors.error} />
+            <Text style={{ fontSize: 16, color: colors.error }}>Sign Out</Text>
           </Pressable>
         </View>
 
         {/* Usage Section */}
-        <Text style={styles.sectionTitle}>Usage</Text>
-        <UsageCard accentColor={theme.colors.accent} />
+        <Text
+          style={{
+            fontSize: 12,
+            fontWeight: "600",
+            color: colors.textMuted,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            marginBottom: 8,
+            marginTop: 8,
+            paddingLeft: 4,
+          }}
+        >
+          Usage
+        </Text>
+        <UsageCard accentColor={theme.colors.accent} colors={colors} />
 
         {/* Appearance Section */}
-        <Text style={styles.sectionTitle}>Appearance</Text>
-        <View style={styles.section}>
+        <Text
+          style={{
+            fontSize: 12,
+            fontWeight: "600",
+            color: colors.textMuted,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            marginBottom: 8,
+            marginTop: 8,
+            paddingLeft: 4,
+          }}
+        >
+          Appearance
+        </Text>
+        <View
+          style={{
+            backgroundColor: colors.backgroundSecondary,
+            borderRadius: 12,
+            marginBottom: 16,
+            overflow: "hidden",
+          }}
+        >
           <SettingsRow
             label="Theme"
             value={theme.name}
             onPress={() => setThemePickerVisible(true)}
+            colors={colors}
           />
           <SettingsRow
             label="Font"
             value={currentFont.name}
             onPress={() => setFontPickerVisible(true)}
             isLast
+            colors={colors}
           />
         </View>
 
         {/* App Section */}
-        <Text style={styles.sectionTitle}>App</Text>
-        <View style={styles.section}>
-          <View style={styles.infoRow}>
-            <Text style={styles.rowLabel}>Version</Text>
-            <Text style={styles.rowValue}>1.0.0</Text>
+        <Text
+          style={{
+            fontSize: 12,
+            fontWeight: "600",
+            color: colors.textMuted,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            marginBottom: 8,
+            marginTop: 8,
+            paddingLeft: 4,
+          }}
+        >
+          App
+        </Text>
+        <View
+          style={{
+            backgroundColor: colors.backgroundSecondary,
+            borderRadius: 12,
+            marginBottom: 16,
+            overflow: "hidden",
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: 16,
+            }}
+          >
+            <Text style={{ fontSize: 16, color: colors.text }}>Version</Text>
+            <Text style={{ fontSize: 16, color: colors.textMuted }}>1.0.0</Text>
           </View>
         </View>
       </ScrollView>
@@ -105,126 +236,37 @@ function SettingsRow({
   value,
   onPress,
   isLast = false,
+  colors,
 }: {
   label: string;
   value?: string;
   onPress: () => void;
   isLast?: boolean;
+  colors: DerivedColors;
 }) {
   return (
     <Pressable
-      style={[styles.row, !isLast && styles.rowBorder]}
+      style={{
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: 16,
+        borderBottomWidth: isLast ? 0 : 1,
+        borderBottomColor: colors.border,
+      }}
       onPress={onPress}
     >
-      <Text style={styles.rowLabel}>{label}</Text>
-      <View style={styles.rowRight}>
-        {value && <Text style={styles.rowValue}>{value}</Text>}
-        <Ionicons name="chevron-forward" size={18} color="#666" />
+      <Text style={{ fontSize: 16, color: colors.text }}>{label}</Text>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+        {value && (
+          <Text style={{ fontSize: 16, color: colors.textMuted }}>{value}</Text>
+        )}
+        <Ionicons
+          name="chevron-forward"
+          size={18}
+          color={colors.textTertiary}
+        />
       </View>
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#1a1a1a",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 8,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#333",
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: "#f5f5f4",
-  },
-  headerSpacer: {
-    width: 44,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  content: {
-    padding: 16,
-    paddingBottom: 40,
-  },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#9ca3af",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 8,
-    marginTop: 8,
-    paddingLeft: 4,
-  },
-  section: {
-    backgroundColor: "#262626",
-    borderRadius: 12,
-    marginBottom: 16,
-    overflow: "hidden",
-  },
-  emailRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#333",
-  },
-  email: {
-    fontSize: 16,
-    color: "#f5f5f4",
-  },
-  signOutRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    padding: 16,
-  },
-  signOutText: {
-    fontSize: 16,
-    color: "#ef4444",
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-  },
-  rowBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#333",
-  },
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-  },
-  rowLabel: {
-    fontSize: 16,
-    color: "#f5f5f4",
-  },
-  rowRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  rowValue: {
-    fontSize: 16,
-    color: "#9ca3af",
-  },
-});

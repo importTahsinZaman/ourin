@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   Modal,
   Pressable,
   ScrollView,
@@ -15,6 +14,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "convex/_generated/api";
 import type { Id } from "convex/_generated/dataModel";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "@/providers/ThemeProvider";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const SIDEBAR_WIDTH = SCREEN_WIDTH * 0.8;
@@ -47,6 +47,7 @@ export function Sidebar({
   onNewChat,
 }: SidebarProps) {
   const router = useRouter();
+  const { colors } = useTheme();
   const slideAnim = useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -118,36 +119,91 @@ export function Sidebar({
       animationType="none"
       onRequestClose={onClose}
     >
-      <View style={styles.container}>
+      <View style={{ flex: 1, flexDirection: "row" }}>
         {/* Backdrop */}
-        <Animated.View style={[styles.backdrop, { opacity: fadeAnim }]}>
-          <Pressable style={styles.backdropPressable} onPress={onClose} />
+        <Animated.View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            opacity: fadeAnim,
+          }}
+        >
+          <Pressable style={{ flex: 1 }} onPress={onClose} />
         </Animated.View>
 
         {/* Sidebar */}
         <Animated.View
-          style={[styles.sidebar, { transform: [{ translateX: slideAnim }] }]}
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: SIDEBAR_WIDTH,
+            backgroundColor: colors.background,
+            borderRightWidth: 1,
+            borderRightColor: colors.border,
+            paddingTop: 60,
+            transform: [{ translateX: slideAnim }],
+          }}
         >
           {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>Ourin</Text>
-            <Pressable style={styles.newChatButton} onPress={handleNewChat}>
-              <Ionicons name="add-circle" size={28} color="#d97756" />
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              paddingHorizontal: 20,
+              paddingBottom: 16,
+              borderBottomWidth: 1,
+              borderBottomColor: colors.border,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 24,
+                fontWeight: "700",
+                color: colors.text,
+              }}
+            >
+              Ourin
+            </Text>
+            <Pressable style={{ padding: 4 }} onPress={handleNewChat}>
+              <Ionicons name="add-circle" size={28} color={colors.accent} />
             </Pressable>
           </View>
 
           {/* Conversations List */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Recents</Text>
+          <View
+            style={{
+              paddingHorizontal: 20,
+              paddingTop: 20,
+              paddingBottom: 8,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: "600",
+                color: colors.textMuted,
+                textTransform: "uppercase",
+                letterSpacing: 0.5,
+              }}
+            >
+              Recents
+            </Text>
           </View>
 
           {isLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color="#d97756" />
+            <View style={{ padding: 20, alignItems: "center" }}>
+              <ActivityIndicator size="small" color={colors.accent} />
             </View>
           ) : (
             <ScrollView
-              style={styles.conversationsList}
+              style={{ flex: 1, paddingHorizontal: 12 }}
               showsVerticalScrollIndicator={false}
             >
               {conversations && conversations.length > 0 ? (
@@ -156,40 +212,86 @@ export function Sidebar({
                   return (
                     <Pressable
                       key={conv._id}
-                      style={[
-                        styles.conversationItem,
-                        isActive && styles.conversationItemActive,
-                      ]}
+                      style={{
+                        paddingVertical: 12,
+                        paddingHorizontal: 12,
+                        borderRadius: 8,
+                        marginBottom: 2,
+                        backgroundColor: isActive
+                          ? colors.accentMuted
+                          : "transparent",
+                      }}
                       onPress={() => handleSelectConversation(conv._id)}
                       onLongPress={() => handleDeleteConversation(conv._id)}
                       delayLongPress={500}
                     >
                       <Text
-                        style={[
-                          styles.conversationTitle,
-                          isActive && styles.conversationTitleActive,
-                        ]}
+                        style={{
+                          fontSize: 15,
+                          color: isActive ? colors.accent : colors.text,
+                          marginBottom: 2,
+                        }}
                         numberOfLines={1}
                       >
                         {conv.title || "New Chat"}
                       </Text>
-                      <Text style={styles.conversationTime}>
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: colors.textMuted,
+                        }}
+                      >
                         {formatRelativeTime(conv.updatedAt)}
                       </Text>
                     </Pressable>
                   );
                 })
               ) : (
-                <Text style={styles.emptyText}>No conversations yet</Text>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    color: colors.textMuted,
+                    textAlign: "center",
+                    paddingVertical: 20,
+                  }}
+                >
+                  No conversations yet
+                </Text>
               )}
             </ScrollView>
           )}
 
           {/* Footer - Settings */}
-          <View style={styles.footer}>
-            <Pressable style={styles.settingsButton} onPress={handleSettings}>
-              <Ionicons name="settings-outline" size={22} color="#9ca3af" />
-              <Text style={styles.settingsText}>Settings</Text>
+          <View
+            style={{
+              borderTopWidth: 1,
+              borderTopColor: colors.border,
+              paddingHorizontal: 20,
+              paddingVertical: 16,
+            }}
+          >
+            <Pressable
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 12,
+                paddingVertical: 8,
+              }}
+              onPress={handleSettings}
+            >
+              <Ionicons
+                name="settings-outline"
+                size={22}
+                color={colors.textSecondary}
+              />
+              <Text
+                style={{
+                  fontSize: 16,
+                  color: colors.textSecondary,
+                }}
+              >
+                Settings
+              </Text>
             </Pressable>
           </View>
         </Animated.View>
@@ -197,108 +299,3 @@ export function Sidebar({
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    flexDirection: "row",
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  backdropPressable: {
-    flex: 1,
-  },
-  sidebar: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: SIDEBAR_WIDTH,
-    backgroundColor: "#1a1a1a",
-    borderRightWidth: 1,
-    borderRightColor: "#333",
-    paddingTop: 60,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#333",
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#f5f5f4",
-  },
-  newChatButton: {
-    padding: 4,
-  },
-  section: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 8,
-  },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#6b7280",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  loadingContainer: {
-    padding: 20,
-    alignItems: "center",
-  },
-  conversationsList: {
-    flex: 1,
-    paddingHorizontal: 12,
-  },
-  conversationItem: {
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    marginBottom: 2,
-  },
-  conversationItemActive: {
-    backgroundColor: "rgba(217, 119, 86, 0.15)",
-  },
-  conversationTitle: {
-    fontSize: 15,
-    color: "#f5f5f4",
-    marginBottom: 2,
-  },
-  conversationTitleActive: {
-    color: "#d97756",
-  },
-  conversationTime: {
-    fontSize: 12,
-    color: "#6b7280",
-  },
-  emptyText: {
-    fontSize: 14,
-    color: "#6b7280",
-    textAlign: "center",
-    paddingVertical: 20,
-  },
-  footer: {
-    borderTopWidth: 1,
-    borderTopColor: "#333",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  settingsButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 8,
-  },
-  settingsText: {
-    fontSize: 16,
-    color: "#9ca3af",
-  },
-});

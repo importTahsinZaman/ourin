@@ -1,20 +1,29 @@
 import React from "react";
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, ActivityIndicator } from "react-native";
 import { useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
+import type { DerivedColors } from "@/providers/ThemeProvider";
 
 interface UsageCardProps {
   accentColor?: string;
+  colors: DerivedColors;
 }
 
-export function UsageCard({ accentColor = "#d97756" }: UsageCardProps) {
+export function UsageCard({ accentColor = "#d97756", colors }: UsageCardProps) {
   const usageSummary = useQuery(api.usage.getUsageSummary);
 
   // Loading state
   if (usageSummary === undefined) {
     return (
-      <View style={styles.container}>
-        <View style={styles.loadingContainer}>
+      <View
+        style={{
+          backgroundColor: colors.backgroundSecondary,
+          borderRadius: 12,
+          padding: 16,
+          marginBottom: 16,
+        }}
+      >
+        <View style={{ paddingVertical: 20, alignItems: "center" }}>
           <ActivityIndicator size="small" color={accentColor} />
         </View>
       </View>
@@ -24,8 +33,24 @@ export function UsageCard({ accentColor = "#d97756" }: UsageCardProps) {
   // No subscription (free tier or not signed in)
   if (usageSummary === null) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.noDataText}>Subscribe to view usage details</Text>
+      <View
+        style={{
+          backgroundColor: colors.backgroundSecondary,
+          borderRadius: 12,
+          padding: 16,
+          marginBottom: 16,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 14,
+            color: colors.textMuted,
+            textAlign: "center",
+            paddingVertical: 8,
+          }}
+        >
+          Subscribe to view usage details
+        </Text>
       </View>
     );
   }
@@ -33,26 +58,62 @@ export function UsageCard({ accentColor = "#d97756" }: UsageCardProps) {
   // Self-hosting mode - just show token usage
   if (usageSummary.isSelfHosting) {
     return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Token Usage</Text>
+      <View
+        style={{
+          backgroundColor: colors.backgroundSecondary,
+          borderRadius: 12,
+          padding: 16,
+          marginBottom: 16,
+        }}
+      >
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 12,
+          }}
+        >
+          <Text style={{ fontSize: 14, fontWeight: "600", color: colors.text }}>
+            Token Usage
+          </Text>
         </View>
-        <View style={styles.statsRow}>
-          <View style={styles.stat}>
-            <Text style={styles.statValue}>
+        <View style={{ flexDirection: "row", justifyContent: "space-around" }}>
+          <View style={{ alignItems: "center" }}>
+            <Text
+              style={{ fontSize: 18, fontWeight: "700", color: colors.text }}
+            >
               {formatNumber(usageSummary.totalInputTokens)}
             </Text>
-            <Text style={styles.statLabel}>Input Tokens</Text>
+            <Text
+              style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}
+            >
+              Input Tokens
+            </Text>
           </View>
-          <View style={styles.stat}>
-            <Text style={styles.statValue}>
+          <View style={{ alignItems: "center" }}>
+            <Text
+              style={{ fontSize: 18, fontWeight: "700", color: colors.text }}
+            >
               {formatNumber(usageSummary.totalOutputTokens)}
             </Text>
-            <Text style={styles.statLabel}>Output Tokens</Text>
+            <Text
+              style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}
+            >
+              Output Tokens
+            </Text>
           </View>
-          <View style={styles.stat}>
-            <Text style={styles.statValue}>{usageSummary.messageCount}</Text>
-            <Text style={styles.statLabel}>Messages</Text>
+          <View style={{ alignItems: "center" }}>
+            <Text
+              style={{ fontSize: 18, fontWeight: "700", color: colors.text }}
+            >
+              {usageSummary.messageCount}
+            </Text>
+            <Text
+              style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}
+            >
+              Messages
+            </Text>
           </View>
         </View>
       </View>
@@ -81,37 +142,65 @@ export function UsageCard({ accentColor = "#d97756" }: UsageCardProps) {
     : null;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Monthly Credits</Text>
+    <View
+      style={{
+        backgroundColor: colors.backgroundSecondary,
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 16,
+      }}
+    >
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 12,
+        }}
+      >
+        <Text style={{ fontSize: 14, fontWeight: "600", color: colors.text }}>
+          Monthly Credits
+        </Text>
         {periodStart && periodEnd && (
-          <Text style={styles.period}>
+          <Text style={{ fontSize: 12, color: colors.textMuted }}>
             {periodStart} - {periodEnd}
           </Text>
         )}
       </View>
 
       {/* Progress bar */}
-      <View style={styles.progressContainer}>
-        <View style={styles.progressBar}>
+      <View style={{ marginBottom: 8 }}>
+        <View
+          style={{
+            height: 8,
+            backgroundColor: colors.backgroundTertiary,
+            borderRadius: 4,
+            overflow: "hidden",
+          }}
+        >
           <View
-            style={[
-              styles.progressFill,
-              {
-                width: `${percentage}%`,
-                backgroundColor: isLow ? "#ef4444" : accentColor,
-              },
-            ]}
+            style={{
+              height: "100%",
+              borderRadius: 4,
+              width: `${percentage}%`,
+              backgroundColor: isLow ? colors.error : accentColor,
+            }}
           />
         </View>
       </View>
 
       {/* Credits info */}
-      <View style={styles.creditsRow}>
-        <Text style={[styles.creditsRemaining, isLow && styles.creditsLow]}>
+      <View style={{ flexDirection: "row", alignItems: "baseline" }}>
+        <Text
+          style={{
+            fontSize: 20,
+            fontWeight: "700",
+            color: isLow ? colors.error : colors.text,
+          }}
+        >
           {formatNumber(remaining)}
         </Text>
-        <Text style={styles.creditsTotal}>
+        <Text style={{ fontSize: 14, color: colors.textMuted, marginLeft: 4 }}>
           / {formatNumber(subscriptionCredits)} remaining
         </Text>
       </View>
@@ -119,9 +208,27 @@ export function UsageCard({ accentColor = "#d97756" }: UsageCardProps) {
       {/* Purchased credits */}
       {usageSummary.purchasedBalance !== null &&
         usageSummary.purchasedBalance > 0 && (
-          <View style={styles.purchasedRow}>
-            <Text style={styles.purchasedLabel}>+ Purchased:</Text>
-            <Text style={styles.purchasedValue}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginTop: 8,
+              paddingTop: 8,
+              borderTopWidth: 1,
+              borderTopColor: colors.border,
+            }}
+          >
+            <Text style={{ fontSize: 13, color: colors.textMuted }}>
+              + Purchased:
+            </Text>
+            <Text
+              style={{
+                fontSize: 13,
+                color: colors.success,
+                marginLeft: 4,
+                fontWeight: "500",
+              }}
+            >
               {formatNumber(usageSummary.purchasedBalance)} credits
             </Text>
           </View>
@@ -139,102 +246,3 @@ function formatNumber(num: number): string {
   }
   return num.toLocaleString();
 }
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#262626",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  loadingContainer: {
-    paddingVertical: 20,
-    alignItems: "center",
-  },
-  noDataText: {
-    fontSize: 14,
-    color: "#9ca3af",
-    textAlign: "center",
-    paddingVertical: 8,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  title: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#f5f5f4",
-  },
-  period: {
-    fontSize: 12,
-    color: "#9ca3af",
-  },
-  progressContainer: {
-    marginBottom: 8,
-  },
-  progressBar: {
-    height: 8,
-    backgroundColor: "#404040",
-    borderRadius: 4,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    borderRadius: 4,
-  },
-  creditsRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
-  },
-  creditsRemaining: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#f5f5f4",
-  },
-  creditsLow: {
-    color: "#ef4444",
-  },
-  creditsTotal: {
-    fontSize: 14,
-    color: "#9ca3af",
-    marginLeft: 4,
-  },
-  purchasedRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: "#333",
-  },
-  purchasedLabel: {
-    fontSize: 13,
-    color: "#9ca3af",
-  },
-  purchasedValue: {
-    fontSize: 13,
-    color: "#22c55e",
-    marginLeft: 4,
-    fontWeight: "500",
-  },
-  statsRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-  },
-  stat: {
-    alignItems: "center",
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#f5f5f4",
-  },
-  statLabel: {
-    fontSize: 12,
-    color: "#9ca3af",
-    marginTop: 2,
-  },
-});

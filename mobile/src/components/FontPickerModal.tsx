@@ -2,7 +2,6 @@ import React from "react";
 import {
   View,
   Text,
-  StyleSheet,
   Pressable,
   ScrollView,
   Modal,
@@ -17,7 +16,7 @@ interface FontPickerModalProps {
 }
 
 export function FontPickerModal({ visible, onClose }: FontPickerModalProps) {
-  const { fontId, setFont, availableFonts, theme } = useTheme();
+  const { fontId, setFont, availableFonts, colors } = useTheme();
 
   const handleSelect = (id: string) => {
     setFont(id);
@@ -31,19 +30,38 @@ export function FontPickerModal({ visible, onClose }: FontPickerModalProps) {
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Choose Font</Text>
-          <Pressable onPress={onClose} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color="#9ca3af" />
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingHorizontal: 16,
+            paddingVertical: 16,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border,
+          }}
+        >
+          <Text style={{ fontSize: 18, fontWeight: "600", color: colors.text }}>
+            Choose Font
+          </Text>
+          <Pressable onPress={onClose} style={{ padding: 4 }}>
+            <Ionicons name="close" size={24} color={colors.textMuted} />
           </Pressable>
         </View>
         <ScrollView
-          style={styles.scrollView}
+          style={{ flex: 1 }}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
         >
-          <Text style={styles.description}>
+          <Text
+            style={{
+              fontSize: 14,
+              color: colors.textMuted,
+              marginBottom: 20,
+              lineHeight: 20,
+            }}
+          >
             Select a font for the app interface. Note: Custom fonts are
             available on web only. On mobile, all options use the system font.
           </Text>
@@ -52,16 +70,31 @@ export function FontPickerModal({ visible, onClose }: FontPickerModalProps) {
             return (
               <Pressable
                 key={font.id}
-                style={[styles.fontRow, isSelected && styles.fontRowSelected]}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  paddingVertical: 14,
+                  paddingHorizontal: 14,
+                  borderRadius: 10,
+                  marginBottom: 4,
+                  backgroundColor: isSelected
+                    ? colors.backgroundSecondary
+                    : "transparent",
+                }}
                 onPress={() => handleSelect(font.id)}
               >
-                <Text style={styles.fontName}>{font.name}</Text>
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontWeight: "500",
+                    color: colors.text,
+                  }}
+                >
+                  {font.name}
+                </Text>
                 {isSelected && (
-                  <Ionicons
-                    name="checkmark"
-                    size={20}
-                    color={theme.colors.accent}
-                  />
+                  <Ionicons name="checkmark" size={20} color={colors.accent} />
                 )}
               </Pressable>
             );
@@ -71,57 +104,3 @@ export function FontPickerModal({ visible, onClose }: FontPickerModalProps) {
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#1f1f1f",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#2a2a2a",
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#f5f5f4",
-  },
-  closeButton: {
-    padding: 4,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-  description: {
-    fontSize: 14,
-    color: "#9ca3af",
-    marginBottom: 20,
-    lineHeight: 20,
-  },
-  fontRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    borderRadius: 10,
-    marginBottom: 4,
-  },
-  fontRowSelected: {
-    backgroundColor: "#2a2a2a",
-  },
-  fontName: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#f5f5f4",
-  },
-});
