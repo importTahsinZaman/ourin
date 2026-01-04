@@ -11,15 +11,68 @@ import type {
   ToolInvocationPart,
   SourcesPart,
 } from "@ourin/shared/types";
+import { StepsAccordion } from "./StepsAccordion";
 
 interface MessageBubbleProps {
   message: UIMessage;
   isStreaming?: boolean;
 }
 
+// Chunk type for grouping parts
+type Chunk =
+  | { type: "steps"; parts: MessagePart[] }
+  | { type: "single"; part: MessagePart };
+
+// Check if a part should be grouped into steps accordion
+function isStepPart(part: MessagePart): boolean {
+  if (part.type === "reasoning") return true;
+  if (part.type === "tool-invocation") {
+    return (part as ToolInvocationPart).toolName
+      .toLowerCase()
+      .includes("search");
+  }
+  return false;
+}
+
+// Group consecutive step parts together
+function chunkParts(parts: MessagePart[]): Chunk[] {
+  const chunks: Chunk[] = [];
+  let currentStepParts: MessagePart[] = [];
+
+  for (const part of parts) {
+    if (isStepPart(part)) {
+      currentStepParts.push(part);
+    } else {
+      // Flush any accumulated step parts
+      if (currentStepParts.length > 0) {
+        chunks.push({ type: "steps", parts: currentStepParts });
+        currentStepParts = [];
+      }
+      chunks.push({ type: "single", part });
+    }
+  }
+
+  // Flush remaining step parts
+  if (currentStepParts.length > 0) {
+    chunks.push({ type: "steps", parts: currentStepParts });
+  }
+
+  return chunks;
+}
+
 export function MessageBubble({ message, isStreaming }: MessageBubbleProps) {
   const { colors } = useTheme();
   const isUser = message.role === "user";
+
+  // Chunk parts to group steps together
+  const chunks = useMemo(() => chunkParts(message.parts), [message.parts]);
+
+  // Check if actively thinking (last chunk is steps and streaming)
+  const lastChunk = chunks[chunks.length - 1];
+  const isActivelyThinking =
+    isStreaming &&
+    lastChunk?.type === "steps" &&
+    !message.parts.some((p) => p.type === "text" && (p as TextPart).text);
 
   return (
     <View
@@ -32,15 +85,30 @@ export function MessageBubble({ message, isStreaming }: MessageBubbleProps) {
         alignSelf: isUser ? "flex-end" : "stretch",
       }}
     >
-      {message.parts.map((part, index) => (
-        <PartRenderer
-          key={index}
-          part={part}
-          isUser={isUser}
-          isStreaming={isStreaming && index === message.parts.length - 1}
-          colors={colors}
-        />
-      ))}
+      {chunks.map((chunk, index) => {
+        if (chunk.type === "steps") {
+          const isLastChunk = index === chunks.length - 1;
+          return (
+            <StepsAccordion
+              key={`steps-${index}`}
+              parts={chunk.parts}
+              isStreaming={isStreaming && isLastChunk}
+              isActivelyThinking={isActivelyThinking && isLastChunk}
+              colors={colors}
+            />
+          );
+        } else {
+          return (
+            <PartRenderer
+              key={`part-${index}`}
+              part={chunk.part}
+              isUser={isUser}
+              isStreaming={isStreaming && index === chunks.length - 1}
+              colors={colors}
+            />
+          );
+        }
+      })}
     </View>
   );
 }
