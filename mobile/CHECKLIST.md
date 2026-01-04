@@ -209,16 +209,23 @@
 
 ---
 
-## Phase 8: Billing
+## Phase 8: Billing ✅
 
-- [ ] **Subscription**
-  - [ ] Show current tier/credits
-  - [ ] Open Stripe checkout via expo-web-browser
-  - [ ] Handle success/cancel redirects
+- [x] **Subscription**
+  - [x] Show current tier/credits (SubscriptionCard for free, UsageCard for subscribers)
+  - [x] Open Stripe checkout via expo-web-browser
+  - [x] Handle success/cancel redirects via deep links (ourin://billing)
+  - [x] Manage subscription via Stripe portal
 
-- [ ] **Credit packs**
-  - [ ] Purchase flow
-  - [ ] Credit balance display
+- [x] **Credit packs**
+  - [x] Purchase flow (PurchasedCreditsCard with buy button)
+  - [x] Credit balance display
+  - [x] Purchase history with expandable list
+
+- [x] **API Integration**
+  - [x] Web API endpoints support X-Platform: mobile header
+  - [x] Billing API functions in api.ts
+  - [x] useBilling hook with expo-web-browser
 
 ---
 
@@ -253,7 +260,7 @@
 
 ## Phase 11: Deep Linking
 
-- [ ] Configure `ourin://` scheme in app.json
+- [x] Configure `ourin://` scheme in app.json (done for billing)
 - [ ] Handle `ourin://c/[id]` URLs
 - [ ] Universal links (iOS) / App Links (Android)
 
@@ -281,5 +288,5 @@
 
 ## Current Status
 
-**Completed:** Phase 1-7 (Infrastructure, Core Infrastructure, Auth Flow, Chat Feature, Conversations, File Attachments, Settings)
-**Next:** Phase 8 (Billing)
+**Completed:** Phase 1-8 (Infrastructure, Core Infrastructure, Auth Flow, Chat Feature, Conversations, File Attachments, Settings, Billing)
+**Next:** Phase 9 (Platform Polish)

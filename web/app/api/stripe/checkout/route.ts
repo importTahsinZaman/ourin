@@ -3,6 +3,23 @@ import { stripe, SUBSCRIPTION_PRICE_ID } from "@/lib/stripe";
 import { verifyChatToken, extractChatToken } from "@/lib/verifyChatToken";
 import { IS_SELF_HOSTING } from "@/lib/config";
 
+function getRedirectUrls(req: Request) {
+  const isMobile = req.headers.get("X-Platform") === "mobile";
+  const webBaseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+  if (isMobile) {
+    return {
+      success: "ourin://billing?success=true",
+      cancel: "ourin://billing?canceled=true",
+    };
+  }
+
+  return {
+    success: `${webBaseUrl}/?settings=billing&success=true`,
+    cancel: `${webBaseUrl}/?settings=billing&canceled=true`,
+  };
+}
+
 /**
  * create a stripe checkout session for subscribing to the $10/month plan.
  */
@@ -44,6 +61,7 @@ export async function POST(req: Request) {
     }
 
     const userId = result.userId;
+    const redirectUrls = getRedirectUrls(req);
 
     // create stripe checkout session for subscription only
     const session = await stripe.checkout.sessions.create({
@@ -54,8 +72,8 @@ export async function POST(req: Request) {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/?settings=billing&success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/?settings=billing&canceled=true`,
+      success_url: redirectUrls.success,
+      cancel_url: redirectUrls.cancel,
       metadata: {
         userId: userId ?? "",
       },

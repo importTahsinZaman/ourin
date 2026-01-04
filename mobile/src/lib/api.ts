@@ -219,23 +219,122 @@ export async function generateTitle(
 }
 
 /**
- * Fetch billing configuration.
+ * Billing configuration response type
  */
-export async function getBillingConfig(): Promise<{
-  subscriptionPriceId: string;
-  creditPackPriceId: string;
+export interface BillingConfig {
+  isSelfHosting: boolean;
   subscriptionCredits: number;
+  subscriptionPriceCents: number;
   creditPackAmount: number;
   creditPackPriceCents: number;
-}> {
+}
+
+/**
+ * Fetch billing configuration.
+ */
+export async function getBillingConfig(): Promise<BillingConfig> {
   const baseUrl = getBaseUrl();
-  const url = `${baseUrl}/api/${API_VERSION}/billing/config`;
+  const url = `${baseUrl}/api/billing/config`;
 
   const response = await fetch(url);
 
   if (!response.ok) {
     throw new ApiError(
       `Failed to fetch billing config: ${response.status}`,
+      response.status
+    );
+  }
+
+  return response.json();
+}
+
+/**
+ * Create a Stripe checkout session for subscription.
+ * Returns the checkout URL to open in browser.
+ */
+export async function createSubscriptionCheckout(
+  token: string
+): Promise<{ url: string }> {
+  const baseUrl = getBaseUrl();
+  const url = `${baseUrl}/api/stripe/checkout`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      "X-Platform": "mobile",
+    },
+    body: JSON.stringify({}),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new ApiError(
+      error.error || `Failed to create checkout: ${response.status}`,
+      response.status
+    );
+  }
+
+  return response.json();
+}
+
+/**
+ * Create a Stripe checkout session for buying credits.
+ * Requires active subscription.
+ * Returns the checkout URL to open in browser.
+ */
+export async function createCreditsCheckout(
+  token: string
+): Promise<{ url: string }> {
+  const baseUrl = getBaseUrl();
+  const url = `${baseUrl}/api/stripe/buy-credits`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      "X-Platform": "mobile",
+    },
+    body: JSON.stringify({}),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new ApiError(
+      error.error || `Failed to create checkout: ${response.status}`,
+      response.status
+    );
+  }
+
+  return response.json();
+}
+
+/**
+ * Create a Stripe customer portal session.
+ * Returns the portal URL to open in browser.
+ */
+export async function createPortalSession(
+  token: string
+): Promise<{ url: string }> {
+  const baseUrl = getBaseUrl();
+  const url = `${baseUrl}/api/stripe/portal`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      "X-Platform": "mobile",
+    },
+    body: JSON.stringify({}),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new ApiError(
+      error.error || `Failed to create portal session: ${response.status}`,
       response.status
     );
   }

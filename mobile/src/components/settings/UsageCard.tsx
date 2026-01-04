@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, ActivityIndicator } from "react-native";
+import { View, Text, ActivityIndicator, Pressable } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
 import type { DerivedColors } from "@/providers/ThemeProvider";
@@ -7,9 +8,16 @@ import type { DerivedColors } from "@/providers/ThemeProvider";
 interface UsageCardProps {
   accentColor?: string;
   colors: DerivedColors;
+  onManageSubscription?: () => void;
+  isManaging?: boolean;
 }
 
-export function UsageCard({ accentColor = "#d97756", colors }: UsageCardProps) {
+export function UsageCard({
+  accentColor = "#d97756",
+  colors,
+  onManageSubscription,
+  isManaging,
+}: UsageCardProps) {
   const usageSummary = useQuery(api.usage.getUsageSummary);
 
   // Loading state
@@ -233,6 +241,40 @@ export function UsageCard({ accentColor = "#d97756", colors }: UsageCardProps) {
             </Text>
           </View>
         )}
+
+      {/* Manage subscription button */}
+      {onManageSubscription && (
+        <Pressable
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+            marginTop: 12,
+            paddingVertical: 10,
+            borderTopWidth: 1,
+            borderTopColor: colors.border,
+            opacity: isManaging ? 0.7 : 1,
+          }}
+          onPress={onManageSubscription}
+          disabled={isManaging}
+        >
+          {isManaging ? (
+            <ActivityIndicator size="small" color={colors.textMuted} />
+          ) : (
+            <>
+              <Ionicons
+                name="settings-outline"
+                size={16}
+                color={colors.textMuted}
+              />
+              <Text style={{ fontSize: 14, color: colors.textMuted }}>
+                Manage Subscription
+              </Text>
+            </>
+          )}
+        </Pressable>
+      )}
     </View>
   );
 }

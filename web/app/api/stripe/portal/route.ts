@@ -5,6 +5,13 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import { IS_SELF_HOSTING } from "@/lib/config";
 
+function getReturnUrl(req: Request) {
+  const isMobile = req.headers.get("X-Platform") === "mobile";
+  const webBaseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+  return isMobile ? "ourin://billing" : `${webBaseUrl}/?settings=billing`;
+}
+
 /**
  * create a stripe customer portal session for managing subscription.
  */
@@ -66,7 +73,7 @@ export async function POST(req: Request) {
     // create stripe customer portal session
     const session = await stripe.billingPortal.sessions.create({
       customer: subscription.stripeCustomerId,
-      return_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/?settings=billing`,
+      return_url: getReturnUrl(req),
     });
 
     return NextResponse.json({ url: session.url });

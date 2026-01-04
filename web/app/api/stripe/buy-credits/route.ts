@@ -5,6 +5,23 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import { IS_SELF_HOSTING } from "@/lib/config";
 
+function getRedirectUrls(req: Request) {
+  const isMobile = req.headers.get("X-Platform") === "mobile";
+  const webBaseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+  if (isMobile) {
+    return {
+      success: "ourin://billing?credits_purchased=true",
+      cancel: "ourin://billing",
+    };
+  }
+
+  return {
+    success: `${webBaseUrl}/?settings=billing&credits_purchased=true`,
+    cancel: `${webBaseUrl}/?settings=billing`,
+  };
+}
+
 /**
  * create a stripe checkout session for purchasing a credit pack.
  * requires an active subscription (membership model).
@@ -76,6 +93,8 @@ export async function POST(req: Request) {
       );
     }
 
+    const redirectUrls = getRedirectUrls(req);
+
     // create stripe checkout session for one-time payment
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -86,8 +105,8 @@ export async function POST(req: Request) {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/?settings=billing&credits_purchased=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/?settings=billing`,
+      success_url: redirectUrls.success,
+      cancel_url: redirectUrls.cancel,
       metadata: {
         userId: userId!,
         type: "credit_pack",

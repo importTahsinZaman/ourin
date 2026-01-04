@@ -4,11 +4,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useAuth } from "@/hooks";
+import { useAuth, useBilling } from "@/hooks";
 import { useTheme, type DerivedColors } from "@/providers/ThemeProvider";
 import { ThemePickerModal } from "@/components/ThemePickerModal";
 import { FontPickerModal } from "@/components/FontPickerModal";
 import { UsageCard } from "@/components/settings/UsageCard";
+import { SubscriptionCard } from "@/components/settings/SubscriptionCard";
+import { PurchasedCreditsCard } from "@/components/settings/PurchasedCreditsCard";
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -16,9 +18,21 @@ export default function SettingsScreen() {
   const { user } = useAuth();
   const { signOut } = useAuthActions();
   const { theme, currentFont, colors } = useTheme();
+  const {
+    tier,
+    billingConfig,
+    isLoading: billingLoading,
+    isSelfHosting,
+    openSubscribeCheckout,
+    openBuyCreditsCheckout,
+    openManageSubscription,
+  } = useBilling();
 
   const [themePickerVisible, setThemePickerVisible] = useState(false);
   const [fontPickerVisible, setFontPickerVisible] = useState(false);
+
+  const isSubscriber = tier === "subscriber";
+  const isFree = tier === "free";
 
   const handleSignOut = async () => {
     await signOut();
@@ -126,22 +140,78 @@ export default function SettingsScreen() {
           </Pressable>
         </View>
 
-        {/* Usage Section */}
-        <Text
-          style={{
-            fontSize: 12,
-            fontWeight: "600",
-            color: colors.textMuted,
-            textTransform: "uppercase",
-            letterSpacing: 0.5,
-            marginBottom: 8,
-            marginTop: 8,
-            paddingLeft: 4,
-          }}
-        >
-          Usage
-        </Text>
-        <UsageCard accentColor={theme.colors.accent} colors={colors} />
+        {/* Billing/Usage Section - only show if not self-hosting */}
+        {!isSelfHosting && (
+          <>
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: "600",
+                color: colors.textMuted,
+                textTransform: "uppercase",
+                letterSpacing: 0.5,
+                marginBottom: 8,
+                marginTop: 8,
+                paddingLeft: 4,
+              }}
+            >
+              {isSubscriber ? "Usage" : "Subscription"}
+            </Text>
+
+            {/* Free tier - show upgrade card */}
+            {isFree && billingConfig && (
+              <SubscriptionCard
+                colors={colors}
+                subscriptionPriceCents={billingConfig.subscriptionPriceCents}
+                subscriptionCredits={billingConfig.subscriptionCredits}
+                isLoading={billingLoading}
+                onSubscribe={openSubscribeCheckout}
+              />
+            )}
+
+            {/* Subscriber - show usage and purchased credits */}
+            {isSubscriber && (
+              <>
+                <UsageCard
+                  accentColor={theme.colors.accent}
+                  colors={colors}
+                  onManageSubscription={openManageSubscription}
+                  isManaging={billingLoading}
+                />
+                {billingConfig && (
+                  <PurchasedCreditsCard
+                    colors={colors}
+                    creditPackAmount={billingConfig.creditPackAmount}
+                    creditPackPriceCents={billingConfig.creditPackPriceCents}
+                    isLoading={billingLoading}
+                    onBuyCredits={openBuyCreditsCheckout}
+                  />
+                )}
+              </>
+            )}
+          </>
+        )}
+
+        {/* Self-hosting mode - just show token usage */}
+        {isSelfHosting && (
+          <>
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: "600",
+                color: colors.textMuted,
+                textTransform: "uppercase",
+                letterSpacing: 0.5,
+                marginBottom: 8,
+                marginTop: 8,
+                paddingLeft: 4,
+              }}
+            >
+              Usage
+            </Text>
+            <UsageCard accentColor={theme.colors.accent} colors={colors} />
+          </>
+        )}
 
         {/* Appearance Section */}
         <Text
