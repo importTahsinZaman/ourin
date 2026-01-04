@@ -269,6 +269,7 @@ export default function ChatScreen() {
               justifyContent: "center",
               alignItems: "center",
               paddingHorizontal: 40,
+              paddingBottom: 160, // Space for floating input
             }}
           >
             <Text

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
   type TextInput as TextInputType,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useFileAttachment, type PendingFile } from "@/hooks/useFileAttachment";
 import { useTheme, type DerivedColors } from "@/providers/ThemeProvider";
@@ -60,8 +61,31 @@ export function ChatInput({
   reasoningLabel,
 }: ChatInputProps) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const [text, setText] = useState("");
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const inputRef = useRef<TextInputType>(null);
+
+  // Track keyboard height
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+      (e) => {
+        setKeyboardHeight(e.endCoordinates.height);
+      }
+    );
+    const hideSubscription = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+      () => {
+        setKeyboardHeight(0);
+      }
+    );
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const {
     pendingFiles,
@@ -140,10 +164,13 @@ export function ChatInput({
   return (
     <View
       style={{
-        paddingHorizontal: 16,
+        position: "absolute",
+        bottom: keyboardHeight,
+        left: 0,
+        right: 0,
+        paddingHorizontal: 12,
         paddingTop: 8,
-        paddingBottom: 32,
-        backgroundColor: colors.background,
+        paddingBottom: keyboardHeight > 0 ? 12 : insets.bottom + 12,
       }}
     >
       {/* Model and Cores toolbar */}
@@ -217,6 +244,12 @@ export function ChatInput({
           paddingTop: 12,
           paddingBottom: 10,
           minHeight: 56,
+          // Floating shadow
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.15,
+          shadowRadius: 8,
+          elevation: 8,
         }}
       >
         <TextInput

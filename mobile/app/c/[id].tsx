@@ -94,24 +94,26 @@ export default function ConversationScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
-        {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#d97756" />
-          </View>
-        ) : displayMessages.length > 0 ? (
-          <MessageList messages={displayMessages} isStreaming={isStreaming} />
-        ) : (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No messages yet</Text>
-          </View>
-        )}
+        <View style={{ flex: 1 }}>
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#d97756" />
+            </View>
+          ) : displayMessages.length > 0 ? (
+            <MessageList messages={displayMessages} isStreaming={isStreaming} />
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No messages yet</Text>
+            </View>
+          )}
 
-        <ChatInput
-          onSend={handleSend}
-          onStop={stop}
-          isStreaming={isStreaming}
-          placeholder="Continue the conversation..."
-        />
+          <ChatInput
+            onSend={handleSend}
+            onStop={stop}
+            isStreaming={isStreaming}
+            placeholder="Continue the conversation..."
+          />
+        </View>
       </KeyboardAvoidingView>
     </>
   );
@@ -131,6 +133,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    paddingBottom: 160, // Space for floating input
   },
   emptyText: {
     color: "#666",

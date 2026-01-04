@@ -58,6 +58,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    paddingVertical: 16,
+    paddingTop: 16,
+    paddingBottom: 160, // Space for floating input
   },
 });
