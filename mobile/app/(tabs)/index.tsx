@@ -197,13 +197,6 @@ export default function ChatScreen() {
   const displayMessages = messages.length > 0 ? messages : initialMessages;
   const hasMessages = displayMessages.length > 0;
 
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "morning";
-    if (hour < 17) return "afternoon";
-    return "evening";
-  };
-
   return (
     <Sidebar
       visible={sidebarVisible}
@@ -308,10 +301,9 @@ export default function ChatScreen() {
                   fontWeight: "500",
                   color: colors.textSecondary,
                   textAlign: "center",
-                  lineHeight: 38,
                 }}
               >
-                How can I help you{"\n"}this {getGreeting()}?
+                Let's get started!
               </Text>
             </View>
           )}
@@ -320,7 +312,7 @@ export default function ChatScreen() {
             onSend={handleSend}
             onStop={stop}
             isStreaming={isStreaming}
-            placeholder="Chat with Ourin"
+            placeholder="What can I do for you?"
             activeCoresCount={activeCoresCount}
             onOpenCorePicker={() => setCorePickerVisible(true)}
             webSearchEnabled={webSearchEnabled}
