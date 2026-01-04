@@ -9,6 +9,9 @@ export const STORAGE_KEYS = {
   LOCAL_CORES: "ourin-local-cores",
   SELECTED_MODEL: "ourin-selected-model",
   THEME: "ourin-theme",
+  THEME_ID: "ourin-theme-id",
+  CUSTOM_THEMES: "ourin-custom-themes",
+  FONT_ID: "ourin-font-id",
   FIRST_VISIT: "ourin-first-visit-complete",
   ACTIVE_CORES_COUNT: "ourin-active-cores-count",
 } as const;

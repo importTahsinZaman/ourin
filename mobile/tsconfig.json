@@ -4,6 +4,8 @@
     "strict": true,
     "paths": {
       "@/*": ["./src/*"],
+      "@ourin/core": ["../packages/core/src"],
+      "@ourin/core/*": ["../packages/core/src/*"],
       "@ourin/shared": ["../packages/shared/src"],
       "@ourin/shared/*": ["../packages/shared/src/*"],
       "convex/_generated/*": ["../web/convex/_generated/*"]

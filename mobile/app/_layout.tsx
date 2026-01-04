@@ -5,6 +5,7 @@ import { StatusBar } from "expo-status-bar";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
 import { useConvexAuth } from "convex/react";
 import { ConvexProvider } from "@/providers/ConvexProvider";
+import { ThemeProvider } from "@/providers/ThemeProvider";
 
 function RootLayoutNav() {
   const { isAuthenticated, isLoading } = useConvexAuth();
@@ -63,7 +64,9 @@ function RootLayoutNav() {
 export default function RootLayout() {
   return (
     <ConvexProvider>
-      <RootLayoutNav />
+      <ThemeProvider>
+        <RootLayoutNav />
+      </ThemeProvider>
     </ConvexProvider>
   );
 }
