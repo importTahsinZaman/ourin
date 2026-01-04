@@ -205,137 +205,135 @@ export default function ChatScreen() {
   };
 
   return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: colors.background,
-        paddingTop: insets.top,
-      }}
+    <Sidebar
+      visible={sidebarVisible}
+      onClose={() => setSidebarVisible(false)}
+      currentConversationId={conversationId}
+      onNewChat={handleNewChat}
     >
-      {/* Custom Header */}
       <View
         style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingHorizontal: 8,
-          paddingVertical: 8,
-          borderBottomWidth: 1,
-          borderBottomColor: colors.border,
+          flex: 1,
+          paddingTop: insets.top,
         }}
       >
-        <Pressable
+        {/* Custom Header */}
+        <View
           style={{
-            width: 44,
-            height: 44,
-            justifyContent: "center",
+            flexDirection: "row",
             alignItems: "center",
+            justifyContent: "space-between",
+            paddingHorizontal: 8,
+            paddingVertical: 8,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border,
           }}
-          onPress={() => setSidebarVisible(true)}
         >
-          <Ionicons name="menu-outline" size={26} color={colors.text} />
-        </Pressable>
-
-        <Pressable
-          style={{
-            width: 44,
-            height: 44,
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-          onPress={handleNewChat}
-          disabled={isStreaming}
-        >
-          <Ionicons
-            name="create-outline"
-            size={24}
-            color={isStreaming ? colors.textMuted : colors.text}
-          />
-        </Pressable>
-      </View>
-
-      {/* Main Content */}
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
-      >
-        {hasMessages ? (
-          <MessageList messages={displayMessages} isStreaming={isStreaming} />
-        ) : (
-          <View
+          <Pressable
             style={{
-              flex: 1,
+              width: 44,
+              height: 44,
               justifyContent: "center",
               alignItems: "center",
-              paddingHorizontal: 40,
-              paddingBottom: 160, // Space for floating input
             }}
+            onPress={() => setSidebarVisible(true)}
           >
-            <Text
+            <Ionicons name="menu-outline" size={26} color={colors.text} />
+          </Pressable>
+
+          <Pressable
+            style={{
+              width: 44,
+              height: 44,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+            onPress={handleNewChat}
+            disabled={isStreaming}
+          >
+            <Ionicons
+              name="create-outline"
+              size={24}
+              color={isStreaming ? colors.textMuted : colors.text}
+            />
+          </Pressable>
+        </View>
+
+        {/* Main Content */}
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+        >
+          {hasMessages ? (
+            <MessageList messages={displayMessages} isStreaming={isStreaming} />
+          ) : (
+            <View
               style={{
-                fontSize: 28,
-                fontWeight: "500",
-                color: colors.textSecondary,
-                textAlign: "center",
-                lineHeight: 38,
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+                paddingHorizontal: 40,
+                paddingBottom: 160, // Space for floating input
               }}
             >
-              How can I help you{"\n"}this {getGreeting()}?
-            </Text>
-          </View>
-        )}
+              <Text
+                style={{
+                  fontSize: 28,
+                  fontWeight: "500",
+                  color: colors.textSecondary,
+                  textAlign: "center",
+                  lineHeight: 38,
+                }}
+              >
+                How can I help you{"\n"}this {getGreeting()}?
+              </Text>
+            </View>
+          )}
 
-        <ChatInput
-          onSend={handleSend}
-          onStop={stop}
-          isStreaming={isStreaming}
-          placeholder="Chat with Ourin"
-          modelName={selectedModelName}
-          activeCoresCount={activeCoresCount}
-          onOpenModelPicker={() => setModelPickerVisible(true)}
-          onOpenCorePicker={() => setCorePickerVisible(true)}
-          webSearchEnabled={webSearchEnabled}
-          onWebSearchToggle={setWebSearchEnabled}
-          modelSupportsWebSearch={modelSupportsWebSearch}
-          reasoningLevel={reasoningLevel}
-          onOpenReasoningPicker={() => setReasoningPickerVisible(true)}
-          modelSupportsReasoning={modelSupportsReasoning}
-          reasoningLabel={reasoningLabel}
+          <ChatInput
+            onSend={handleSend}
+            onStop={stop}
+            isStreaming={isStreaming}
+            placeholder="Chat with Ourin"
+            modelName={selectedModelName}
+            activeCoresCount={activeCoresCount}
+            onOpenModelPicker={() => setModelPickerVisible(true)}
+            onOpenCorePicker={() => setCorePickerVisible(true)}
+            webSearchEnabled={webSearchEnabled}
+            onWebSearchToggle={setWebSearchEnabled}
+            modelSupportsWebSearch={modelSupportsWebSearch}
+            reasoningLevel={reasoningLevel}
+            onOpenReasoningPicker={() => setReasoningPickerVisible(true)}
+            modelSupportsReasoning={modelSupportsReasoning}
+            reasoningLabel={reasoningLabel}
+          />
+        </KeyboardAvoidingView>
+
+        {/* Modals */}
+        <ModelPickerModal
+          visible={modelPickerVisible}
+          selectedModel={selectedModel}
+          onSelectModel={handleSelectModel}
+          onClose={() => setModelPickerVisible(false)}
         />
-      </KeyboardAvoidingView>
 
-      {/* Sidebar */}
-      <Sidebar
-        visible={sidebarVisible}
-        onClose={() => setSidebarVisible(false)}
-        currentConversationId={conversationId}
-        onNewChat={handleNewChat}
-      />
+        <CorePickerModal
+          visible={corePickerVisible}
+          cores={cores}
+          activeCoresCount={activeCoresCount}
+          onToggleCore={toggleActive}
+          onClose={() => setCorePickerVisible(false)}
+        />
 
-      {/* Modals */}
-      <ModelPickerModal
-        visible={modelPickerVisible}
-        selectedModel={selectedModel}
-        onSelectModel={handleSelectModel}
-        onClose={() => setModelPickerVisible(false)}
-      />
-
-      <CorePickerModal
-        visible={corePickerVisible}
-        cores={cores}
-        activeCoresCount={activeCoresCount}
-        onToggleCore={toggleActive}
-        onClose={() => setCorePickerVisible(false)}
-      />
-
-      <ReasoningPickerModal
-        visible={reasoningPickerVisible}
-        selectedModel={selectedModel}
-        reasoningLevel={reasoningLevel}
-        onSelectReasoningLevel={setReasoningLevel}
-        onClose={() => setReasoningPickerVisible(false)}
-      />
-    </View>
+        <ReasoningPickerModal
+          visible={reasoningPickerVisible}
+          selectedModel={selectedModel}
+          reasoningLevel={reasoningLevel}
+          onSelectReasoningLevel={setReasoningLevel}
+          onClose={() => setReasoningPickerVisible(false)}
+        />
+      </View>
+    </Sidebar>
   );
 }

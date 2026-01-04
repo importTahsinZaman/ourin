@@ -66,6 +66,11 @@ export function ChatInput({
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const inputRef = useRef<TextInputType>(null);
 
+  // Dismiss keyboard on mount
+  useEffect(() => {
+    Keyboard.dismiss();
+  }, []);
+
   // Track keyboard height
   useEffect(() => {
     const showSubscription = Keyboard.addListener(
@@ -267,6 +272,7 @@ export function ChatInput({
           multiline
           maxLength={32000}
           editable={!isStreaming}
+          autoFocus={false}
         />
         <View
           style={{

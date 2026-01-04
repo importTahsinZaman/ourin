@@ -15,14 +15,27 @@ interface MessageListProps {
 
 export function MessageList({ messages, isStreaming }: MessageListProps) {
   const flatListRef = useRef<FlatList<UIMessage>>(null);
+  const initialScrollDone = useRef(false);
+  const prevMessageCount = useRef(messages.length);
 
-  // Scroll to bottom when new messages arrive or when streaming
+  // Scroll to bottom - instant on initial load, animated for new messages
   useEffect(() => {
     if (messages.length > 0) {
-      // Small delay to ensure content has rendered
-      setTimeout(() => {
+      const isInitialLoad = !initialScrollDone.current;
+      const isNewMessage = messages.length > prevMessageCount.current;
+
+      if (isInitialLoad) {
+        // Instant scroll on initial load
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: false });
+          initialScrollDone.current = true;
+        }, 50);
+      } else if (isNewMessage || isStreaming) {
+        // Animated scroll for new messages
         flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
+      }
+
+      prevMessageCount.current = messages.length;
     }
   }, [messages.length, isStreaming]);
 
