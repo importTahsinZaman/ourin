@@ -25,6 +25,7 @@ import { CommandPalette } from "@/components/command-palette/CommandPalette";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useKeybinds } from "@/hooks/useKeybinds";
 import { useAnalytics } from "@/hooks/useAnalytics";
+import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { CoresProvider } from "@/contexts/CoresContext";
 import { FREE_MODEL_ID, getModelInfo } from "@/lib/models";
 import { setCookie } from "@/lib/cookies";
@@ -68,6 +69,9 @@ export function HomeClient({
   const { isAuthenticated } = useConvexAuth();
   const analytics = useAnalytics();
   const wasAuthenticatedRef = useRef<boolean | null>(null);
+
+  // responsive breakpoints
+  const { isMobile, isTablet, isDesktop } = useBreakpoint();
 
   // sidebar state - initialize from server-provided props (no flash)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
@@ -335,17 +339,20 @@ export function HomeClient({
       showFloatingSidebar={showFloatingSidebar}
       onShowFloatingSidebarChange={setShowFloatingSidebar}
       keybinds={keybinds}
+      isMobile={isMobile}
+      isTablet={isTablet}
     />
   );
 
-  const themeEditorElement = (
+  // only show theme editor on desktop (>= 1024px)
+  const themeEditorElement = isDesktop ? (
     <ThemeEditorPanel
       isOpen={showThemeEditor}
       onClose={closeThemeEditor}
       side={sidebarSide === "left" ? "right" : "left"}
       onFlipSidebar={flipSidebar}
     />
-  );
+  ) : null;
 
   const mainContent = (
     <main className="flex flex-col flex-1 w-full min-w-0">

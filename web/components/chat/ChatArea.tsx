@@ -671,12 +671,12 @@ export function ChatArea({
   if (isNewChat) {
     return (
       <div
-        className="relative flex flex-col items-center px-4 pt-[25vh] h-full"
+        className="relative flex flex-col items-center px-3 md:px-4 lg:px-6 pt-[25vh] h-full"
         style={{ backgroundColor: "var(--color-background-primary)" }}
         {...dropHandlers}
       >
         <DropZoneOverlay isVisible={isDragging} />
-        <div className="w-full max-w-3xl">
+        <div className="w-full md:max-w-2xl lg:max-w-3xl">
           <h1
             className="mb-4 font-medium text-2xl text-center"
             style={{ color: "var(--color-text-primary)" }}
@@ -703,7 +703,7 @@ export function ChatArea({
         ref={scrollContainerRef}
         className="flex flex-1 justify-center overflow-y-auto"
       >
-        <div className="px-4 pt-16 w-full max-w-3xl">
+        <div className="px-3 md:px-4 lg:px-6 pt-16 w-full md:max-w-2xl lg:max-w-3xl">
           <MessageList
             ref={messageListRef}
             messages={messages}
@@ -718,10 +718,10 @@ export function ChatArea({
 
       {/* input area */}
       <div
-        className="flex justify-center px-4 pb-4"
+        className="flex justify-center px-3 md:px-4 lg:px-6 pb-4"
         style={{ backgroundColor: "var(--color-background-primary)" }}
       >
-        <div className="w-full max-w-3xl">{chatInput}</div>
+        <div className="w-full md:max-w-2xl lg:max-w-3xl">{chatInput}</div>
       </div>
     </div>
   );

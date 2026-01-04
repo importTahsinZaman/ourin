@@ -38,6 +38,8 @@ interface SidebarProps {
   showFloatingSidebar: boolean;
   onShowFloatingSidebarChange: (show: boolean) => void;
   keybinds: KeybindsMap;
+  isMobile?: boolean;
+  isTablet?: boolean;
 }
 
 export function Sidebar({
@@ -55,13 +57,17 @@ export function Sidebar({
   showFloatingSidebar,
   onShowFloatingSidebarChange,
   keybinds,
+  isMobile = false,
+  isTablet = false,
 }: SidebarProps) {
   const [isResizing, setIsResizing] = useState(false);
   const [isMac, setIsMac] = useState(true);
-  const [isSmallScreen, setIsSmallScreen] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
   const floatingSidebarRef = useRef<HTMLElement>(null);
   const hoverDelayRef = useRef<NodeJS.Timeout | null>(null);
+
+  // use props from parent instead of local state for responsive behavior
+  const isSmallScreen = isMobile || isTablet;
 
   // check user state to determine sidebar button (sign up / subscribe / settings)
   // in self-hosting mode, always show "settings" (no sign-in/billing needed)
@@ -92,16 +98,6 @@ export function Sidebar({
   // detect mac vs windows
   useEffect(() => {
     setIsMac(navigator.platform.toUpperCase().indexOf("MAC") >= 0);
-  }, []);
-
-  // detect small screen for responsive tab layout
-  useEffect(() => {
-    const checkScreenSize = () => {
-      setIsSmallScreen(window.innerWidth < 1045);
-    };
-    checkScreenSize();
-    window.addEventListener("resize", checkScreenSize);
-    return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
   // whether to hide floating buttons (small screen + right sidebar)
@@ -340,40 +336,71 @@ export function Sidebar({
 
   return (
     <>
-      {/* normal sidebar (expanded) */}
+      {/* mobile sidebar overlay backdrop */}
+      {isMobile && !collapsed && (
+        <div
+          className="z-40 fixed inset-0 bg-black/50 transition-opacity duration-200"
+          onClick={() => onCollapsedChange(true)}
+        />
+      )}
+
+      {/* normal sidebar (expanded) - renders as overlay on mobile */}
       <aside
         ref={sidebarRef}
         className={cn(
-          "relative h-full overflow-hidden",
-          side === "left" ? "border-r" : "border-l",
-          collapsed ? "w-0 opacity-0" : "opacity-100",
-          !isResizing && "transition-[width,opacity] duration-300 ease-out"
+          "h-full overflow-hidden",
+          // mobile: fixed overlay
+          isMobile
+            ? cn(
+                "z-50 fixed top-0 bottom-0 shadow-2xl",
+                side === "left" ? "left-0" : "right-0",
+                collapsed
+                  ? side === "left"
+                    ? "-translate-x-full"
+                    : "translate-x-full"
+                  : "translate-x-0",
+                "transition-transform duration-300 ease-out"
+              )
+            : cn(
+                // desktop/tablet: relative with border
+                "relative",
+                side === "left" ? "border-r" : "border-l",
+                collapsed ? "w-0 opacity-0" : "opacity-100",
+                !isResizing &&
+                  "transition-[width,opacity] duration-300 ease-out"
+              )
         )}
         style={{
           backgroundColor: "var(--color-background-secondary)",
-          borderColor: "var(--color-border-default)",
-          width: collapsed ? 0 : width,
+          borderColor: isMobile ? undefined : "var(--color-border-default)",
+          width: isMobile ? "85vw" : collapsed ? 0 : width,
+          maxWidth: isMobile ? "320px" : undefined,
         }}
       >
         {/* fixed-width inner container - content doesn't resize during animation */}
-        <div className="flex flex-col h-full" style={{ width }}>
+        <div
+          className="flex flex-col h-full"
+          style={{ width: isMobile ? "100%" : width }}
+        >
           {sidebarContent}
 
-          {/* resize handle */}
-          <div
-            onMouseDown={handleMouseDown}
-            className={cn(
-              "top-0 z-10 absolute w-1 h-full cursor-col-resize",
-              side === "left" ? "right-0" : "left-0",
-              "hover:bg-[var(--color-accent-primary)] transition-colors",
-              isResizing && "bg-[var(--color-accent-primary)]"
-            )}
-          />
+          {/* resize handle - desktop only */}
+          {!isMobile && (
+            <div
+              onMouseDown={handleMouseDown}
+              className={cn(
+                "top-0 z-10 absolute w-1 h-full cursor-col-resize",
+                side === "left" ? "right-0" : "left-0",
+                "hover:bg-[var(--color-accent-primary)] transition-colors",
+                isResizing && "bg-[var(--color-accent-primary)]"
+              )}
+            />
+          )}
         </div>
       </aside>
 
-      {/* hover trigger zone for floating sidebar (collapsed state) */}
-      {collapsed && (
+      {/* hover trigger zone for floating sidebar (collapsed state) - desktop/tablet only */}
+      {collapsed && !isMobile && (
         <div
           className={cn(
             "top-16 z-40 fixed w-24 h-[calc(100%-8rem)]",
@@ -389,7 +416,9 @@ export function Sidebar({
         <TooltipProvider delayDuration={1000}>
           <div
             className={cn(
-              "top-3 z-40 fixed flex items-center gap-1 shadow-sm p-1.5 border rounded-sm",
+              "top-3 z-40 fixed flex items-center shadow-sm border rounded-sm",
+              // touch-friendly sizing on mobile
+              isMobile ? "gap-1 p-1" : "gap-1 p-1.5",
               side === "left" ? "left-3" : "right-3 flex-row-reverse"
             )}
             style={{
@@ -401,10 +430,14 @@ export function Sidebar({
               <TooltipTrigger asChild>
                 <button
                   onClick={() => onCollapsedChange(false)}
-                  className="flex justify-center items-center hover:bg-[var(--color-background-hover)] rounded-sm w-8 h-8 transition-colors"
+                  className={cn(
+                    "flex justify-center items-center hover:bg-[var(--color-background-hover)] rounded-sm transition-colors",
+                    // touch-friendly: 44x44px on mobile, 32x32px on desktop
+                    isMobile ? "w-11 h-11" : "w-8 h-8"
+                  )}
                   style={{ color: "var(--color-text-muted)" }}
                 >
-                  <PanelLeft className="w-4 h-4" />
+                  <PanelLeft className={isMobile ? "w-5 h-5" : "w-4 h-4"} />
                 </button>
               </TooltipTrigger>
               <TooltipContent side="bottom">
@@ -418,10 +451,13 @@ export function Sidebar({
                   <TooltipTrigger asChild>
                     <button
                       onClick={onOpenCommandPalette}
-                      className="flex justify-center items-center hover:bg-[var(--color-background-hover)] rounded-sm w-8 h-8 transition-colors"
+                      className={cn(
+                        "flex justify-center items-center hover:bg-[var(--color-background-hover)] rounded-sm transition-colors",
+                        isMobile ? "w-11 h-11" : "w-8 h-8"
+                      )}
                       style={{ color: "var(--color-text-muted)" }}
                     >
-                      <Search className="w-4 h-4" />
+                      <Search className={isMobile ? "w-5 h-5" : "w-4 h-4"} />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
@@ -435,10 +471,13 @@ export function Sidebar({
                   <TooltipTrigger asChild>
                     <button
                       onClick={onNewChat}
-                      className="flex justify-center items-center hover:bg-[var(--color-background-hover)] rounded-sm w-8 h-8 transition-colors"
+                      className={cn(
+                        "flex justify-center items-center hover:bg-[var(--color-background-hover)] rounded-sm transition-colors",
+                        isMobile ? "w-11 h-11" : "w-8 h-8"
+                      )}
                       style={{ color: "var(--color-text-muted)" }}
                     >
-                      <Plus className="w-4 h-4" />
+                      <Plus className={isMobile ? "w-5 h-5" : "w-4 h-4"} />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
@@ -452,8 +491,8 @@ export function Sidebar({
         </TooltipProvider>
       )}
 
-      {/* floating sidebar overlay (hover state when collapsed) */}
-      {collapsed && (
+      {/* floating sidebar overlay (hover state when collapsed) - desktop/tablet only */}
+      {collapsed && !isMobile && (
         <>
           {/* backdrop */}
           <div
@@ -500,7 +539,8 @@ export function Sidebar({
         <TooltipProvider delayDuration={1000}>
           <div
             className={cn(
-              "bottom-3 z-40 fixed flex items-center gap-1 shadow-sm p-1.5 border rounded-sm",
+              "bottom-3 z-40 fixed flex items-center shadow-sm border rounded-sm",
+              isMobile ? "gap-1 p-1" : "gap-1 p-1.5",
               side === "left" ? "left-3" : "right-3 flex-row-reverse"
             )}
             style={{
@@ -512,15 +552,18 @@ export function Sidebar({
               <TooltipTrigger asChild>
                 <button
                   onClick={onOpenSettings}
-                  className="flex justify-center items-center hover:bg-[var(--color-background-hover)] rounded-sm w-8 h-8 transition-colors"
+                  className={cn(
+                    "flex justify-center items-center hover:bg-[var(--color-background-hover)] rounded-sm transition-colors",
+                    isMobile ? "w-11 h-11" : "w-8 h-8"
+                  )}
                   style={{ color: "var(--color-text-muted)" }}
                 >
                   {isAnonymousUser ? (
-                    <LogIn className="w-4 h-4" />
+                    <LogIn className={isMobile ? "w-5 h-5" : "w-4 h-4"} />
                   ) : isSignedInNonSubscriber ? (
-                    <CreditCard className="w-4 h-4" />
+                    <CreditCard className={isMobile ? "w-5 h-5" : "w-4 h-4"} />
                   ) : (
-                    <Settings className="w-4 h-4" />
+                    <Settings className={isMobile ? "w-5 h-5" : "w-4 h-4"} />
                   )}
                 </button>
               </TooltipTrigger>
@@ -539,10 +582,13 @@ export function Sidebar({
               <TooltipTrigger asChild>
                 <button
                   onClick={onOpenAppearance}
-                  className="flex justify-center items-center hover:bg-[var(--color-background-hover)] rounded-sm w-8 h-8 transition-colors"
+                  className={cn(
+                    "flex justify-center items-center hover:bg-[var(--color-background-hover)] rounded-sm transition-colors",
+                    isMobile ? "w-11 h-11" : "w-8 h-8"
+                  )}
                   style={{ color: "var(--color-text-muted)" }}
                 >
-                  <Palette className="w-4 h-4" />
+                  <Palette className={isMobile ? "w-5 h-5" : "w-4 h-4"} />
                 </button>
               </TooltipTrigger>
               <TooltipContent side="top">

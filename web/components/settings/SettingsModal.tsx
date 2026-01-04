@@ -11,6 +11,7 @@ import { KeybindsTab } from "./tabs/KeybindsTab";
 import { IS_SELF_HOSTING_CLIENT } from "@/lib/config";
 import { toast } from "sonner";
 import { useAnalytics } from "@/hooks/useAnalytics";
+import { useBreakpoint } from "@/hooks/useBreakpoint";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -301,6 +302,9 @@ function SubscribePanel({
 }
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
+  // responsive breakpoints
+  const { isMobile } = useBreakpoint();
+
   // filter out aPI keys tab in self-hosting mode
   const tabs = useMemo(
     () =>
@@ -474,35 +478,43 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           onClick={isRedirectingToStripe ? undefined : onClose}
         />
 
-        {/* modal - same size as full settings modal */}
+        {/* modal - full screen on mobile, fixed size on desktop */}
         <div
-          className="z-10 relative flex shadow-2xl mx-4 rounded-sm w-full max-w-[1000px] h-[780px] overflow-hidden animate-scale-in"
+          className={`z-10 relative flex shadow-2xl overflow-hidden animate-scale-in ${
+            isMobile
+              ? "flex-col inset-0 fixed rounded-none"
+              : "mx-4 rounded-sm w-full max-w-[1000px] h-[780px]"
+          }`}
           style={{
             backgroundColor: "var(--color-background-elevated)",
-            border: "1px solid var(--color-border-default)",
+            border: isMobile ? "none" : "1px solid var(--color-border-default)",
           }}
         >
-          {/* left side - pricing/welcome panel */}
-          <PricingPanel
-            variant={authFlow === "signIn" ? "signIn" : "signUp"}
-            priceCents={subscriptionPriceCents}
-          />
+          {/* left side - pricing/welcome panel (hidden on mobile) */}
+          {!isMobile && (
+            <PricingPanel
+              variant={authFlow === "signIn" ? "signIn" : "signUp"}
+              priceCents={subscriptionPriceCents}
+            />
+          )}
 
           {/* right side - auth form or redirecting state */}
-          <div className="relative flex flex-col flex-1">
+          <div className="relative flex flex-col flex-1 overflow-y-auto">
             {/* close button - hide while redirecting */}
             {!isRedirectingToStripe && (
               <button
                 onClick={onClose}
-                className="top-4 right-4 z-10 absolute hover:bg-[var(--color-background-hover)] p-1.5 rounded-sm transition-colors"
+                className="top-4 right-4 z-10 absolute hover:bg-[var(--color-background-hover)] p-2 rounded-sm transition-colors"
                 style={{ color: "var(--color-text-muted)" }}
               >
-                <X className="w-5 h-5" />
+                <X className={isMobile ? "w-6 h-6" : "w-5 h-5"} />
               </button>
             )}
 
             {/* centered form or redirecting state */}
-            <div className="flex flex-1 justify-center items-center px-12 py-8">
+            <div
+              className={`flex flex-1 justify-center items-center py-8 ${isMobile ? "px-6" : "px-12"}`}
+            >
               <div className="w-full max-w-sm">
                 {isRedirectingToStripe ? (
                   <div className="space-y-4 text-center">
@@ -536,19 +548,25 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         {/* backdrop */}
         <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
-        {/* modal */}
+        {/* modal - full screen on mobile */}
         <div
-          className="z-10 relative flex shadow-2xl mx-4 rounded-sm w-full max-w-[1000px] h-[780px] overflow-hidden animate-scale-in"
+          className={`z-10 relative flex shadow-2xl overflow-hidden animate-scale-in ${
+            isMobile
+              ? "flex-col inset-0 fixed rounded-none"
+              : "mx-4 rounded-sm w-full max-w-[1000px] h-[780px]"
+          }`}
           style={{
             backgroundColor: "var(--color-background-elevated)",
-            border: "1px solid var(--color-border-default)",
+            border: isMobile ? "none" : "1px solid var(--color-border-default)",
           }}
         >
-          {/* left side - pricing panel */}
-          <PricingPanel
-            variant="subscribe"
-            priceCents={subscriptionPriceCents}
-          />
+          {/* left side - pricing panel (hidden on mobile) */}
+          {!isMobile && (
+            <PricingPanel
+              variant="subscribe"
+              priceCents={subscriptionPriceCents}
+            />
+          )}
 
           {/* right side - subscribe button + logout */}
           <SubscribePanel
@@ -568,31 +586,46 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         onClick={onClose}
       />
 
-      {/* modal - 30% larger */}
+      {/* modal - full screen on mobile */}
       <div
-        className="z-10 relative flex shadow-2xl mx-4 rounded-sm w-full max-w-[1000px] h-[780px] overflow-hidden animate-scale-in"
+        className={`z-10 relative flex shadow-2xl overflow-hidden animate-scale-in ${
+          isMobile
+            ? "flex-col inset-0 fixed rounded-none"
+            : "mx-4 rounded-sm w-full max-w-[1000px] h-[780px]"
+        }`}
         style={{
           backgroundColor: "var(--color-background-elevated)",
-          border: "1px solid var(--color-border-default)",
+          border: isMobile ? "none" : "1px solid var(--color-border-default)",
         }}
       >
-        {/* sidebar - wider with more generous padding */}
-        <div
-          className="flex flex-col flex-shrink-0 px-4 py-5 w-56"
-          style={{
-            backgroundColor: "var(--color-background-secondary)",
-            borderRight: "1px solid var(--color-border-muted)",
-          }}
-        >
-          <div className="flex-1">
-            <h2
-              className="mb-6 font-semibold text-base tracking-tight"
-              style={{ color: "var(--color-text-primary)" }}
-            >
-              Settings
-            </h2>
+        {/* mobile header with horizontal tabs */}
+        {isMobile ? (
+          <div
+            className="flex flex-col flex-shrink-0"
+            style={{
+              backgroundColor: "var(--color-background-secondary)",
+              borderBottom: "1px solid var(--color-border-muted)",
+            }}
+          >
+            {/* header row */}
+            <div className="flex justify-between items-center px-4 py-3">
+              <h2
+                className="font-semibold text-base"
+                style={{ color: "var(--color-text-primary)" }}
+              >
+                Settings
+              </h2>
+              <button
+                onClick={onClose}
+                className="hover:bg-[var(--color-background-hover)] p-2 rounded-sm transition-colors"
+                style={{ color: "var(--color-text-muted)" }}
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
 
-            <nav className="space-y-0.5">
+            {/* horizontal tabs */}
+            <div className="flex gap-1 px-3 pb-2 overflow-x-auto">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -601,14 +634,12 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-3 px-2 py-2 rounded-sm w-full text-sm transition-colors ${
+                    className={`flex items-center gap-2 px-3 py-2 rounded-sm text-sm transition-colors whitespace-nowrap ${
                       isActive
                         ? "bg-[var(--color-background-active)]"
                         : "hover:bg-[var(--color-background-hover)]"
                     }`}
-                    style={{
-                      color: "var(--color-text-primary)",
-                    }}
+                    style={{ color: "var(--color-text-primary)" }}
                   >
                     <Icon
                       className="w-4 h-4"
@@ -618,58 +649,108 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   </button>
                 );
               })}
-            </nav>
+            </div>
           </div>
-
-          {/* user info at bottom */}
+        ) : (
+          /* desktop sidebar */
           <div
-            className="-mx-4 px-4 pt-4 border-t"
-            style={{ borderColor: "var(--color-border-muted)" }}
+            className="flex flex-col flex-shrink-0 px-4 py-5 w-56"
+            style={{
+              backgroundColor: "var(--color-background-secondary)",
+              borderRight: "1px solid var(--color-border-muted)",
+            }}
           >
-            {currentUser === undefined ? (
-              <div className="flex justify-center py-2">
-                <Loader2
-                  className="w-4 h-4 animate-spin"
-                  style={{ color: "var(--color-text-muted)" }}
-                />
-              </div>
-            ) : (
-              <div className="flex items-center gap-3">
-                <p
-                  className="flex-1 text-sm truncate"
-                  style={{ color: "var(--color-text-secondary)" }}
-                >
-                  {currentUser?.email?.split("@")[0]}
-                </p>
-                <button
-                  onClick={() => signOut()}
-                  className="hover:bg-red-500/10 p-1.5 rounded-sm transition-colors shrink-0"
-                  style={{ color: "var(--color-text-muted)" }}
-                  title="Sign out"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </div>
-            )}
+            <div className="flex-1">
+              <h2
+                className="mb-6 font-semibold text-base tracking-tight"
+                style={{ color: "var(--color-text-primary)" }}
+              >
+                Settings
+              </h2>
+
+              <nav className="space-y-0.5">
+                {tabs.map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = activeTab === tab.id;
+
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex items-center gap-3 px-2 py-2 rounded-sm w-full text-sm transition-colors ${
+                        isActive
+                          ? "bg-[var(--color-background-active)]"
+                          : "hover:bg-[var(--color-background-hover)]"
+                      }`}
+                      style={{
+                        color: "var(--color-text-primary)",
+                      }}
+                    >
+                      <Icon
+                        className="w-4 h-4"
+                        style={{ color: "var(--color-text-muted)" }}
+                      />
+                      <span className="font-medium">{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+
+            {/* user info at bottom */}
+            <div
+              className="-mx-4 px-4 pt-4 border-t"
+              style={{ borderColor: "var(--color-border-muted)" }}
+            >
+              {currentUser === undefined ? (
+                <div className="flex justify-center py-2">
+                  <Loader2
+                    className="w-4 h-4 animate-spin"
+                    style={{ color: "var(--color-text-muted)" }}
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <p
+                    className="flex-1 text-sm truncate"
+                    style={{ color: "var(--color-text-secondary)" }}
+                  >
+                    {currentUser?.email?.split("@")[0]}
+                  </p>
+                  <button
+                    onClick={() => signOut()}
+                    className="hover:bg-red-500/10 p-1.5 rounded-sm transition-colors shrink-0"
+                    style={{ color: "var(--color-text-muted)" }}
+                    title="Sign out"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* content */}
         <div
-          className="relative flex flex-col flex-1"
+          className="relative flex flex-col flex-1 min-h-0"
           style={{ backgroundColor: "var(--color-background-elevated)" }}
         >
-          {/* close button - absolute positioned in corner */}
-          <button
-            onClick={onClose}
-            className="top-4 right-4 z-10 absolute hover:bg-[var(--color-background-hover)] p-1.5 rounded-sm transition-colors"
-            style={{ color: "var(--color-text-muted)" }}
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {/* close button - desktop only (mobile has it in header) */}
+          {!isMobile && (
+            <button
+              onClick={onClose}
+              className="top-4 right-4 z-10 absolute hover:bg-[var(--color-background-hover)] p-1.5 rounded-sm transition-colors"
+              style={{ color: "var(--color-text-muted)" }}
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
 
-          {/* tab content - more generous padding */}
-          <div className="flex-1 px-8 py-6 overflow-y-auto">
+          {/* tab content */}
+          <div
+            className={`flex-1 overflow-y-auto ${isMobile ? "px-4 py-4" : "px-8 py-6"}`}
+          >
             {activeTab === "subscription" && (
               <AccountTab
                 signUpStep={signUpStep}
@@ -681,6 +762,41 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             {activeTab === "api-keys" && <ApiKeysTab />}
             {activeTab === "keybinds" && <KeybindsTab />}
           </div>
+
+          {/* mobile user info footer */}
+          {isMobile && (
+            <div
+              className="flex items-center gap-3 px-4 py-3 border-t"
+              style={{
+                borderColor: "var(--color-border-muted)",
+                backgroundColor: "var(--color-background-secondary)",
+              }}
+            >
+              {currentUser === undefined ? (
+                <Loader2
+                  className="w-4 h-4 animate-spin"
+                  style={{ color: "var(--color-text-muted)" }}
+                />
+              ) : (
+                <>
+                  <p
+                    className="flex-1 text-sm truncate"
+                    style={{ color: "var(--color-text-secondary)" }}
+                  >
+                    {currentUser?.email?.split("@")[0]}
+                  </p>
+                  <button
+                    onClick={() => signOut()}
+                    className="flex items-center gap-2 hover:bg-red-500/10 px-3 py-2 rounded-sm transition-colors"
+                    style={{ color: "var(--color-text-muted)" }}
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span className="text-sm">Sign out</span>
+                  </button>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
