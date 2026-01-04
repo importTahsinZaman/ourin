@@ -241,6 +241,31 @@ export default function ChatScreen() {
             <Ionicons name="menu-outline" size={26} color={colors.text} />
           </Pressable>
 
+          {/* Model Picker - Center */}
+          <Pressable
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 4,
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+            }}
+            onPress={() => setModelPickerVisible(true)}
+          >
+            <Text
+              style={{
+                fontSize: 15,
+                fontWeight: "500",
+                color: colors.text,
+                maxWidth: 160,
+              }}
+              numberOfLines={1}
+            >
+              {selectedModelName}
+            </Text>
+            <Ionicons name="chevron-down" size={16} color={colors.textMuted} />
+          </Pressable>
+
           <Pressable
             style={{
               width: 44,
@@ -296,9 +321,7 @@ export default function ChatScreen() {
             onStop={stop}
             isStreaming={isStreaming}
             placeholder="Chat with Ourin"
-            modelName={selectedModelName}
             activeCoresCount={activeCoresCount}
-            onOpenModelPicker={() => setModelPickerVisible(true)}
             onOpenCorePicker={() => setCorePickerVisible(true)}
             webSearchEnabled={webSearchEnabled}
             onWebSearchToggle={setWebSearchEnabled}

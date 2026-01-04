@@ -1,19 +1,20 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   View,
   Text,
   Pressable,
   ScrollView,
   Modal,
-  SafeAreaView,
+  Animated,
+  Dimensions,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme, type DerivedColors } from "@/providers/ThemeProvider";
-import {
-  MODELS_BY_DATE,
-  FREE_MODEL_ID,
-  type Model,
-} from "@ourin/shared/models";
+import { MODELS_BY_DATE, type Model } from "@ourin/shared/models";
+
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+const MODAL_HEIGHT = SCREEN_HEIGHT * 0.45;
 
 interface ModelPickerModalProps {
   visible: boolean;
@@ -29,48 +30,116 @@ export function ModelPickerModal({
   onClose,
 }: ModelPickerModalProps) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
 
-  // Group models by provider
-  const modelsByProvider = useMemo(() => {
-    const groups: Record<string, Model[]> = {
-      google: [],
-      anthropic: [],
-      openai: [],
-    };
-    MODELS_BY_DATE.forEach((model) => {
-      groups[model.provider].push(model);
+  // Animation values
+  const backdropOpacity = useRef(new Animated.Value(0)).current;
+  const sheetTranslateY = useRef(new Animated.Value(MODAL_HEIGHT)).current;
+
+  useEffect(() => {
+    if (visible) {
+      Animated.parallel([
+        Animated.timing(backdropOpacity, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(sheetTranslateY, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      backdropOpacity.setValue(0);
+      sheetTranslateY.setValue(MODAL_HEIGHT);
+    }
+  }, [visible, backdropOpacity, sheetTranslateY]);
+
+  const handleClose = () => {
+    Animated.parallel([
+      Animated.timing(backdropOpacity, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(sheetTranslateY, {
+        toValue: MODAL_HEIGHT,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onClose();
     });
-    return groups;
-  }, []);
-
-  const providerNames: Record<string, string> = {
-    google: "Google",
-    anthropic: "Anthropic",
-    openai: "OpenAI",
   };
-
-  const providerOrder = ["anthropic", "google", "openai"];
 
   const handleSelect = (modelId: string) => {
     onSelectModel(modelId);
-    onClose();
+    handleClose();
   };
 
   return (
     <Modal
       visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={onClose}
+      transparent
+      animationType="none"
+      onRequestClose={handleClose}
     >
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      {/* Backdrop */}
+      <Animated.View
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.5)",
+          opacity: backdropOpacity,
+        }}
+      >
+        <Pressable style={{ flex: 1 }} onPress={handleClose} />
+      </Animated.View>
+
+      {/* Sheet */}
+      <Animated.View
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: MODAL_HEIGHT,
+          backgroundColor: colors.background,
+          borderTopLeftRadius: 16,
+          borderTopRightRadius: 16,
+          transform: [{ translateY: sheetTranslateY }],
+        }}
+      >
+        {/* Handle */}
+        <View
+          style={{
+            alignItems: "center",
+            paddingTop: 10,
+            paddingBottom: 6,
+          }}
+        >
+          <View
+            style={{
+              width: 36,
+              height: 4,
+              borderRadius: 2,
+              backgroundColor: colors.border,
+            }}
+          />
+        </View>
+
+        {/* Header */}
         <View
           style={{
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
             paddingHorizontal: 16,
-            paddingVertical: 16,
+            paddingVertical: 12,
             borderBottomWidth: 1,
             borderBottomColor: colors.border,
           }}
@@ -78,43 +147,28 @@ export function ModelPickerModal({
           <Text style={{ fontSize: 18, fontWeight: "600", color: colors.text }}>
             Select Model
           </Text>
-          <Pressable onPress={onClose} style={{ padding: 4 }}>
+          <Pressable onPress={handleClose} style={{ padding: 4 }}>
             <Ionicons name="close" size={24} color={colors.textMuted} />
           </Pressable>
         </View>
+
+        {/* Content */}
         <ScrollView
-          style={{ flex: 1, paddingHorizontal: 16, paddingTop: 16 }}
+          style={{ flex: 1, paddingHorizontal: 16, paddingTop: 8 }}
+          contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
           showsVerticalScrollIndicator={false}
         >
-          {providerOrder.map((provider) => (
-            <View key={provider} style={{ marginBottom: 20 }}>
-              <Text
-                style={{
-                  fontSize: 12,
-                  fontWeight: "600",
-                  color: colors.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: 0.5,
-                  marginBottom: 8,
-                  paddingLeft: 4,
-                }}
-              >
-                {providerNames[provider]}
-              </Text>
-              {modelsByProvider[provider].map((model) => (
-                <ModelRow
-                  key={model.id}
-                  model={model}
-                  isSelected={selectedModel === model.id}
-                  isFree={model.id === FREE_MODEL_ID}
-                  onPress={() => handleSelect(model.id)}
-                  colors={colors}
-                />
-              ))}
-            </View>
+          {MODELS_BY_DATE.map((model) => (
+            <ModelRow
+              key={model.id}
+              model={model}
+              isSelected={selectedModel === model.id}
+              onPress={() => handleSelect(model.id)}
+              colors={colors}
+            />
           ))}
         </ScrollView>
-      </SafeAreaView>
+      </Animated.View>
     </Modal>
   );
 }
@@ -122,18 +176,11 @@ export function ModelPickerModal({
 interface ModelRowProps {
   model: Model;
   isSelected: boolean;
-  isFree: boolean;
   onPress: () => void;
   colors: DerivedColors;
 }
 
-function ModelRow({
-  model,
-  isSelected,
-  isFree,
-  onPress,
-  colors,
-}: ModelRowProps) {
+function ModelRow({ model, isSelected, onPress, colors }: ModelRowProps) {
   const hasReasoning = !!model.reasoningParameter;
 
   return (
@@ -170,21 +217,6 @@ function ModelRow({
               color={colors.accent}
               style={{ marginLeft: 6 }}
             />
-          )}
-          {isFree && (
-            <View
-              style={{
-                backgroundColor: colors.success,
-                paddingHorizontal: 6,
-                paddingVertical: 2,
-                borderRadius: 4,
-                marginLeft: 8,
-              }}
-            >
-              <Text style={{ fontSize: 10, fontWeight: "700", color: "#fff" }}>
-                FREE
-              </Text>
-            </View>
           )}
         </View>
         <Text

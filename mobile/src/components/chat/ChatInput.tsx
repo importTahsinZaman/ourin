@@ -28,9 +28,7 @@ interface ChatInputProps {
   onStop?: () => void;
   isStreaming?: boolean;
   placeholder?: string;
-  modelName?: string;
   activeCoresCount?: number;
-  onOpenModelPicker?: () => void;
   onOpenCorePicker?: () => void;
   // Web search
   webSearchEnabled?: boolean;
@@ -48,9 +46,7 @@ export function ChatInput({
   onStop,
   isStreaming,
   placeholder = "Message",
-  modelName,
   activeCoresCount = 0,
-  onOpenModelPicker,
   onOpenCorePicker,
   webSearchEnabled = false,
   onWebSearchToggle,
@@ -178,30 +174,8 @@ export function ChatInput({
         paddingBottom: keyboardHeight > 0 ? 12 : insets.bottom + 12,
       }}
     >
-      {/* Model and Cores toolbar */}
+      {/* Cores toolbar */}
       <View style={{ flexDirection: "row", gap: 8, marginBottom: 8 }}>
-        <Pressable
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 4,
-            backgroundColor: colors.backgroundSecondary,
-            paddingHorizontal: 10,
-            paddingVertical: 6,
-            borderRadius: 16,
-          }}
-          onPress={onOpenModelPicker}
-        >
-          <Ionicons name="cube-outline" size={16} color={colors.textMuted} />
-          <Text
-            style={{ fontSize: 13, color: colors.textMuted, maxWidth: 100 }}
-            numberOfLines={1}
-          >
-            {modelName || "Model"}
-          </Text>
-          <Ionicons name="chevron-down" size={14} color={colors.textTertiary} />
-        </Pressable>
-
         <Pressable
           style={{
             flexDirection: "row",
