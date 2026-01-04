@@ -25,9 +25,11 @@ export function MessageBubble({ message, isStreaming }: MessageBubbleProps) {
     <View
       style={{
         marginVertical: 8,
-        marginHorizontal: 16,
-        maxWidth: "85%",
-        alignSelf: isUser ? "flex-end" : "flex-start",
+        // User messages: bubble with margin, Assistant: full width with padding
+        marginHorizontal: isUser ? 16 : 0,
+        paddingHorizontal: isUser ? 0 : 16,
+        maxWidth: isUser ? "85%" : undefined,
+        alignSelf: isUser ? "flex-end" : "stretch",
       }}
     >
       {message.parts.map((part, index) => (
@@ -95,79 +97,82 @@ function TextPartView({
     () => ({
       body: {
         color: colors.text,
-        fontSize: 15,
-        lineHeight: 22,
+        fontSize: 17,
+        lineHeight: 26,
       },
       paragraph: {
         marginTop: 0,
-        marginBottom: 8,
+        marginBottom: 12,
       },
       heading1: {
         color: colors.text,
-        fontSize: 22,
-        fontWeight: "bold" as const,
-        marginTop: 16,
-        marginBottom: 8,
+        fontSize: 26,
+        fontWeight: "700" as const,
+        marginTop: 24,
+        marginBottom: 12,
+        lineHeight: 32,
       },
       heading2: {
         color: colors.text,
-        fontSize: 18,
-        fontWeight: "bold" as const,
-        marginTop: 12,
-        marginBottom: 6,
+        fontSize: 22,
+        fontWeight: "700" as const,
+        marginTop: 20,
+        marginBottom: 10,
+        lineHeight: 28,
       },
       heading3: {
         color: colors.text,
-        fontSize: 16,
+        fontSize: 19,
         fontWeight: "600" as const,
-        marginTop: 10,
-        marginBottom: 4,
+        marginTop: 16,
+        marginBottom: 8,
+        lineHeight: 24,
       },
       code_inline: {
         backgroundColor: colors.backgroundTertiary,
         color: colors.textSecondary,
         fontFamily: "monospace",
-        fontSize: 13,
-        paddingHorizontal: 4,
+        fontSize: 15,
+        paddingHorizontal: 6,
         paddingVertical: 2,
         borderRadius: 4,
       },
       code_block: {
         backgroundColor: colors.background,
-        padding: 12,
-        borderRadius: 8,
-        marginVertical: 8,
+        padding: 14,
+        borderRadius: 10,
+        marginVertical: 12,
       },
       fence: {
         backgroundColor: colors.background,
         color: colors.textSecondary,
         fontFamily: "monospace",
-        fontSize: 13,
-        padding: 12,
-        borderRadius: 8,
-        marginVertical: 8,
+        fontSize: 14,
+        padding: 14,
+        borderRadius: 10,
+        marginVertical: 12,
       },
       blockquote: {
         backgroundColor: colors.backgroundSecondary,
         borderLeftWidth: 3,
         borderLeftColor: colors.accent,
-        paddingLeft: 12,
-        marginVertical: 8,
+        paddingLeft: 14,
+        marginVertical: 12,
       },
       list_item: {
-        marginVertical: 2,
+        marginVertical: 4,
       },
       bullet_list: {
-        marginVertical: 8,
+        marginVertical: 12,
       },
       ordered_list: {
-        marginVertical: 8,
+        marginVertical: 12,
       },
       link: {
         color: "#60a5fa",
       },
       strong: {
-        fontWeight: "bold" as const,
+        fontWeight: "700" as const,
       },
       em: {
         fontStyle: "italic" as const,
@@ -180,8 +185,8 @@ function TextPartView({
     () => ({
       body: {
         color: "#ffffff",
-        fontSize: 15,
-        lineHeight: 22,
+        fontSize: 17,
+        lineHeight: 26,
       },
       paragraph: {
         marginTop: 0,
@@ -191,8 +196,8 @@ function TextPartView({
         backgroundColor: "rgba(0,0,0,0.2)",
         color: "#ffffff",
         fontFamily: "monospace",
-        fontSize: 13,
-        paddingHorizontal: 4,
+        fontSize: 15,
+        paddingHorizontal: 6,
         paddingVertical: 2,
         borderRadius: 4,
       },
@@ -200,9 +205,9 @@ function TextPartView({
         backgroundColor: "rgba(0,0,0,0.2)",
         color: "#ffffff",
         fontFamily: "monospace",
-        fontSize: 13,
-        padding: 12,
-        borderRadius: 8,
+        fontSize: 14,
+        padding: 14,
+        borderRadius: 10,
         marginVertical: 8,
       },
       link: {
@@ -210,7 +215,7 @@ function TextPartView({
         textDecorationLine: "underline" as const,
       },
       strong: {
-        fontWeight: "bold" as const,
+        fontWeight: "700" as const,
       },
       em: {
         fontStyle: "italic" as const,
@@ -221,19 +226,28 @@ function TextPartView({
 
   if (!part.text) return null;
 
-  return (
-    <View
-      style={{
-        backgroundColor: isUser ? colors.accent : colors.backgroundSecondary,
-        borderRadius: 16,
-        paddingHorizontal: 14,
-        paddingVertical: 10,
-      }}
-    >
-      <Markdown
-        style={isUser ? userMarkdownStyles : assistantMarkdownStyles}
-        mergeStyle
+  // User messages get bubble styling, assistant messages are plain full-width
+  if (isUser) {
+    return (
+      <View
+        style={{
+          backgroundColor: colors.accent,
+          borderRadius: 16,
+          paddingHorizontal: 14,
+          paddingVertical: 10,
+        }}
       >
+        <Markdown style={userMarkdownStyles} mergeStyle>
+          {part.text}
+        </Markdown>
+      </View>
+    );
+  }
+
+  // Assistant message - no bubble, full width
+  return (
+    <View style={{ paddingVertical: 4 }}>
+      <Markdown style={assistantMarkdownStyles} mergeStyle>
         {part.text + (isStreaming ? "\u258C" : "")}
       </Markdown>
     </View>
