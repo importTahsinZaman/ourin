@@ -164,23 +164,45 @@
 
 ---
 
-## Phase 7: Settings
+## Phase 7: Settings ✅
 
-- [ ] **Account section**
-  - [ ] User info display
-  - [ ] Sign out
-  - [ ] Delete account
+- [x] **Account section**
+  - [x] User info display (email)
+  - [x] Sign out functionality
 
-- [ ] **Preferences**
-  - [ ] Theme toggle (light/dark/system)
-  - [ ] Default model selection
+- [x] **Usage display**
+  - [x] Monthly credits progress bar
+  - [x] Credits remaining / total
+  - [x] Period dates display
+  - [x] Purchased credits section
+  - [x] Self-hosting mode (token usage stats)
 
-- [ ] **Cores management**
-  - [ ] List cores
-  - [ ] Create/edit/delete cores
-  - [ ] Sync with Convex
+- [x] **Theming system**
+  - [x] ThemeProvider with context
+  - [x] 54 built-in themes (29 light, 25 dark)
+  - [x] Theme picker modal with grid layout
+  - [x] Color swatches preview
+  - [x] Custom theme support infrastructure
+  - [x] AsyncStorage persistence
 
-- [ ] **BYOK (Bring Your Own Keys)**
+- [x] **Font selection**
+  - [x] Font picker modal
+  - [x] 10 font options from @ourin/core
+  - [x] Persistence with AsyncStorage
+
+- [x] **App-wide theming**
+  - [x] Color utility functions (getDerivedColors)
+  - [x] 15+ derived color variants from 3 base colors
+  - [x] Root layout theming
+  - [x] Chat screen theming
+  - [x] Sidebar theming
+  - [x] ChatInput theming
+  - [x] MessageBubble theming (with dynamic markdown styles)
+  - [x] All modals theming (Model, Core, Reasoning, Theme, Font)
+  - [x] Settings screen theming
+  - [x] UsageCard theming
+
+- [ ] **BYOK (Bring Your Own Keys)** - Deferred
   - [ ] API key input for each provider
   - [ ] Secure storage with expo-secure-store
   - [ ] Validate keys
@@ -259,5 +281,5 @@
 
 ## Current Status
 
-**Completed:** Phase 1-6 (Infrastructure, Core Infrastructure, Auth Flow, Chat Feature, Conversations, File Attachments)
-**Next:** Phase 7 (Settings)
+**Completed:** Phase 1-7 (Infrastructure, Core Infrastructure, Auth Flow, Chat Feature, Conversations, File Attachments, Settings)
+**Next:** Phase 8 (Billing)
