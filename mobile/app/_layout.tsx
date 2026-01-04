@@ -1,4 +1,6 @@
 import "react-native-get-random-values";
+// TextDecoder polyfill for streaming
+import "text-encoding";
 import { useEffect } from "react";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";

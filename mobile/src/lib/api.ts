@@ -1,4 +1,6 @@
 import type { UIMessage } from "@ourin/shared/types";
+// Use polyfilled fetch for ReadableStream support in React Native
+import { fetch as streamingFetch } from "react-native-fetch-api";
 
 const API_VERSION = "v1";
 
@@ -79,7 +81,57 @@ export interface StreamEvent {
 export type StreamCallback = (event: StreamEvent) => void;
 
 /**
- * Send a chat message and stream the response.
+ * Parse a single SSE line and emit the appropriate event.
+ */
+function parseSSELine(
+  line: string,
+  onEvent: StreamCallback
+): { textDelta?: string } {
+  if (!line.trim()) return {};
+
+  const colonIndex = line.indexOf(":");
+  if (colonIndex === -1) return {};
+
+  const eventType = line.slice(0, colonIndex);
+  const eventData = line.slice(colonIndex + 1);
+
+  try {
+    if (eventType === "data") {
+      const parsed = JSON.parse(eventData);
+
+      if (parsed.type === "text-delta" && parsed.delta) {
+        onEvent({ type: "text-delta", data: parsed.delta });
+        return { textDelta: parsed.delta };
+      } else if (parsed.type === "reasoning-start") {
+        onEvent({ type: "reasoning-start", data: parsed });
+      } else if (parsed.type === "reasoning-delta" && parsed.delta) {
+        onEvent({ type: "reasoning-delta", data: parsed.delta });
+      } else if (parsed.type === "reasoning-end") {
+        onEvent({ type: "reasoning-end", data: parsed });
+      } else if (parsed.type === "tool-input-start") {
+        onEvent({ type: "tool-input-start", data: parsed });
+      } else if (parsed.type === "tool-input-delta") {
+        onEvent({ type: "tool-input-delta", data: parsed });
+      } else if (parsed.type === "tool-result") {
+        onEvent({ type: "tool-result", data: parsed });
+      } else if (parsed.type === "sources") {
+        onEvent({ type: "sources", data: parsed.sources });
+      }
+    } else if (eventType === "error") {
+      const parsed = JSON.parse(eventData);
+      onEvent({ type: "error", data: parsed });
+    }
+  } catch {
+    // Skip malformed lines
+  }
+
+  return {};
+}
+
+/**
+ * Send a chat message and stream the response in real-time.
+ *
+ * Uses ReadableStream for true character-by-character streaming.
  *
  * @param token - Auth token from generateChatToken
  * @param options - Chat request options
@@ -96,7 +148,8 @@ export async function streamChat(
   const baseUrl = getBaseUrl();
   const url = `${baseUrl}/api/${API_VERSION}/chat`;
 
-  const response = await fetch(url, {
+  // Use polyfilled fetch for streaming support
+  const response = await streamingFetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -111,6 +164,8 @@ export async function streamChat(
       webSearchEnabled: options.webSearchEnabled ?? false,
     }),
     signal,
+    // Enable text streaming in react-native-fetch-api
+    reactNative: { textStreaming: true },
   });
 
   if (!response.ok) {
@@ -128,51 +183,60 @@ export async function streamChat(
     throw new ApiError(errorDetails, response.status, errorCode, errorDetails);
   }
 
-  // React Native doesn't fully support ReadableStream
-  // Fall back to reading the full response as text and parsing SSE format
+  // Use ReadableStream for real-time streaming
+  // Modern React Native with Hermes supports this
+  if (response.body) {
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let fullText = "";
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        // Decode chunk and add to buffer
+        buffer += decoder.decode(value, { stream: true });
+
+        // Process complete lines (SSE format: type:json\n)
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || ""; // Keep incomplete line in buffer
+
+        for (const line of lines) {
+          const result = parseSSELine(line, onEvent);
+          if (result.textDelta) {
+            fullText += result.textDelta;
+          }
+        }
+      }
+
+      // Process any remaining data in buffer
+      if (buffer.trim()) {
+        const result = parseSSELine(buffer, onEvent);
+        if (result.textDelta) {
+          fullText += result.textDelta;
+        }
+      }
+
+      onEvent({ type: "done", data: null });
+      return fullText;
+    } finally {
+      reader.releaseLock();
+    }
+  }
+
+  // Fallback: If ReadableStream not available, use text() method
+  // This blocks until complete but ensures compatibility
+  console.warn("ReadableStream not available, falling back to blocking read");
   const text = await response.text();
   let fullText = "";
 
-  // Parse SSE format from full response
   const lines = text.split("\n");
-
   for (const line of lines) {
-    if (!line.trim()) continue;
-
-    const colonIndex = line.indexOf(":");
-    if (colonIndex === -1) continue;
-
-    const eventType = line.slice(0, colonIndex);
-    const eventData = line.slice(colonIndex + 1);
-
-    try {
-      if (eventType === "data") {
-        const parsed = JSON.parse(eventData);
-
-        if (parsed.type === "text-delta" && parsed.delta) {
-          fullText += parsed.delta;
-          onEvent({ type: "text-delta", data: parsed.delta });
-        } else if (parsed.type === "reasoning-start") {
-          onEvent({ type: "reasoning-start", data: parsed });
-        } else if (parsed.type === "reasoning-delta" && parsed.delta) {
-          onEvent({ type: "reasoning-delta", data: parsed.delta });
-        } else if (parsed.type === "reasoning-end") {
-          onEvent({ type: "reasoning-end", data: parsed });
-        } else if (parsed.type === "tool-input-start") {
-          onEvent({ type: "tool-input-start", data: parsed });
-        } else if (parsed.type === "tool-input-delta") {
-          onEvent({ type: "tool-input-delta", data: parsed });
-        } else if (parsed.type === "tool-result") {
-          onEvent({ type: "tool-result", data: parsed });
-        } else if (parsed.type === "sources") {
-          onEvent({ type: "sources", data: parsed.sources });
-        }
-      } else if (eventType === "error") {
-        const parsed = JSON.parse(eventData);
-        onEvent({ type: "error", data: parsed });
-      }
-    } catch {
-      // Skip malformed lines
+    const result = parseSSELine(line, onEvent);
+    if (result.textDelta) {
+      fullText += result.textDelta;
     }
   }
 
