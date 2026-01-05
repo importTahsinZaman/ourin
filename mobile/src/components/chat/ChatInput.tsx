@@ -7,15 +7,13 @@ import {
   Keyboard,
   Image,
   ScrollView,
-  ActionSheetIOS,
   Platform,
-  Alert,
   ActivityIndicator,
   type TextInput as TextInputType,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useFileAttachment, type PendingFile } from "@/hooks/useFileAttachment";
+import { type PendingFile } from "@/hooks/useFileAttachment";
 import { useTheme, type DerivedColors } from "@/providers/ThemeProvider";
 import type { FilePart } from "@ourin/shared/types";
 
@@ -28,17 +26,16 @@ interface ChatInputProps {
   onStop?: () => void;
   isStreaming?: boolean;
   placeholder?: string;
-  activeCoresCount?: number;
-  onOpenCorePicker?: () => void;
-  // Web search
   webSearchEnabled?: boolean;
-  onWebSearchToggle?: (enabled: boolean) => void;
-  modelSupportsWebSearch?: boolean;
-  // Reasoning
-  reasoningLevel?: string | number;
-  onOpenReasoningPicker?: () => void;
-  modelSupportsReasoning?: boolean;
-  reasoningLabel?: string;
+  // File attachment
+  pendingFiles: PendingFile[];
+  isUploading: boolean;
+  hasFiles: boolean;
+  onRemoveFile: (id: string) => void;
+  getFileParts: () => FilePart[];
+  clearFiles: () => void;
+  // Add to chat modal
+  onOpenAddToChat: () => void;
 }
 
 export function ChatInput({
@@ -46,15 +43,14 @@ export function ChatInput({
   onStop,
   isStreaming,
   placeholder = "Message",
-  activeCoresCount = 0,
-  onOpenCorePicker,
   webSearchEnabled = false,
-  onWebSearchToggle,
-  modelSupportsWebSearch = false,
-  reasoningLevel,
-  onOpenReasoningPicker,
-  modelSupportsReasoning = false,
-  reasoningLabel,
+  pendingFiles,
+  isUploading,
+  hasFiles,
+  onRemoveFile,
+  getFileParts,
+  clearFiles,
+  onOpenAddToChat,
 }: ChatInputProps) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -88,18 +84,6 @@ export function ChatInput({
     };
   }, []);
 
-  const {
-    pendingFiles,
-    isUploading,
-    hasFiles,
-    takePhoto,
-    pickImage,
-    pickDocument,
-    removeFile,
-    clearFiles,
-    getFileParts,
-  } = useFileAttachment();
-
   const handleSend = () => {
     const trimmed = text.trim();
     const fileParts = getFileParts();
@@ -116,47 +100,8 @@ export function ChatInput({
     Keyboard.dismiss();
   };
 
-  const isReasoningOff = reasoningLevel === "off";
-
   const handleStop = () => {
     onStop?.();
-  };
-
-  const showAttachmentOptions = () => {
-    if (Platform.OS === "ios") {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options: [
-            "Cancel",
-            "Take Photo",
-            "Choose from Library",
-            "Choose Document",
-          ],
-          cancelButtonIndex: 0,
-        },
-        (buttonIndex) => {
-          switch (buttonIndex) {
-            case 1:
-              takePhoto();
-              break;
-            case 2:
-              pickImage();
-              break;
-            case 3:
-              pickDocument();
-              break;
-          }
-        }
-      );
-    } else {
-      // Android fallback
-      Alert.alert("Add Attachment", "Choose an option", [
-        { text: "Cancel", style: "cancel" },
-        { text: "Take Photo", onPress: takePhoto },
-        { text: "Choose from Library", onPress: pickImage },
-        { text: "Choose Document", onPress: pickDocument },
-      ]);
-    }
   };
 
   const canSend =
@@ -174,28 +119,6 @@ export function ChatInput({
         paddingBottom: keyboardHeight > 0 ? 12 : insets.bottom + 12,
       }}
     >
-      {/* Cores toolbar */}
-      <View style={{ flexDirection: "row", gap: 8, marginBottom: 8 }}>
-        <Pressable
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 4,
-            backgroundColor: colors.backgroundSecondary,
-            paddingHorizontal: 10,
-            paddingVertical: 6,
-            borderRadius: 16,
-          }}
-          onPress={onOpenCorePicker}
-        >
-          <Ionicons name="layers-outline" size={16} color={colors.textMuted} />
-          <Text style={{ fontSize: 13, color: colors.textMuted }}>
-            {activeCoresCount} Core{activeCoresCount !== 1 ? "s" : ""}
-          </Text>
-          <Ionicons name="chevron-down" size={14} color={colors.textTertiary} />
-        </Pressable>
-      </View>
-
       {/* File previews */}
       {pendingFiles.length > 0 && (
         <ScrollView
@@ -208,7 +131,7 @@ export function ChatInput({
             <FilePreview
               key={file.id}
               file={file}
-              onRemove={() => removeFile(file.id)}
+              onRemove={() => onRemoveFile(file.id)}
               colors={colors}
             />
           ))}
@@ -256,67 +179,24 @@ export function ChatInput({
             marginTop: 8,
           }}
         >
-          {/* Left side buttons */}
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            {/* Attachment button */}
-            <Pressable
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 16,
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-              onPress={showAttachmentOptions}
-              disabled={isStreaming}
-            >
-              <Ionicons
-                name="add"
-                size={22}
-                color={isStreaming ? colors.textTertiary : colors.textMuted}
-              />
-            </Pressable>
-
-            {/* Reasoning button - only show for reasoning models */}
-            {modelSupportsReasoning && onOpenReasoningPicker && (
-              <Pressable
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 16,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-                onPress={onOpenReasoningPicker}
-              >
-                <Ionicons
-                  name="bulb-outline"
-                  size={20}
-                  color={isReasoningOff ? colors.textMuted : colors.accent}
-                />
-              </Pressable>
-            )}
-
-            {/* Web search toggle - only show for models that support it */}
-            {modelSupportsWebSearch && onWebSearchToggle && (
-              <Pressable
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 16,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-                onPress={() => onWebSearchToggle(!webSearchEnabled)}
-              >
-                <Ionicons
-                  name="globe-outline"
-                  size={20}
-                  color={webSearchEnabled ? colors.accent : colors.textMuted}
-                />
-              </Pressable>
-            )}
-          </View>
+          {/* Add to chat button */}
+          <Pressable
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 16,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+            onPress={onOpenAddToChat}
+            disabled={isStreaming}
+          >
+            <Ionicons
+              name="add"
+              size={22}
+              color={isStreaming ? colors.textTertiary : colors.textMuted}
+            />
+          </Pressable>
 
           {/* Send/Stop button */}
           {isStreaming ? (

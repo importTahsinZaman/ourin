@@ -242,8 +242,6 @@ export function Sidebar({
         {/* Footer - Settings */}
         <View
           style={{
-            borderTopWidth: 1,
-            borderTopColor: colors.border,
             paddingHorizontal: 20,
             paddingVertical: 16,
             paddingBottom: insets.bottom + 16,
@@ -268,11 +266,7 @@ export function Sidebar({
                 alignItems: "center",
               }}
             >
-              <Text
-                style={{ fontSize: 14, fontWeight: "600", color: colors.text }}
-              >
-                {/* User initial - could be dynamic */}U
-              </Text>
+              <Ionicons name="settings-outline" size={18} color={colors.text} />
             </View>
             <Text
               style={{

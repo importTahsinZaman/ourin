@@ -21,11 +21,11 @@ import {
 import type { UIMessage, MessagePart, FilePart } from "@ourin/shared/types";
 import { useOurinChat } from "@/hooks/useOurinChat";
 import { useCores } from "@/hooks/useCores";
+import { useFileAttachment } from "@/hooks/useFileAttachment";
 import { useTheme } from "@/providers/ThemeProvider";
 import { MessageList, ChatInput } from "@/components/chat";
+import { AddToChatModal } from "@/components/chat/AddToChatModal";
 import { ModelPickerModal } from "@/components/ModelPickerModal";
-import { CorePickerModal } from "@/components/CorePickerModal";
-import { ReasoningPickerModal } from "@/components/ReasoningPickerModal";
 import { Sidebar } from "@/components/Sidebar";
 
 export default function ChatScreen() {
@@ -62,17 +62,16 @@ export default function ChatScreen() {
     "medium"
   );
 
+  // Modal visibility states
+  const [modelPickerVisible, setModelPickerVisible] = useState(false);
+  const [addToChatVisible, setAddToChatVisible] = useState(false);
+
   // Update model when conversation loads
   useEffect(() => {
     if (conversation?.model) {
       setSelectedModel(conversation.model);
     }
   }, [conversation?.model]);
-
-  // Modal visibility states
-  const [modelPickerVisible, setModelPickerVisible] = useState(false);
-  const [corePickerVisible, setCorePickerVisible] = useState(false);
-  const [reasoningPickerVisible, setReasoningPickerVisible] = useState(false);
 
   // Model capabilities
   const modelInfo = useMemo(() => getModelInfo(selectedModel), [selectedModel]);
@@ -88,23 +87,6 @@ export default function ChatScreen() {
     }
   }, [selectedModel, modelInfo, modelSupportsReasoning]);
 
-  // Get reasoning label for display
-  const reasoningLabel = useMemo(() => {
-    if (!modelSupportsReasoning) return undefined;
-    if (reasoningLevel === "off") return "Off";
-
-    const { kind, presets, allowedValues } = modelInfo.reasoningParameter!;
-    if (kind === "effort" && allowedValues) {
-      const value = reasoningLevel as string;
-      return value.charAt(0).toUpperCase() + value.slice(1);
-    }
-    if (kind === "budget" && presets) {
-      const preset = presets.find((p) => p.value === reasoningLevel);
-      return preset?.label;
-    }
-    return undefined;
-  }, [modelSupportsReasoning, reasoningLevel, modelInfo]);
-
   const {
     cores,
     activeCoresCount,
@@ -112,6 +94,19 @@ export default function ChatScreen() {
     getActiveCoreNames,
     toggleActive,
   } = useCores();
+
+  // File attachment hook
+  const {
+    pendingFiles,
+    isUploading,
+    hasFiles,
+    takePhoto,
+    pickImage,
+    pickDocument,
+    removeFile,
+    clearFiles,
+    getFileParts,
+  } = useFileAttachment();
 
   // Transform DB messages to UIMessage format
   const initialMessages: UIMessage[] = (messagesData ?? []).map((msg) => ({
@@ -313,15 +308,14 @@ export default function ChatScreen() {
             onStop={stop}
             isStreaming={isStreaming}
             placeholder="What can I do for you?"
-            activeCoresCount={activeCoresCount}
-            onOpenCorePicker={() => setCorePickerVisible(true)}
             webSearchEnabled={webSearchEnabled}
-            onWebSearchToggle={setWebSearchEnabled}
-            modelSupportsWebSearch={modelSupportsWebSearch}
-            reasoningLevel={reasoningLevel}
-            onOpenReasoningPicker={() => setReasoningPickerVisible(true)}
-            modelSupportsReasoning={modelSupportsReasoning}
-            reasoningLabel={reasoningLabel}
+            pendingFiles={pendingFiles}
+            isUploading={isUploading}
+            hasFiles={hasFiles}
+            onRemoveFile={removeFile}
+            getFileParts={getFileParts}
+            clearFiles={clearFiles}
+            onOpenAddToChat={() => setAddToChatVisible(true)}
           />
         </KeyboardAvoidingView>
 
@@ -333,20 +327,22 @@ export default function ChatScreen() {
           onClose={() => setModelPickerVisible(false)}
         />
 
-        <CorePickerModal
-          visible={corePickerVisible}
-          cores={cores}
-          activeCoresCount={activeCoresCount}
-          onToggleCore={toggleActive}
-          onClose={() => setCorePickerVisible(false)}
-        />
-
-        <ReasoningPickerModal
-          visible={reasoningPickerVisible}
+        <AddToChatModal
+          visible={addToChatVisible}
+          onClose={() => setAddToChatVisible(false)}
+          onTakePhoto={takePhoto}
+          onPickImage={pickImage}
+          onPickDocument={pickDocument}
+          webSearchEnabled={webSearchEnabled}
+          onWebSearchToggle={setWebSearchEnabled}
+          modelSupportsWebSearch={modelSupportsWebSearch}
           selectedModel={selectedModel}
           reasoningLevel={reasoningLevel}
           onSelectReasoningLevel={setReasoningLevel}
-          onClose={() => setReasoningPickerVisible(false)}
+          modelSupportsReasoning={modelSupportsReasoning}
+          cores={cores}
+          activeCoresCount={activeCoresCount}
+          onToggleCore={toggleActive}
         />
       </View>
     </Sidebar>
