@@ -317,6 +317,103 @@ describe("Billing Logic", () => {
     });
   });
 
+  describe("Message Deduplication Logic", () => {
+    it("deduplicates messages by messageId when calculating credits", () => {
+      // This tests the fix for the bug where duplicate messageIds caused double-counting
+      const messages = [
+        { messageId: "msg1", credits: 1000 },
+        { messageId: "msg2", credits: 500 },
+        { messageId: "msg1", credits: 1000 }, // duplicate - same messageId
+        { messageId: "msg3", credits: 750 },
+        { messageId: "msg2", credits: 500 }, // duplicate - same messageId
+      ];
+
+      // Without deduplication (the bug): 3750 credits
+      const totalWithoutDedup = messages.reduce((sum, m) => sum + m.credits, 0);
+      expect(totalWithoutDedup).toBe(3750);
+
+      // With deduplication (the fix): 2250 credits
+      const seenIds = new Set<string>();
+      let totalWithDedup = 0;
+      for (const msg of messages) {
+        if (seenIds.has(msg.messageId)) continue;
+        seenIds.add(msg.messageId);
+        totalWithDedup += msg.credits;
+      }
+      expect(totalWithDedup).toBe(2250);
+    });
+
+    it("counts credits correctly when same messageId appears in different rows", () => {
+      // This can happen with forked conversations - same logical message in multiple conversations
+      const messages = [
+        {
+          messageId: "msg1",
+          conversationId: "conv1",
+          credits: 1000,
+          wasForked: false,
+        },
+        {
+          messageId: "msg1",
+          conversationId: "conv2",
+          credits: 1000,
+          wasForked: true,
+        }, // forked copy
+        {
+          messageId: "msg2",
+          conversationId: "conv1",
+          credits: 500,
+          wasForked: false,
+        },
+      ];
+
+      // First, filter out forked messages
+      const nonForked = messages.filter((m) => !m.wasForked);
+
+      // Then deduplicate by messageId
+      const seenIds = new Set<string>();
+      let totalCredits = 0;
+      for (const msg of nonForked) {
+        if (seenIds.has(msg.messageId)) continue;
+        seenIds.add(msg.messageId);
+        totalCredits += msg.credits;
+      }
+
+      expect(totalCredits).toBe(1500); // msg1 (1000) + msg2 (500)
+    });
+
+    it("handles empty message list in deduplication", () => {
+      const messages: Array<{ messageId: string; credits: number }> = [];
+
+      const seenIds = new Set<string>();
+      let total = 0;
+      for (const msg of messages) {
+        if (seenIds.has(msg.messageId)) continue;
+        seenIds.add(msg.messageId);
+        total += msg.credits;
+      }
+
+      expect(total).toBe(0);
+    });
+
+    it("handles all duplicates (edge case)", () => {
+      const messages = [
+        { messageId: "msg1", credits: 1000 },
+        { messageId: "msg1", credits: 1000 },
+        { messageId: "msg1", credits: 1000 },
+      ];
+
+      const seenIds = new Set<string>();
+      let total = 0;
+      for (const msg of messages) {
+        if (seenIds.has(msg.messageId)) continue;
+        seenIds.add(msg.messageId);
+        total += msg.credits;
+      }
+
+      expect(total).toBe(1000); // only counted once
+    });
+  });
+
   describe("Overage Calculation", () => {
     it("calculates overage when subscription is exceeded", () => {
       const subscriptionCredits = 10000;

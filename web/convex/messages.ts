@@ -48,6 +48,20 @@ async function insertMessageAndUpdateConversation(
   conversation: Doc<"conversations">,
   message: MessageInput
 ): Promise<void> {
+  // idempotency check - skip if message with same ID already exists in this conversation
+  const existing = await ctx.db
+    .query("messages")
+    .withIndex("by_conversation_created", (q) =>
+      q.eq("conversationId", conversationId)
+    )
+    .filter((q) => q.eq(q.field("messageId"), message.id))
+    .first();
+
+  if (existing) {
+    // message already exists, skip insertion (idempotent)
+    return;
+  }
+
   // use model from top-level field, fall back to metadata for backwards compat
   const model =
     message.model ??
@@ -83,6 +97,7 @@ async function insertMessageAndUpdateConversation(
 /**
  * calculate total credit usage for a user's messages in a billing period.
  * excludes forked messages and messages using own aPI key.
+ * deduplicates by messageId to handle any duplicate message records.
  */
 async function calculatePeriodUsage(
   ctx: MutationCtx,
@@ -103,8 +118,16 @@ async function calculatePeriodUsage(
     )
     .collect();
 
+  // deduplicate by messageId to handle any duplicate records
+  const seenMessageIds = new Set<string>();
   let totalUsed = 0;
   for (const msg of periodMessages) {
+    // skip duplicates
+    if (seenMessageIds.has(msg.messageId)) {
+      continue;
+    }
+    seenMessageIds.add(msg.messageId);
+
     totalUsed += calculateCredits(
       msg.model ?? "unknown",
       msg.inputTokens ?? 0,

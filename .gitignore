@@ -46,3 +46,6 @@ yarn-error.log*
 
 # Convex
 .convex
+web/convex/_generated/
+
+expo-env.d.ts

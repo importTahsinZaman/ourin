@@ -8,6 +8,7 @@ import { describe, it, expect } from "vitest";
 
 // simulate message record
 interface Message {
+  messageId?: string;
   role: "user" | "assistant";
   inputTokens?: number;
   outputTokens?: number;
@@ -93,7 +94,13 @@ function groupByModel(
   > = {};
 
   for (const msg of messages) {
-    if (msg.role !== "user" || msg.inputTokens === undefined || msg.wasForked) {
+    // must exclude wasForked AND usedOwnKey (bug fix: usedOwnKey was missing before)
+    if (
+      msg.role !== "user" ||
+      msg.inputTokens === undefined ||
+      msg.wasForked ||
+      msg.usedOwnKey
+    ) {
       continue;
     }
 
@@ -114,6 +121,39 @@ function groupByModel(
   }
 
   return byModel;
+}
+
+// business logic: calculate credits with deduplication by messageId
+function calculateTotalCreditsWithDedup(messages: Message[]): number {
+  const seenMessageIds = new Set<string>();
+  let total = 0;
+
+  for (const msg of messages) {
+    if (
+      msg.role !== "user" ||
+      msg.inputTokens === undefined ||
+      msg.wasForked ||
+      msg.usedOwnKey
+    ) {
+      continue;
+    }
+
+    // deduplicate by messageId if present
+    if (msg.messageId) {
+      if (seenMessageIds.has(msg.messageId)) {
+        continue;
+      }
+      seenMessageIds.add(msg.messageId);
+    }
+
+    total += calculateCredits(
+      msg.model ?? "unknown",
+      msg.inputTokens ?? 0,
+      msg.outputTokens ?? 0
+    );
+  }
+
+  return total;
 }
 
 // business logic: filter messages within period
@@ -605,6 +645,29 @@ describe("usage", () => {
       const grouped = groupByModel(messages);
       expect(grouped["claude-3-opus"].count).toBe(1);
     });
+
+    it("excludes own-key messages from grouping", () => {
+      const messages: Message[] = [
+        {
+          role: "user",
+          inputTokens: 1000,
+          outputTokens: 500,
+          model: "claude-3-opus",
+          createdAt: Date.now(),
+        },
+        {
+          role: "user",
+          inputTokens: 2000,
+          outputTokens: 1000,
+          model: "claude-3-opus",
+          createdAt: Date.now(),
+          usedOwnKey: true,
+        },
+      ];
+
+      const grouped = groupByModel(messages);
+      expect(grouped["claude-3-opus"].count).toBe(1);
+    });
   });
 
   describe("filterByPeriod", () => {
@@ -827,6 +890,196 @@ describe("usage", () => {
 
       const credits = calculateTotalCredits(messages);
       expect(credits).toBeGreaterThan(0);
+    });
+  });
+
+  describe("messageId deduplication", () => {
+    it("deduplicates messages with same messageId", () => {
+      const messages: Message[] = [
+        {
+          messageId: "msg1",
+          role: "user",
+          inputTokens: 1000,
+          outputTokens: 500,
+          model: "claude",
+          createdAt: Date.now(),
+        },
+        {
+          messageId: "msg1", // duplicate
+          role: "user",
+          inputTokens: 1000,
+          outputTokens: 500,
+          model: "claude",
+          createdAt: Date.now(),
+        },
+        {
+          messageId: "msg2",
+          role: "user",
+          inputTokens: 2000,
+          outputTokens: 1000,
+          model: "claude",
+          createdAt: Date.now(),
+        },
+      ];
+
+      const creditsWithDedup = calculateTotalCreditsWithDedup(messages);
+      const creditsWithoutDedup = calculateTotalCredits(messages);
+
+      // without dedup: 3 messages counted
+      // with dedup: 2 messages counted (msg1 + msg2)
+      expect(creditsWithoutDedup).toBeGreaterThan(creditsWithDedup);
+    });
+
+    it("counts unique messageIds only once", () => {
+      const singleCredit = calculateCredits("claude", 1000, 500);
+
+      const messages: Message[] = [
+        {
+          messageId: "msg1",
+          role: "user",
+          inputTokens: 1000,
+          outputTokens: 500,
+          model: "claude",
+          createdAt: Date.now(),
+        },
+        {
+          messageId: "msg1", // duplicate
+          role: "user",
+          inputTokens: 1000,
+          outputTokens: 500,
+          model: "claude",
+          createdAt: Date.now(),
+        },
+      ];
+
+      const credits = calculateTotalCreditsWithDedup(messages);
+      expect(credits).toBe(singleCredit);
+    });
+
+    it("handles messages without messageId", () => {
+      const messages: Message[] = [
+        {
+          role: "user",
+          inputTokens: 1000,
+          outputTokens: 500,
+          model: "claude",
+          createdAt: Date.now(),
+        },
+        {
+          role: "user",
+          inputTokens: 1000,
+          outputTokens: 500,
+          model: "claude",
+          createdAt: Date.now(),
+        },
+      ];
+
+      // without messageId, no deduplication happens
+      const creditsWithDedup = calculateTotalCreditsWithDedup(messages);
+      const creditsWithoutDedup = calculateTotalCredits(messages);
+      expect(creditsWithDedup).toBe(creditsWithoutDedup);
+    });
+
+    it("still excludes forked and own-key messages when deduplicating", () => {
+      const messages: Message[] = [
+        {
+          messageId: "msg1",
+          role: "user",
+          inputTokens: 1000,
+          outputTokens: 500,
+          model: "claude",
+          createdAt: Date.now(),
+        },
+        {
+          messageId: "msg2",
+          role: "user",
+          inputTokens: 1000,
+          outputTokens: 500,
+          model: "claude",
+          createdAt: Date.now(),
+          wasForked: true, // should be excluded
+        },
+        {
+          messageId: "msg3",
+          role: "user",
+          inputTokens: 1000,
+          outputTokens: 500,
+          model: "claude",
+          createdAt: Date.now(),
+          usedOwnKey: true, // should be excluded
+        },
+      ];
+
+      const credits = calculateTotalCreditsWithDedup(messages);
+      const singleCredit = calculateCredits("claude", 1000, 500);
+      expect(credits).toBe(singleCredit); // only msg1 counted
+    });
+
+    it("handles complex scenario with duplicates and exclusions", () => {
+      const singleCredit = calculateCredits("claude", 1000, 500);
+
+      const messages: Message[] = [
+        // billable - unique
+        {
+          messageId: "msg1",
+          role: "user",
+          inputTokens: 1000,
+          outputTokens: 500,
+          model: "claude",
+          createdAt: Date.now(),
+        },
+        // duplicate of msg1 - should be skipped
+        {
+          messageId: "msg1",
+          role: "user",
+          inputTokens: 1000,
+          outputTokens: 500,
+          model: "claude",
+          createdAt: Date.now(),
+        },
+        // billable - unique
+        {
+          messageId: "msg2",
+          role: "user",
+          inputTokens: 1000,
+          outputTokens: 500,
+          model: "claude",
+          createdAt: Date.now(),
+        },
+        // forked copy of msg2 - excluded
+        {
+          messageId: "msg2",
+          role: "user",
+          inputTokens: 1000,
+          outputTokens: 500,
+          model: "claude",
+          createdAt: Date.now(),
+          wasForked: true,
+        },
+        // own key usage - excluded
+        {
+          messageId: "msg3",
+          role: "user",
+          inputTokens: 5000,
+          outputTokens: 2500,
+          model: "claude",
+          createdAt: Date.now(),
+          usedOwnKey: true,
+        },
+        // billable - unique
+        {
+          messageId: "msg4",
+          role: "user",
+          inputTokens: 1000,
+          outputTokens: 500,
+          model: "claude",
+          createdAt: Date.now(),
+        },
+      ];
+
+      const credits = calculateTotalCreditsWithDedup(messages);
+      // should count: msg1 + msg2 + msg4 = 3 * singleCredit
+      expect(credits).toBe(singleCredit * 3);
     });
   });
 });
