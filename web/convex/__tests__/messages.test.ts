@@ -536,3 +536,171 @@ describe("addSourcesToLastAssistant Logic", () => {
     expect(updatedParts[1].type).toBe("sources");
   });
 });
+
+describe("Message Insertion Idempotency", () => {
+  // This tests the logic for preventing duplicate message insertions
+  // which was a bug that caused credits to be double-counted
+
+  it("detects existing message by messageId in conversation", () => {
+    const existingMessages = [
+      { messageId: "msg1", conversationId: "conv1" },
+      { messageId: "msg2", conversationId: "conv1" },
+      { messageId: "msg3", conversationId: "conv1" },
+    ];
+
+    const newMessageId = "msg2";
+    const conversationId = "conv1";
+
+    // simulate the idempotency check
+    const existingMessage = existingMessages.find(
+      (m) => m.messageId === newMessageId && m.conversationId === conversationId
+    );
+
+    expect(existingMessage).toBeDefined();
+    expect(existingMessage?.messageId).toBe("msg2");
+  });
+
+  it("allows insertion when messageId does not exist in conversation", () => {
+    const existingMessages = [
+      { messageId: "msg1", conversationId: "conv1" },
+      { messageId: "msg2", conversationId: "conv1" },
+    ];
+
+    const newMessageId = "msg3";
+    const conversationId = "conv1";
+
+    const existingMessage = existingMessages.find(
+      (m) => m.messageId === newMessageId && m.conversationId === conversationId
+    );
+
+    expect(existingMessage).toBeUndefined();
+  });
+
+  it("allows same messageId in different conversations (forking)", () => {
+    const existingMessages = [
+      { messageId: "msg1", conversationId: "conv1" },
+      { messageId: "msg2", conversationId: "conv1" },
+    ];
+
+    const newMessageId = "msg1"; // same as existing
+    const conversationId = "conv2"; // different conversation (fork)
+
+    const existingMessage = existingMessages.find(
+      (m) => m.messageId === newMessageId && m.conversationId === conversationId
+    );
+
+    // should not find it because it's in a different conversation
+    expect(existingMessage).toBeUndefined();
+  });
+
+  it("idempotency check prevents duplicate insertion logic", () => {
+    const existingMessages: Array<{
+      messageId: string;
+      conversationId: string;
+    }> = [{ messageId: "msg1", conversationId: "conv1" }];
+
+    const insertMessage = (messageId: string, conversationId: string) => {
+      // idempotency check
+      const existing = existingMessages.find(
+        (m) => m.messageId === messageId && m.conversationId === conversationId
+      );
+
+      if (existing) {
+        return { inserted: false, reason: "already_exists" };
+      }
+
+      existingMessages.push({ messageId, conversationId });
+      return { inserted: true };
+    };
+
+    // first insert of msg2 - should succeed
+    const result1 = insertMessage("msg2", "conv1");
+    expect(result1.inserted).toBe(true);
+    expect(existingMessages.length).toBe(2);
+
+    // second insert of msg2 - should be idempotent (no-op)
+    const result2 = insertMessage("msg2", "conv1");
+    expect(result2.inserted).toBe(false);
+    expect(result2.reason).toBe("already_exists");
+    expect(existingMessages.length).toBe(2); // still 2, not 3
+
+    // insert msg2 in different conversation - should succeed
+    const result3 = insertMessage("msg2", "conv2");
+    expect(result3.inserted).toBe(true);
+    expect(existingMessages.length).toBe(3);
+  });
+});
+
+describe("Credit Deduplication in Billing", () => {
+  it("calculates credits only once per unique messageId", () => {
+    interface BillingMessage {
+      messageId: string;
+      credits: number;
+      wasForked: boolean;
+      usedOwnKey: boolean;
+    }
+
+    const messages: BillingMessage[] = [
+      { messageId: "msg1", credits: 100, wasForked: false, usedOwnKey: false },
+      { messageId: "msg1", credits: 100, wasForked: false, usedOwnKey: false }, // duplicate
+      { messageId: "msg2", credits: 200, wasForked: false, usedOwnKey: false },
+      { messageId: "msg3", credits: 300, wasForked: true, usedOwnKey: false }, // forked - excluded
+      { messageId: "msg4", credits: 400, wasForked: false, usedOwnKey: true }, // own key - excluded
+    ];
+
+    // correct billing calculation with deduplication
+    const seenIds = new Set<string>();
+    let totalCredits = 0;
+
+    for (const msg of messages) {
+      // skip forked and own-key messages
+      if (msg.wasForked || msg.usedOwnKey) continue;
+
+      // skip duplicates
+      if (seenIds.has(msg.messageId)) continue;
+      seenIds.add(msg.messageId);
+
+      totalCredits += msg.credits;
+    }
+
+    // should be: msg1 (100) + msg2 (200) = 300
+    // NOT: msg1 (100) + msg1 (100) + msg2 (200) = 400 (bug)
+    expect(totalCredits).toBe(300);
+  });
+
+  it("handles scenario where duplicates would cause overage", () => {
+    const subscriptionCredits = 250;
+
+    interface BillingMessage {
+      messageId: string;
+      credits: number;
+    }
+
+    const messages: BillingMessage[] = [
+      { messageId: "msg1", credits: 100 },
+      { messageId: "msg1", credits: 100 }, // duplicate
+      { messageId: "msg2", credits: 100 },
+      { messageId: "msg2", credits: 100 }, // duplicate
+    ];
+
+    // BUG: without dedup = 400 credits, subscription balance = -150 (overage!)
+    const totalWithoutDedup = messages.reduce((sum, m) => sum + m.credits, 0);
+    expect(totalWithoutDedup).toBe(400);
+
+    const balanceWithoutDedup = subscriptionCredits - totalWithoutDedup;
+    expect(balanceWithoutDedup).toBe(-150); // incorrectly shows overage
+
+    // FIX: with dedup = 200 credits, subscription balance = 50 (no overage)
+    const seenIds = new Set<string>();
+    let totalWithDedup = 0;
+    for (const msg of messages) {
+      if (seenIds.has(msg.messageId)) continue;
+      seenIds.add(msg.messageId);
+      totalWithDedup += msg.credits;
+    }
+    expect(totalWithDedup).toBe(200);
+
+    const balanceWithDedup = subscriptionCredits - totalWithDedup;
+    expect(balanceWithDedup).toBe(50); // correctly shows remaining credits
+  });
+});

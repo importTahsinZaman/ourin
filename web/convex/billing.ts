@@ -45,6 +45,7 @@ export interface TierInfo {
  * helper to calculate balance from messages for a subscriber.
  * tokens are stored on uSER messages (saved before streaming).
  * excludes messages where user used their own aPI key.
+ * deduplicates by messageId to handle any duplicate message records.
  */
 async function calculateSubscriberBalance(
   ctx: QueryCtx,
@@ -66,8 +67,16 @@ async function calculateSubscriberBalance(
     )
     .collect();
 
+  // deduplicate by messageId to handle any duplicate records
+  const seenMessageIds = new Set<string>();
   let totalUsed = 0;
   for (const msg of messages) {
+    // skip duplicates
+    if (seenMessageIds.has(msg.messageId)) {
+      continue;
+    }
+    seenMessageIds.add(msg.messageId);
+
     totalUsed += calculateCredits(
       msg.model ?? "unknown",
       msg.inputTokens ?? 0,

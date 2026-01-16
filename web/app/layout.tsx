@@ -18,6 +18,7 @@ import { PostHogProvider } from "@/components/providers/PostHogProvider";
 import { PostHogPageView } from "@/components/providers/PostHogPageView";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { CoreEditorProviderWrapper } from "@/components/providers/CoreEditorProviderWrapper";
+import { ReactRecallProvider } from "react-recall";
 import {
   getThemeById,
   defaultTheme,
@@ -196,24 +197,28 @@ export default async function RootLayout({
         )}
       </head>
       <body>
-        <ConvexClientProvider>
-          <PostHogProvider>
-            <PostHogPageView />
-            <ThemeProvider initialThemeId={themeId} initialFontId={fontId}>
-              <CoreEditorProviderWrapper>{children}</CoreEditorProviderWrapper>
-              <Toaster
-                position="top-center"
-                toastOptions={{
-                  style: {
-                    background: "var(--color-background-elevated)",
-                    color: "var(--color-text-primary)",
-                    border: "1px solid var(--color-border-default)",
-                  },
-                }}
-              />
-            </ThemeProvider>
-          </PostHogProvider>
-        </ConvexClientProvider>
+        <ReactRecallProvider>
+          <ConvexClientProvider>
+            <PostHogProvider>
+              <PostHogPageView />
+              <ThemeProvider initialThemeId={themeId} initialFontId={fontId}>
+                <CoreEditorProviderWrapper>
+                  {children}
+                </CoreEditorProviderWrapper>
+                <Toaster
+                  position="top-center"
+                  toastOptions={{
+                    style: {
+                      background: "var(--color-background-elevated)",
+                      color: "var(--color-text-primary)",
+                      border: "1px solid var(--color-border-default)",
+                    },
+                  }}
+                />
+              </ThemeProvider>
+            </PostHogProvider>
+          </ConvexClientProvider>
+        </ReactRecallProvider>
         <SpeedInsights />
       </body>
     </html>

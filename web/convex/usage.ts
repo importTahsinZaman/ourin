@@ -84,7 +84,7 @@ export const getUsageSummary = query({
     const periodStart = subscription.currentPeriodStart;
     const periodEnd = subscription.currentPeriodEnd;
 
-    // get user messages with token data in current period (exclude forked messages)
+    // get user messages with token data in current period (exclude forked messages and own-key usage)
     const messages = await ctx.db
       .query("messages")
       .withIndex("by_user_created", (q) => q.eq("userId", userId))
@@ -93,12 +93,13 @@ export const getUsageSummary = query({
           q.gte(q.field("createdAt"), periodStart),
           q.eq(q.field("role"), "user"),
           q.neq(q.field("inputTokens"), undefined),
-          q.neq(q.field("wasForked"), true)
+          q.neq(q.field("wasForked"), true),
+          q.neq(q.field("usedOwnKey"), true)
         )
       )
       .collect();
 
-    // calculate totals
+    // calculate totals (deduplicate by messageId to handle any duplicate records)
     let totalCreditsUsed = 0;
     let totalInputTokens = 0;
     let totalOutputTokens = 0;
@@ -106,8 +107,15 @@ export const getUsageSummary = query({
       string,
       { count: number; tokens: number; credits: number }
     > = {};
+    const seenMessageIds = new Set<string>();
 
     for (const msg of messages) {
+      // skip duplicates
+      if (seenMessageIds.has(msg.messageId)) {
+        continue;
+      }
+      seenMessageIds.add(msg.messageId);
+
       const inputTokens = msg.inputTokens ?? 0;
       const outputTokens = msg.outputTokens ?? 0;
       const model = msg.model ?? "unknown";
@@ -177,7 +185,7 @@ export const getUsageHistory = query({
     const userId = await getAuthUserId(ctx);
     if (!userId) return [];
 
-    // get user messages with token data (exclude forked messages)
+    // get user messages with token data (exclude forked messages and own-key usage)
     const messages = await ctx.db
       .query("messages")
       .withIndex("by_user_created", (q) => q.eq("userId", userId))
@@ -185,13 +193,24 @@ export const getUsageHistory = query({
         q.and(
           q.eq(q.field("role"), "user"),
           q.neq(q.field("inputTokens"), undefined),
-          q.neq(q.field("wasForked"), true)
+          q.neq(q.field("wasForked"), true),
+          q.neq(q.field("usedOwnKey"), true)
         )
       )
       .order("desc")
-      .take(limit);
+      .take(limit * 2); // fetch extra to account for potential duplicates
 
-    return messages.map((msg) => ({
+    // deduplicate by messageId
+    const seenMessageIds = new Set<string>();
+    const uniqueMessages = messages.filter((msg) => {
+      if (seenMessageIds.has(msg.messageId)) {
+        return false;
+      }
+      seenMessageIds.add(msg.messageId);
+      return true;
+    });
+
+    return uniqueMessages.slice(0, limit).map((msg) => ({
       messageId: msg.messageId,
       model: msg.model ?? "unknown",
       inputTokens: msg.inputTokens ?? 0,
