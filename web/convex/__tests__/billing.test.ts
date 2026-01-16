@@ -319,7 +319,7 @@ describe("Billing Logic", () => {
 
   describe("Message Deduplication Logic", () => {
     it("deduplicates messages by messageId when calculating credits", () => {
-      // This tests the fix for the bug where duplicate messageIds caused double-counting
+      // this tests the fix for the bug where duplicate messageIds caused double-counting
       const messages = [
         { messageId: "msg1", credits: 1000 },
         { messageId: "msg2", credits: 500 },
@@ -328,11 +328,11 @@ describe("Billing Logic", () => {
         { messageId: "msg2", credits: 500 }, // duplicate - same messageId
       ];
 
-      // Without deduplication (the bug): 3750 credits
+      // without deduplication (the bug): 3750 credits
       const totalWithoutDedup = messages.reduce((sum, m) => sum + m.credits, 0);
       expect(totalWithoutDedup).toBe(3750);
 
-      // With deduplication (the fix): 2250 credits
+      // with deduplication (the fix): 2250 credits
       const seenIds = new Set<string>();
       let totalWithDedup = 0;
       for (const msg of messages) {
@@ -344,7 +344,7 @@ describe("Billing Logic", () => {
     });
 
     it("counts credits correctly when same messageId appears in different rows", () => {
-      // This can happen with forked conversations - same logical message in multiple conversations
+      // this can happen with forked conversations - same logical message in multiple conversations
       const messages = [
         {
           messageId: "msg1",
@@ -366,10 +366,10 @@ describe("Billing Logic", () => {
         },
       ];
 
-      // First, filter out forked messages
+      // first, filter out forked messages
       const nonForked = messages.filter((m) => !m.wasForked);
 
-      // Then deduplicate by messageId
+      // then deduplicate by messageId
       const seenIds = new Set<string>();
       let totalCredits = 0;
       for (const msg of nonForked) {

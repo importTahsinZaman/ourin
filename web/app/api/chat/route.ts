@@ -760,6 +760,23 @@ export async function POST(req: Request) {
           // send accurate token usage to Langfuse (manual tracing since SDK telemetry underreports)
           try {
             // format messages for Langfuse (OpenAI-style with system as first message)
+            // sanitize multimodal content to avoid sending large base64 payloads to third party
+            const sanitizeContent = (
+              content: string | Array<{ type: string; [key: string]: unknown }>
+            ): string => {
+              if (typeof content === "string") return content;
+              return content
+                .map((part) => {
+                  if (part.type === "text") return part.text as string;
+                  if (part.type === "image")
+                    return `[image: ${(part.mimeType as string) || "unknown type"}]`;
+                  if (part.type === "file")
+                    return `[file: ${(part.filename as string) || "document"}, ${part.mediaType as string}]`;
+                  return `[${part.type}]`;
+                })
+                .join("\n");
+            };
+
             const langfuseMessages = [
               {
                 role: "system" as const,
@@ -767,10 +784,11 @@ export async function POST(req: Request) {
               },
               ...coreMessages.map((msg) => ({
                 role: msg.role,
-                content:
-                  typeof msg.content === "string"
-                    ? msg.content
-                    : JSON.stringify(msg.content),
+                content: sanitizeContent(
+                  msg.content as
+                    | string
+                    | Array<{ type: string; [key: string]: unknown }>
+                ),
               })),
             ];
 
