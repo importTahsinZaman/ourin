@@ -86,10 +86,6 @@ Respond with ONLY the title, no quotes, no explanation, no punctuation at the en
 Examples: "Python debugging help", "Recipe for pasta", "Travel plans for Japan"`,
       prompt: userMessage,
       maxOutputTokens: 12,
-      experimental_telemetry: {
-        isEnabled: true,
-        functionId: "title-generation",
-      },
     });
 
     const title = extractTitle(generateResult.text);

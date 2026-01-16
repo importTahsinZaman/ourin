@@ -49,3 +49,5 @@ yarn-error.log*
 web/convex/_generated/
 
 expo-env.d.ts
+# react-recall debug logs
+.react-recall/

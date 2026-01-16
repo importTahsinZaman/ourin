@@ -1,11 +1,5 @@
-import { LangfuseSpanProcessor } from "@langfuse/otel";
-import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
-
+// OpenTelemetry auto-instrumentation disabled - we use direct Langfuse SDK
+// in the chat route for accurate token counts (AI SDK telemetry underreports)
 export function register() {
-  const langfuseSpanProcessor = new LangfuseSpanProcessor();
-  const tracerProvider = new NodeTracerProvider({
-    spanProcessors: [langfuseSpanProcessor],
-  });
-
-  tracerProvider.register();
+  // intentionally empty - manual tracing via langfuse SDK in route handlers
 }

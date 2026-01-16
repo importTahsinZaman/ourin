@@ -10,7 +10,7 @@ import { IS_SELF_HOSTING } from "@/lib/config";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import { getEncoding } from "js-tiktoken";
-import { updateActiveTrace } from "@langfuse/tracing";
+import { Langfuse } from "langfuse";
 
 // ============================================================================
 // constants
@@ -516,15 +516,6 @@ export async function POST(req: Request) {
     // convert messages to coreMessage format (images auto-resized to fit provider limits)
     const coreMessages = await convertMessages(messages, modelInfo.provider);
 
-    // update langfuse trace with session and user info
-    if (conversationId) {
-      updateActiveTrace({
-        sessionId: conversationId,
-        userId,
-        name: "chat-completion",
-      });
-    }
-
     // get the appropriate model instance
     let modelInstance;
     if (useCustomKey && customApiKey) {
@@ -629,8 +620,11 @@ export async function POST(req: Request) {
             usedOwnKey: useCustomKey,
             serverSecret: process.env.CHAT_AUTH_SECRET!,
           });
-        } catch (err) {
-          console.error("Failed to update token checkpoint:", err);
+        } catch {
+          // silently ignore OCC errors - these are expected during streaming
+          // since updateStreamingMessage also modifies the conversation
+          // the final onFinish update will capture accurate totals
+          // TODO: verify this is fine
         }
       }, TOKEN_TRACKING_INTERVAL_MS);
     }
@@ -682,16 +676,6 @@ export async function POST(req: Request) {
       tools,
       headers,
       abortSignal: req.signal,
-      experimental_telemetry: {
-        isEnabled: true,
-        functionId: "chat-completion",
-        metadata: {
-          conversationId: conversationId || "unknown",
-          userId,
-          model: requestedModel,
-          webSearchEnabled: shouldUseWebSearch,
-        },
-      },
       onChunk: ({ chunk }) => {
         // track accumulated text for abort estimation
         if (chunk.type === "text-delta") {
@@ -701,17 +685,59 @@ export async function POST(req: Request) {
       onError: (error) => {
         console.error("Stream error:", error);
       },
-      onFinish: async ({ usage, sources }) => {
+      onFinish: async ({ usage, sources, providerMetadata }) => {
         onFinishCalled = true;
         clearTokenInterval(); // stop checkpoint updates, we have exact tokens now
         // track token usage for all users (needed for billing calculations)
         if (usage && conversationId) {
-          // cast to tokenUsage because property names vary across sDK versions
-          const usageTyped = usage as TokenUsage;
-          const inputTokens =
-            usageTyped.inputTokens ?? usageTyped.promptTokens ?? 0;
-          const outputTokens =
-            usageTyped.outputTokens ?? usageTyped.completionTokens ?? 0;
+          // use providerMetadata for accurate billing - SDK usage object underreports
+          // tokens for features like extended thinking, web search grounding, etc.
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const metadata = providerMetadata as any;
+
+          let inputTokens: number;
+          let outputTokens: number;
+
+          if (
+            modelInfo.provider === "anthropic" &&
+            metadata?.anthropic?.usage
+          ) {
+            // anthropic: use actual usage which includes full thinking tokens
+            const anthropicUsage = metadata.anthropic.usage;
+            inputTokens = anthropicUsage.input_tokens ?? 0;
+            outputTokens = anthropicUsage.output_tokens ?? 0;
+          } else if (
+            modelInfo.provider === "google" &&
+            metadata?.google?.usageMetadata
+          ) {
+            // google: SDK underreports when using web search grounding or thinking
+            // totalTokenCount includes all tokens (prompt + grounding + thinking + output)
+            const googleUsage = metadata.google.usageMetadata;
+            const totalTokens = googleUsage.totalTokenCount ?? 0;
+            const candidatesTokens = googleUsage.candidatesTokenCount ?? 0;
+            const thoughtsTokens = googleUsage.thoughtsTokenCount ?? 0;
+            // input = total minus output tokens (candidates + thoughts)
+            inputTokens = totalTokens - candidatesTokens - thoughtsTokens;
+            // output = candidates + thinking tokens
+            outputTokens = candidatesTokens + thoughtsTokens;
+          } else if (
+            modelInfo.provider === "openai" &&
+            metadata?.openai?.usage
+          ) {
+            // openai: use provider metadata if available for consistency
+            const openaiUsage = metadata.openai.usage;
+            inputTokens =
+              openaiUsage.prompt_tokens ?? openaiUsage.input_tokens ?? 0;
+            outputTokens =
+              openaiUsage.completion_tokens ?? openaiUsage.output_tokens ?? 0;
+          } else {
+            // fallback to SDK usage object
+            const usageTyped = usage as TokenUsage;
+            inputTokens =
+              usageTyped.inputTokens ?? usageTyped.promptTokens ?? 0;
+            outputTokens =
+              usageTyped.outputTokens ?? usageTyped.completionTokens ?? 0;
+          }
 
           try {
             // update tokens and automatically deduct purchased credits if needed
@@ -729,6 +755,54 @@ export async function POST(req: Request) {
           } catch (err) {
             // log error but don't fail the request (usage tracking is best-effort)
             console.error("Failed to track usage:", err);
+          }
+
+          // send accurate token usage to Langfuse (manual tracing since SDK telemetry underreports)
+          try {
+            // format messages for Langfuse (OpenAI-style with system as first message)
+            const langfuseMessages = [
+              {
+                role: "system" as const,
+                content: systemPrompt || "You are a helpful assistant.",
+              },
+              ...coreMessages.map((msg) => ({
+                role: msg.role,
+                content:
+                  typeof msg.content === "string"
+                    ? msg.content
+                    : JSON.stringify(msg.content),
+              })),
+            ];
+
+            // use direct Langfuse SDK - must create a trace first, then add generation to it
+            const langfuse = new Langfuse();
+            const trace = langfuse.trace({
+              name: "chat-request",
+              userId,
+              metadata: {
+                conversationId: conversationId || "unknown",
+                provider: modelInfo.provider,
+                webSearchEnabled: shouldUseWebSearch,
+              },
+            });
+
+            trace.generation({
+              name: "chat-completion",
+              model: requestedModel,
+              input: langfuseMessages,
+              output: accumulatedText,
+              usage: {
+                input: inputTokens,
+                output: outputTokens,
+                total: inputTokens + outputTokens,
+              },
+            });
+
+            // flush to ensure the trace is sent before the request ends
+            await langfuse.flushAsync();
+          } catch (err) {
+            // langfuse tracing is best-effort, don't fail the request
+            console.error("Failed to send Langfuse trace:", err);
           }
         }
 

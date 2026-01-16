@@ -414,6 +414,41 @@ LANGFUSE_BASEURL=
 
 ## Debugging Tips
 
+## React Recall Debug Logs
+
+React Recall captures user interactions, console logs, errors, and network requests in `.react-recall/logs.jsonl`. Each line is a JSON object.
+
+.react-recall/logs.jsonl is located in ourin/.react-recall/logs.jsonl
+
+### Querying Logs
+
+```bash
+# Last 10 events
+tail -n 10 .react-recall/logs.jsonl
+
+# All errors
+grep '"type":"error"' .react-recall/logs.jsonl
+
+# All network failures (4xx, 5xx)
+grep '"type":"network"' .react-recall/logs.jsonl | grep -E '"status":[45][0-9]{2}'
+
+# Search for specific text
+grep -i "submit" .react-recall/logs.jsonl
+
+# Get just error messages
+grep '"type":"error"' .react-recall/logs.jsonl | jq -r '.message'
+
+# Events from last 60 seconds
+SINCE=$(($(date +%s) * 1000 - 60000)) && awk -v since="$SINCE" -F'"ms":' '$2+0 > since' .react-recall/logs.jsonl
+```
+
+### Event Types
+
+- `type: "event"` - User interactions (clicks, inputs, navigation)
+- `type: "error"` - Uncaught errors and unhandled rejections
+- `type: "log"` - Console logs (log, info, warn, debug)
+- `type: "network"` - Fetch/XHR requests with full request/response data
+
 ### Chat Streaming Issues
 
 - Check browser Network tab for SSE stream
