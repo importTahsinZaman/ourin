@@ -1,4 +1,5 @@
-import { streamText, ModelMessage } from "ai";
+import { ModelMessage, createUIMessageStreamResponse } from "ai";
+import { start } from "workflow/api";
 import { anthropic, createAnthropic } from "@ai-sdk/anthropic";
 import { openai, createOpenAI } from "@ai-sdk/openai";
 import { google, createGoogleGenerativeAI } from "@ai-sdk/google";
@@ -9,8 +10,7 @@ import { fetchAndProcessImage } from "@/lib/imageProcessing";
 import { IS_SELF_HOSTING } from "@/lib/config";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
-import { getEncoding } from "js-tiktoken";
-import { Langfuse } from "langfuse";
+import { chatWorkflow } from "@/app/workflows/chat";
 
 // ============================================================================
 // constants
@@ -18,46 +18,6 @@ import { Langfuse } from "langfuse";
 
 /** timeout for fetching files (images, pDFs) in milliseconds */
 const FILE_FETCH_TIMEOUT_MS = 30000;
-
-/** estimated tokens added per message for structure overhead */
-const TOKENS_PER_MESSAGE_OVERHEAD = 4;
-
-/** estimated tokens for web search tool definitions */
-const TOOL_DEFINITION_TOKENS = 1500;
-
-/** estimated tokens per image (conservative estimate for vision models) */
-const TOKENS_PER_IMAGE = 4000;
-
-/** interval for tracking token usage during streaming (ms) */
-const TOKEN_TRACKING_INTERVAL_MS = 1000;
-
-/** time to wait for onFinish after abort before tracking partial tokens (ms) */
-const ABORT_SETTLE_MS = 100;
-
-// ============================================================================
-// token encoding
-// ============================================================================
-
-// get tiktoken encoder - cl100k_base works well for most modern models
-// (gPT-4, gPT-3.5-turbo, and is a reasonable approximation for claude/gemini)
-let tiktokenEncoder: ReturnType<typeof getEncoding> | null = null;
-function getTokenEncoder() {
-  if (!tiktokenEncoder) {
-    tiktokenEncoder = getEncoding("cl100k_base");
-  }
-  return tiktokenEncoder;
-}
-
-// count tokens using tiktoken
-function countTokens(text: string): number {
-  try {
-    const encoder = getTokenEncoder();
-    return encoder.encode(text).length;
-  } catch {
-    // fallback to rough estimate if tiktoken fails
-    return Math.ceil(text.length / 4);
-  }
-}
 
 // initialize convex client
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
@@ -516,360 +476,33 @@ export async function POST(req: Request) {
     // convert messages to coreMessage format (images auto-resized to fit provider limits)
     const coreMessages = await convertMessages(messages, modelInfo.provider);
 
-    // get the appropriate model instance
-    let modelInstance;
-    if (useCustomKey && customApiKey) {
-      modelInstance = createProviderWithKey(
-        modelInfo.provider,
-        customApiKey,
-        modelInfo.apiModelId
-      );
-    } else {
-      modelInstance = getModel(requestedModel);
-    }
-
-    // build web search tools and provider options
-    const tools = shouldUseWebSearch
-      ? buildWebSearchTools(modelInfo.provider)
-      : undefined;
-
-    const useReasoning =
-      modelInfo.reasoningParameter &&
-      reasoningLevel !== undefined &&
-      reasoningLevel !== "off";
-
-    const providerOptions = buildProviderOptions(
-      modelInfo.provider,
-      reasoningLevel,
-      modelInfo.reasoningParameter?.kind
-    );
-
-    // build headers for interleaved thinking (anthropic only)
-    // this allows reasoning tokens to appear between tool calls
-    const headers: Record<string, string> | undefined =
-      modelInfo.provider === "anthropic" && useReasoning
-        ? { "anthropic-beta": "interleaved-thinking-2025-05-14" }
-        : undefined;
-
-    // track whether onFinish was called (for abort/interval handling)
-    let onFinishCalled = false;
-    let accumulatedText = "";
-    let cachedInputTokens: number | null = null; // lazy calculation
-    let lastTrackedOutputTokens = 0; // avoid redundant updates
-
-    // calculate input tokens lazily (only when first needed)
-    const getInputTokens = () => {
-      if (cachedInputTokens !== null) return cachedInputTokens;
-
-      let totalTokens = countTokens(
-        systemPrompt || "You are a helpful assistant."
-      );
-      let imageCount = 0;
-
-      for (const msg of coreMessages) {
-        if (typeof msg.content === "string") {
-          totalTokens += countTokens(msg.content);
-        } else if (Array.isArray(msg.content)) {
-          for (const part of msg.content) {
-            if (part.type === "text") {
-              totalTokens += countTokens(part.text);
-            } else if (part.type === "image") {
-              imageCount++;
-            }
-          }
-        }
-        // add overhead for message structure
-        totalTokens += TOKENS_PER_MESSAGE_OVERHEAD;
-      }
-
-      // add overhead for tool definitions when web search is enabled
-      if (shouldUseWebSearch) {
-        totalTokens += TOOL_DEFINITION_TOKENS;
-      }
-
-      // add overhead for images
-      totalTokens += imageCount * TOKENS_PER_IMAGE;
-
-      cachedInputTokens = totalTokens;
-      return totalTokens;
-    };
-
-    // set up 1000ms interval for token tracking (non-blocking, first run at 1000ms)
-    let tokenTrackingInterval: ReturnType<typeof setInterval> | null = null;
-    if (conversationId) {
-      tokenTrackingInterval = setInterval(async () => {
-        if (onFinishCalled || accumulatedText.length === 0) return;
-
-        const outputTokens = countTokens(accumulatedText);
-        // skip if no change since last update
-        if (outputTokens === lastTrackedOutputTokens) return;
-        lastTrackedOutputTokens = outputTokens;
-
-        const inputTokens = getInputTokens();
-
-        // double-check before mutation to minimize race with onFinish
-        if (onFinishCalled) return;
-
-        try {
-          await convex.mutation(api.messages.updateTokens, {
-            conversationId,
-            userId,
-            model: requestedModel,
-            inputTokens,
-            outputTokens,
-            usedOwnKey: useCustomKey,
-            serverSecret: process.env.CHAT_AUTH_SECRET!,
-          });
-        } catch {
-          // silently ignore OCC errors - these are expected during streaming
-          // since updateStreamingMessage also modifies the conversation
-          // the final onFinish update will capture accurate totals
-          // TODO: verify this is fine
-        }
-      }, TOKEN_TRACKING_INTERVAL_MS);
-    }
-
-    // cleanup function for interval
-    const clearTokenInterval = () => {
-      if (tokenTrackingInterval) {
-        clearInterval(tokenTrackingInterval);
-        tokenTrackingInterval = null;
-      }
-    };
-
-    // handle abort - track final partial tokens when client disconnects
-    const handleAbort = async () => {
-      clearTokenInterval();
-
-      // wait a bit to see if onFinish gets called
-      await new Promise((resolve) => setTimeout(resolve, ABORT_SETTLE_MS));
-
-      if (!onFinishCalled && accumulatedText.length > 0 && conversationId) {
-        const inputTokens = getInputTokens();
-        const outputTokens = countTokens(accumulatedText);
-
-        try {
-          await convex.mutation(api.messages.updateTokens, {
-            conversationId,
-            userId,
-            model: requestedModel,
-            inputTokens,
-            outputTokens,
-            usedOwnKey: useCustomKey,
-            serverSecret: process.env.CHAT_AUTH_SECRET!,
-          });
-        } catch (err) {
-          console.error("Failed to track aborted usage:", err);
-        }
-      }
-    };
-
-    req.signal.addEventListener("abort", handleAbort);
-
-    // stream the response with usage tracking
-    // pass request signal so lLM generation is cancelled if client disconnects
-    const result = streamText({
-      model: modelInstance,
-      system: systemPrompt || "You are a helpful assistant.",
-      messages: coreMessages,
-      providerOptions,
-      tools,
-      headers,
-      abortSignal: req.signal,
-      onChunk: ({ chunk }) => {
-        // track accumulated text for abort estimation
-        if (chunk.type === "text-delta") {
-          accumulatedText += chunk.text;
-        }
+    // Start durable workflow - this replaces streamText() + token interval
+    // WDK handles:
+    // - Durability (survives tab close, crashes, deploys)
+    // - Token tracking (single write at completion, not 1-second polling)
+    // - Stream resumption (clients can reconnect)
+    const run = await start(chatWorkflow, [
+      coreMessages,
+      {
+        model: requestedModel,
+        userId,
+        conversationId,
+        systemPrompt,
+        reasoningLevel,
+        webSearchEnabled: shouldUseWebSearch,
+        useCustomKey,
+        customApiKey: customApiKey || undefined,
+        tier: tier.tier,
       },
-      onError: (error) => {
-        console.error("Stream error:", error);
+    ]);
+
+    // Return stream with run ID header for client resumption
+    // Use createUIMessageStreamResponse to properly format the WDK stream
+    return createUIMessageStreamResponse({
+      stream: run.readable,
+      headers: {
+        "x-workflow-run-id": run.runId,
       },
-      onFinish: async ({ usage, sources, providerMetadata }) => {
-        onFinishCalled = true;
-        clearTokenInterval(); // stop checkpoint updates, we have exact tokens now
-        // track token usage for all users (needed for billing calculations)
-        if (usage && conversationId) {
-          // use providerMetadata for accurate billing - SDK usage object underreports
-          // tokens for features like extended thinking, web search grounding, etc.
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const metadata = providerMetadata as any;
-
-          let inputTokens: number;
-          let outputTokens: number;
-
-          if (
-            modelInfo.provider === "anthropic" &&
-            metadata?.anthropic?.usage
-          ) {
-            // anthropic: use actual usage which includes full thinking tokens
-            const anthropicUsage = metadata.anthropic.usage;
-            inputTokens = anthropicUsage.input_tokens ?? 0;
-            outputTokens = anthropicUsage.output_tokens ?? 0;
-          } else if (
-            modelInfo.provider === "google" &&
-            metadata?.google?.usageMetadata
-          ) {
-            // google: SDK underreports when using web search grounding or thinking
-            // totalTokenCount includes all tokens (prompt + grounding + thinking + output)
-            const googleUsage = metadata.google.usageMetadata;
-            const totalTokens = googleUsage.totalTokenCount ?? 0;
-            const candidatesTokens = googleUsage.candidatesTokenCount ?? 0;
-            const thoughtsTokens = googleUsage.thoughtsTokenCount ?? 0;
-            // input = total minus output tokens (candidates + thoughts)
-            inputTokens = totalTokens - candidatesTokens - thoughtsTokens;
-            // output = candidates + thinking tokens
-            outputTokens = candidatesTokens + thoughtsTokens;
-          } else if (
-            modelInfo.provider === "openai" &&
-            metadata?.openai?.usage
-          ) {
-            // openai: use provider metadata if available for consistency
-            const openaiUsage = metadata.openai.usage;
-            inputTokens =
-              openaiUsage.prompt_tokens ?? openaiUsage.input_tokens ?? 0;
-            outputTokens =
-              openaiUsage.completion_tokens ?? openaiUsage.output_tokens ?? 0;
-          } else {
-            // fallback to SDK usage object
-            const usageTyped = usage as TokenUsage;
-            inputTokens =
-              usageTyped.inputTokens ?? usageTyped.promptTokens ?? 0;
-            outputTokens =
-              usageTyped.outputTokens ?? usageTyped.completionTokens ?? 0;
-          }
-
-          try {
-            // update tokens and automatically deduct purchased credits if needed
-            // this is atomic - convex handles subscription balance check and fIFO deduction
-            // pass usedOwnKey to skip credit deduction when user's own aPI key was used
-            await convex.mutation(api.messages.updateTokens, {
-              conversationId,
-              userId,
-              model: requestedModel,
-              inputTokens,
-              outputTokens,
-              usedOwnKey: useCustomKey,
-              serverSecret: process.env.CHAT_AUTH_SECRET!,
-            });
-          } catch (err) {
-            // log error but don't fail the request (usage tracking is best-effort)
-            console.error("Failed to track usage:", err);
-          }
-
-          // send accurate token usage to Langfuse (manual tracing since SDK telemetry underreports)
-          try {
-            // format messages for Langfuse (OpenAI-style with system as first message)
-            // sanitize multimodal content to avoid sending large base64 payloads to third party
-            const sanitizeContent = (
-              content: string | Array<{ type: string; [key: string]: unknown }>
-            ): string => {
-              if (typeof content === "string") return content;
-              return content
-                .map((part) => {
-                  if (part.type === "text") return part.text as string;
-                  if (part.type === "image")
-                    return `[image: ${(part.mimeType as string) || "unknown type"}]`;
-                  if (part.type === "file")
-                    return `[file: ${(part.filename as string) || "document"}, ${part.mediaType as string}]`;
-                  return `[${part.type}]`;
-                })
-                .join("\n");
-            };
-
-            const langfuseMessages = [
-              {
-                role: "system" as const,
-                content: systemPrompt || "You are a helpful assistant.",
-              },
-              ...coreMessages.map((msg) => ({
-                role: msg.role,
-                content: sanitizeContent(
-                  msg.content as
-                    | string
-                    | Array<{ type: string; [key: string]: unknown }>
-                ),
-              })),
-            ];
-
-            // use direct Langfuse SDK - must create a trace first, then add generation to it
-            const langfuse = new Langfuse();
-            const trace = langfuse.trace({
-              name: "chat-request",
-              userId,
-              metadata: {
-                conversationId: conversationId || "unknown",
-                provider: modelInfo.provider,
-                webSearchEnabled: shouldUseWebSearch,
-              },
-            });
-
-            trace.generation({
-              name: "chat-completion",
-              model: requestedModel,
-              input: langfuseMessages,
-              output: accumulatedText,
-              usage: {
-                input: inputTokens,
-                output: outputTokens,
-                total: inputTokens + outputTokens,
-              },
-            });
-
-            // flush to ensure the trace is sent before the request ends
-            await langfuse.flushAsync();
-          } catch (err) {
-            // langfuse tracing is best-effort, don't fail the request
-            console.error("Failed to send Langfuse trace:", err);
-          }
-        }
-
-        // increment free tier message count (production mode only)
-        if (!IS_SELF_HOSTING && tier.tier === "free") {
-          try {
-            await convex.mutation(api.freeUsage.incrementFreeUsageInternal, {
-              userId,
-              serverSecret: process.env.CHAT_AUTH_SECRET!,
-            });
-          } catch (err) {
-            console.error("Failed to increment free usage:", err);
-          }
-        }
-
-        // save web search sources to the assistant message
-        if (
-          shouldUseWebSearch &&
-          sources &&
-          sources.length > 0 &&
-          conversationId
-        ) {
-          try {
-            // cast sources to webSearchSource because structure varies across providers
-            const sourcesTyped = sources as WebSearchSource[];
-            const mappedSources = sourcesTyped
-              .filter((s) => s.url || s.uri) // filter out sources without uRLs
-              .map((s) => ({
-                title: s.title || s.url || s.uri || "Source",
-                url: s.url || s.uri || "",
-                snippet: s.snippet || undefined,
-              }));
-
-            if (mappedSources.length > 0) {
-              await convex.mutation(api.messages.addSourcesToLastAssistant, {
-                conversationId,
-                sources: mappedSources,
-              });
-            }
-          } catch (err) {
-            console.error("Failed to save sources:", err);
-          }
-        }
-      },
-    });
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (result as any).toUIMessageStreamResponse({
-      sendReasoning: true,
     });
   } catch (error) {
     console.error("Chat API error:", error);

@@ -28,6 +28,7 @@
     "@ourin/core": "workspace:*",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@vercel/speed-insights": "^1.3.1",
+    "@workflow/ai": "^4.0.1-beta.48",
     "ai": "^6.0.0",
     "clsx": "^2.1.1",
     "convex": "^1.17.0",
@@ -51,7 +52,8 @@
     "shiki": "^3.20.0",
     "sonner": "^1.7.0",
     "stripe": "^20.0.0",
-    "tailwind-merge": "^2.5.5"
+    "tailwind-merge": "^2.5.5",
+    "workflow": "^4.0.1-beta.48"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",

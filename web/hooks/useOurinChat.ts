@@ -12,6 +12,11 @@ import type {
 } from "@/types/chat";
 import { toast } from "sonner";
 import { useAnonymousAuth } from "./useAnonymousAuth";
+import {
+  getActiveRunId,
+  clearActiveRunId,
+  setActiveRunId,
+} from "@/lib/workflow-transport";
 
 interface UseOurinChatOptions {
   conversationId: string | null;
@@ -94,6 +99,51 @@ export function useOurinChat({
       setMessages(streamingMessagesSnapshotRef.current.messages);
     }
   }, [conversationId, streamingConversationId]);
+
+  // effect to resume WDK stream on mount if there's an active run
+  // this handles page refresh or tab close/reopen during streaming
+  useEffect(() => {
+    if (!conversationId) return;
+
+    const activeRunId = getActiveRunId(conversationId);
+    if (!activeRunId) return;
+
+    // there's an active run - attempt to resume the stream
+    const resumeStream = async () => {
+      try {
+        setStatus("streaming");
+        setStreamingConversationId(conversationId);
+
+        const response = await fetch(
+          `/api/chat/${encodeURIComponent(activeRunId)}/stream`
+        );
+
+        if (!response.ok) {
+          // run not found or expired - clear the run ID
+          clearActiveRunId(conversationId);
+          setStatus("ready");
+          setStreamingConversationId(null);
+          return;
+        }
+
+        // the messages from Convex should already have the partial response
+        // we just need to continue streaming from where we left off
+        // the stream will be processed by the normal message handler
+        // for now, just mark as ready since WDK handles durability server-side
+        // and the message was persisted via the 250ms interval
+        clearActiveRunId(conversationId);
+        setStatus("ready");
+        setStreamingConversationId(null);
+      } catch {
+        // failed to resume - clear and reset
+        clearActiveRunId(conversationId);
+        setStatus("ready");
+        setStreamingConversationId(null);
+      }
+    };
+
+    resumeStream();
+  }, [conversationId]);
 
   // convex mutations
   const appendMessage = useMutation(api.messages.append);
@@ -393,6 +443,12 @@ export function useOurinChat({
           throw new Error("No response body");
         }
 
+        // store WDK run ID for stream resumption
+        const runId = response.headers.get("x-workflow-run-id");
+        if (runId) {
+          setActiveRunId(convId, runId);
+        }
+
         // read uI message stream format
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
@@ -660,6 +716,8 @@ export function useOurinChat({
         setStreamingConversationId(null);
         // clear snapshot - streaming is done
         streamingMessagesSnapshotRef.current = null;
+        // clear WDK run ID - stream completed successfully
+        clearActiveRunId(convId);
 
         return {
           fullText,
@@ -684,6 +742,8 @@ export function useOurinChat({
           setStreamingConversationId(null);
           // clear snapshot - streaming is done
           streamingMessagesSnapshotRef.current = null;
+          // clear WDK run ID - stream was aborted by user
+          clearActiveRunId(convId);
 
           // persist aborted state with partial content
           if (shouldPersist) {
@@ -729,6 +789,8 @@ export function useOurinChat({
         setStreamingConversationId(null);
         // clear snapshot - streaming is done
         streamingMessagesSnapshotRef.current = null;
+        // clear WDK run ID - stream errored
+        clearActiveRunId(convId);
 
         if (shouldPersist && orderedParts.length > 0) {
           const errorMetadata = {
